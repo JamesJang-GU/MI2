@@ -2076,7 +2076,7 @@ def build_detail_alphaliner(conn) -> None:
         glob.setdefault(r["d"], {}).update(
             ships=_clean(r["g"]) or _clean(r["s"]), teu=_clean(r["teu"]))
     meta = {}
-    meta_cols = {r[0] for r in conn.execute("PRAGMA table_info(snapshot_meta)")}
+    meta_cols = {r[1] for r in conn.execute("PRAGMA table_info(snapshot_meta)")}
     select_meta = ["snapshot_date AS d", "global_ships AS g",
                    "top100_teu AS teu", "top10_share AS sh", "orderbook_teu AS ob"]
     for column, alias in (("sum_active_ships", "sa"), ("sum_total_teu", "st"),
