@@ -205,47 +205,48 @@ def summarize_linerlytica(conn):
 
 
 def summarize_alphaliner(conn):
-    """Top3 리스트 + Top10 점유율 도넛."""
-    out = {"metrics": [], "series": [], "top3": [], "shares": []}
-    master = conn.execute(
-        "SELECT snapshot_id, data_date, total_teu FROM alphaliner_master "
-        "ORDER BY data_date DESC LIMIT 2"
+    """Active Ships + TEU 2단 + 각각 그래프 (순위/점유율 미표기).
+
+    현재 크롤러는 snapshot_meta/operator_snapshots 테이블에 적재하므로
+    해당 테이블을 읽고, 비어 있을 때만 레거시 alphaliner_master 로 폴백.
+    """
+    out = {"metrics": [], "series": []}
+    rows = conn.execute(
+        "SELECT snapshot_date, top100_ships, top100_teu FROM snapshot_meta "
+        "ORDER BY snapshot_date DESC LIMIT 400"
     ).fetchall()
-    if not master:
+    if rows:
+        date_key, ships_key, teu_key = "snapshot_date", "top100_ships", "top100_teu"
+    else:
+        rows = conn.execute(
+            "SELECT data_date AS snapshot_date, total_ships AS top100_ships, "
+            "       total_teu AS top100_teu FROM alphaliner_master "
+            "ORDER BY data_date DESC LIMIT 400"
+        ).fetchall()
+        date_key, ships_key, teu_key = "snapshot_date", "top100_ships", "top100_teu"
+    if not rows:
         return out
-    latest, prev = master[0], (master[1] if len(master) > 1 else None)
+    latest, prev = rows[0], (rows[1] if len(rows) > 1 else None)
     out["metrics"].append(
-        metric("Top100 합계", latest["total_teu"],
-               prev["total_teu"] if prev else None, latest["data_date"], unit="TEU")
+        metric("Active Ships", latest[ships_key],
+               prev[ships_key] if prev else None, latest[date_key], unit="척")
     )
-    top = conn.execute(
-        "SELECT rank, operator_name, total_teu, market_share FROM alphaliner_detail "
-        "WHERE snapshot_id = ? ORDER BY rank LIMIT 10",
-        (latest["snapshot_id"],),
-    ).fetchall()
-    for i, row in enumerate(top[:3]):
-        out["top3"].append(
-            {"rank": i + 1, "name": row["operator_name"],
-             "value": row["total_teu"], "unit": "TEU"}
+    out["metrics"].append(
+        metric("선대 (TEU)", latest[teu_key],
+               prev[teu_key] if prev else None, latest[date_key], unit="TEU")
+    )
+    for key, label in ((ships_key, "Active Ships"), (teu_key, "선대 (TEU)")):
+        out["series"].append(
+            {"label": label,
+             "points": year_filter([[r[date_key], r[key]] for r in reversed(rows)])}
         )
-    covered = 0.0
-    for row in top:
-        share = r2(row["market_share"])
-        if share is None and latest["total_teu"]:
-            share = round(row["total_teu"] / latest["total_teu"] * 100, 1)
-        if share is None:
-            continue
-        covered += share
-        out["shares"].append({"name": row["operator_name"], "pct": share})
-    if out["shares"] and covered < 100:
-        out["shares"].append({"name": "기타", "pct": round(100 - covered, 1)})
-    out["updated"] = latest["data_date"]
+    out["updated"] = latest[date_key]
     return out
 
 
 def summarize_forwarders(conn):
-    """Top3 포워더 세로 리스트 (그래프 없음)."""
-    out = {"metrics": [], "series": [], "top3": []}
+    """Top 1위만: 국적/회사명 + REV/TEU/TON."""
+    out = {"metrics": [], "series": [], "top1": None}
     dates = conn.execute(
         "SELECT DISTINCT date FROM forwarders ORDER BY date DESC LIMIT 2"
     ).fetchall()
@@ -254,33 +255,28 @@ def summarize_forwarders(conn):
     latest_date = dates[0]["date"]
     prev_date = dates[1]["date"] if len(dates) > 1 else None
 
-    rows = conn.execute(
-        "SELECT provider, revenue, teu FROM forwarders "
-        "WHERE date = ? ORDER BY rank ASC, revenue DESC",
+    top1 = conn.execute(
+        "SELECT provider, hq, revenue, teu, air_tons FROM forwarders "
+        "WHERE date = ? ORDER BY rank ASC, revenue DESC LIMIT 1",
         (latest_date,),
-    ).fetchall()
-    seen = []
-    seen_names = set()
-    for row in rows:
-        if row["provider"] in seen_names:
-            continue
-        seen_names.add(row["provider"])
-        seen.append(row)
-        if len(seen) == 3:
-            break
-    for i, row in enumerate(seen):
-        prev_rev = None
-        if prev_date:
-            p = conn.execute(
-                "SELECT revenue FROM forwarders WHERE date = ? AND provider = ?",
-                (prev_date, row["provider"]),
-            ).fetchone()
-            prev_rev = p["revenue"] if p else None
-        m = metric(row["provider"], row["revenue"], prev_rev, latest_date, unit="$M")
-        out["top3"].append(
-            {"rank": i + 1, "name": row["provider"], "value": row["revenue"],
-             "unit": "$M", "change": m["change"], "pct": m["pct"],
-             "teu": row["teu"]}
+    ).fetchone()
+    if not top1:
+        return out
+    out["top1"] = {"name": top1["provider"], "hq": top1["hq"]}
+
+    prev_row = None
+    if prev_date:
+        prev_row = conn.execute(
+            "SELECT revenue, teu, air_tons FROM forwarders "
+            "WHERE date = ? AND provider = ?",
+            (prev_date, top1["provider"]),
+        ).fetchone()
+    for label, column, unit in (("REV", "revenue", "$M"),
+                                ("TEU", "teu", ""),
+                                ("TON", "air_tons", "ton")):
+        out["metrics"].append(
+            metric(label, top1[column],
+                   prev_row[column] if prev_row else None, latest_date, unit=unit)
         )
     out["updated"] = latest_date
     return out

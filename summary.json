@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-05 02:39:13",
+ "generated_at": "2026-11-05 03:06:51",
  "modules": [
   {
    "id": "sea",
@@ -1381,122 +1381,87 @@
    "page": "alphaliner/index.html",
    "metrics": [
     {
-     "label": "Top100 합계",
-     "value": 34113905.0,
-     "prev": 34113905.0,
-     "change": 0.0,
-     "pct": 0.0,
+     "label": "Active Ships",
+     "value": 6629.0,
+     "prev": null,
+     "change": null,
+     "pct": null,
+     "unit": "척",
+     "asof": "2026-11-05"
+    },
+    {
+     "label": "선대 (TEU)",
+     "value": 34193780.0,
+     "prev": null,
+     "change": null,
+     "pct": null,
      "unit": "TEU",
-     "asof": "2026-10-19"
+     "asof": "2026-11-05"
     }
    ],
-   "series": [],
-   "updated": "2026-10-19",
-   "error": null,
-   "top3": [
+   "series": [
     {
-     "rank": 1,
-     "name": "Mediterranean Shg Co",
-     "value": 7453718,
-     "unit": "TEU"
+     "label": "Active Ships",
+     "points": [
+      [
+       "2026-11-05",
+       6629
+      ]
+     ]
     },
     {
-     "rank": 2,
-     "name": "Maersk",
-     "value": 4728084,
-     "unit": "TEU"
-    },
-    {
-     "rank": 3,
-     "name": "CMA CGM Group",
-     "value": 4487464,
-     "unit": "TEU"
+     "label": "선대 (TEU)",
+     "points": [
+      [
+       "2026-11-05",
+       34193780
+      ]
+     ]
     }
    ],
-   "shares": [
-    {
-     "name": "Mediterranean Shg Co",
-     "pct": 21.5
-    },
-    {
-     "name": "Maersk",
-     "pct": 13.6
-    },
-    {
-     "name": "CMA CGM Group",
-     "pct": 12.9
-    },
-    {
-     "name": "COSCO Group",
-     "pct": 10.6
-    },
-    {
-     "name": "Hapag-Lloyd",
-     "pct": 7.0
-    },
-    {
-     "name": "ONE (Ocean Network Express)",
-     "pct": 6.3
-    },
-    {
-     "name": "Evergreen Line",
-     "pct": 5.9
-    },
-    {
-     "name": "HMM Co Ltd",
-     "pct": 3.0
-    },
-    {
-     "name": "Yang Ming Marine Transport Corp.",
-     "pct": 2.2
-    },
-    {
-     "name": "Zim",
-     "pct": 2.0
-    },
-    {
-     "name": "기타",
-     "pct": 15.0
-    }
-   ]
+   "updated": "2026-11-05",
+   "error": null
   },
   {
    "id": "forwarders",
    "title": "포워더 순위",
    "page": "forwarders/index.html",
-   "metrics": [],
+   "metrics": [
+    {
+     "label": "REV",
+     "value": 37379.0,
+     "prev": 37379.0,
+     "change": 0.0,
+     "pct": 0.0,
+     "unit": "$M",
+     "asof": "2026-11-05"
+    },
+    {
+     "label": "TEU",
+     "value": 3695424.0,
+     "prev": 3695424.0,
+     "change": 0.0,
+     "pct": 0.0,
+     "unit": "",
+     "asof": "2026-11-05"
+    },
+    {
+     "label": "TON",
+     "value": 2013127.0,
+     "prev": 2013127.0,
+     "change": 0.0,
+     "pct": 0.0,
+     "unit": "ton",
+     "asof": "2026-11-05"
+    }
+   ],
    "series": [],
    "updated": "2026-11-05",
    "error": null,
-   "top3": [
-    {
-     "rank": 1,
-     "name": "DSV",
-     "value": 37379.0,
-     "unit": "$M",
-     "change": 0.0,
-     "pct": 0.0,
-     "teu": 3695424.0
-    },
-    {
-     "rank": 2,
-     "name": "Kuehne + Nagel",
-     "value": 33836.0,
-     "unit": "$M",
-     "change": 0.0,
-     "pct": 0.0,
-     "teu": 4325000.0
-    },
-    {
-     "rank": 3,
-     "name": "DHL Supply Chain & Global Forwarding",
-     "value": 35538.0,
-     "unit": "$M",
-     "change": 0.0,
-     "pct": 0.0,
-     "teu": 3274000.0
-    }
-   ]
+   "top1": {
+    "name": "DSV",
+    "hq": "Denmark"
+   }
   },
   {
    "id": "air",

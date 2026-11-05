@@ -74,9 +74,6 @@
           padding-top:6px;font-size:11.5px;align-items:baseline}
   .subrow .v{color:var(--txt);font-variant-numeric:tabular-nums;text-align:right}
   .subrow .v em{font-style:normal;font-size:10px;color:var(--dim);margin-left:3px}
-  /* Top3 리스트 */
-  .top3{display:flex;flex-direction:column;gap:6px}
-  .t3{display:flex;align-items:baseline;gap:7px;background:var(--panel2);
       border:1px solid var(--line);padding:6px 7px}
   .t3 .rk{color:#000;background:var(--amber);font-weight:700;font-size:11px;
           padding:1px 5px;flex:none}
@@ -88,8 +85,6 @@
   .t3 .sub{width:100%;display:flex;justify-content:space-between;gap:6px;
            font-size:10px;color:var(--dim);margin-top:2px}
   .t3wrap{display:flex;flex-direction:column}
-  /* alphaliner 좌우 분할 */
-  .split{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1}
   /* 거시 3단 스택 */
   .stack{display:flex;flex-direction:column;gap:8px}
   .stack .grp{background:var(--panel2);border:1px solid var(--line);padding:6px 7px}
@@ -97,11 +92,16 @@
   .stack .v{color:#fff;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
   .stack .v em{font-style:normal;font-size:10px;color:var(--dim);margin-left:3px}
   .stack .chartbox{height:60px;margin-top:4px}
-  /* 시스템 패널 */
-  .sysrow{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;
-          border-bottom:1px dotted #1f1f1f}
-  .sysrow .st.ok{color:var(--up)} .sysrow .st.fail{color:var(--down)}
-  .sysrow .t{color:var(--dim)}
+  /* 헤더 기준일: 작고 회색톤 */
+  .ref{color:#8f8f8f;font-size:10px;margin-left:8px;white-space:nowrap;
+       overflow:hidden;text-overflow:ellipsis}
+  /* 포워더 1위 헤더 */
+  .fwdhead{display:flex;align-items:center;gap:8px}
+  .flag{font-size:22px;line-height:1}
+  .fname{color:#fff;font-size:16px;font-weight:700;letter-spacing:.03em;
+         overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rk1{margin-left:auto;color:#000;background:var(--amber);font-size:10px;
+       padding:1px 6px;font-weight:700;flex:none}
   footer{color:var(--dim);font-size:10px;letter-spacing:.08em;padding:6px 12px 18px;
          border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px}
   footer b{color:var(--amber);font-weight:400}
@@ -223,44 +223,32 @@ function duoBox(mod){
     lineChart(cv, [mod.series[Number(cv.dataset.s) || 0]].filter(Boolean)));
   return box;
 }
-/* alphaliner: 합계 행 + 좌 Top3 / 우 도넛 */
-function alphaBox(mod){
-  const total = mod.metrics[0];
-  const list = (mod.top3 || []).map(t => `
-    <div class="t3"><span class="rk">${t.rank}</span>
-      <span class="nm">${t.name}</span>
-      <span class="vv">${fmt(t.value)}${unitHtml(t.unit)}</span></div>`).join("");
-  const box = boxShell(mod,
-    (total ? `<div class="subrow" style="border-top:0;padding-top:0">
-        <span class="lbl" style="margin:0">${total.label}</span>
-        <span class="v">${fmt(total.value)}${unitHtml(total.unit)}${chgHtml(total)}</span>
-      </div>` : "") +
-    `<div class="split">
-       <div class="top3">${list}</div>
-       <div class="sharelist">
-         <div class="celltitle">TOP 10 CARRIER SHARE</div>
-         ${(mod.shares || []).slice(0, 10).map((s, i) => `
-           <div class="shrow"><span class="rk2">${i + 1}</span>
-             <span class="nm">${s.name}</span>
-             <span class="pc">${Number(s.pct).toFixed(1)}%</span></div>`).join("")}
-       </div>
-     </div>` +
-    errHtml(mod));
-  return box;
-}
-/* forwarders: Top3 세로, 그래프 없음 */
+/* forwarders: 1위만 — 국기+회사명 상단, REV/TEU/TON 하단 */
+const FLAGS = {
+  "Denmark":"🇩🇰","Switzerland":"🇨🇭","Germany":"🇩🇪","France":"🇫🇷",
+  "United States":"🇺🇸","USA":"🇺🇸","Japan":"🇯🇵","China":"🇨🇳",
+  "United Kingdom":"🇬🇧","Netherlands":"🇳🇱","Spain":"🇪🇸","Italy":"🇮🇹",
+  "Sweden":"🇸🇪","Norway":"🇳🇴","South Korea":"🇰🇷","Korea":"🇰🇷",
+  "Singapore":"🇸🇬","United Arab Emirates":"🇦🇪","Belgium":"🇧🇪",
+  "Austria":"🇦🇹","Canada":"🇨🇦","Australia":"🇦🇺","Hong Kong":"🇭🇰",
+  "Taiwan":"🇹🇼","India":"🇮🇳","Brazil":"🇧🇷","Mexico":"🇲🇽","Turkey":"🇹🇷",
+  "Finland":"🇫🇮","Ireland":"🇮🇪","Luxembourg":"🇱🇺","Portugal":"🇵🇹",
+  "Greece":"🇬🇷","Israel":"🇮🇱","Saudi Arabia":"🇸🇦","Thailand":"🇹🇭",
+  "Vietnam":"🇻🇳","Malaysia":"🇲🇾","Indonesia":"🇮🇩","Poland":"🇵🇱",
+  "South Africa":"🇿🇦","New Zealand":"🇳🇿",
+};
 function fwdBox(mod){
-  const list = (mod.top3 || []).map(t => `
-    <div class="t3wrap"><div class="t3">
-      <span class="rk">${t.rank}</span>
-      <span class="nm">${t.name}</span>
-      <span class="vv">${fmt(t.value)}${unitHtml(t.unit)}</span></div>
-      <div class="t3"><span class="sub">
-        <span>TEU ${fmt(t.teu)}</span>${chgHtml(t)}</span></div>
+  const t = mod.top1 || {};
+  const trio = (mod.metrics || []).slice(0, 3).map(m => `
+    <div class="cell">
+      <div class="lbl">${m.label}</div>
+      <div class="val">${fmt(m.value)}${unitHtml(m.unit)}</div>
+      ${chgHtml(m)}
     </div>`).join("");
   return boxShell(mod,
-    `<div class="top3">${list}</div>
-     <div class="asof">A&A Top 25 · 매출 기준</div>` + errHtml(mod));
+    `<div class="fwdhead"><span class="flag">${FLAGS[t.hq] || "🏳️"}</span>
+       <span class="fname">${t.name || "-"}</span><span class="rk1">#1</span></div>
+     <div class="trio">${trio}</div>` + errHtml(mod));
 }
 /* air: 항로 3지수 상단 + 3라인 그래프 */
 function airBox(mod){
@@ -325,35 +313,13 @@ function macroBox(mod){
     lineChart(cv, [mod.groups[Number(cv.dataset.g)].series[0]], {xticks: 4}));
   return box;
 }
-function sysPanel(status){
-  const runs = (status && status.runs || []);
-  const okCnt = runs.filter(r => r.ok).length;
-  const lines = runs.map(r => `
-    <div class="cl ${r.ok ? "ok" : "fail"}">
-      <span class="ts">${(r.finished_at || "").slice(5, 16)}</span>
-      <span class="st">${r.ok ? "OK" : "FAIL"}</span>
-      <span class="md">${r.module}</span>
-      <span class="du">${r.seconds}s</span>
-    </div>`).join("") ||
-    `<div class="cl wait">no run yet — awaiting first schedule</div>`;
-  const el = document.createElement("div");
-  el.innerHTML = `<section class="console">
-    <div class="chead"><span class="led"></span>SYSTEM CONSOLE
-      <span class="cmeta">${runs.length} mods · ${okCnt} ok · ${runs.length - okCnt} fail</span></div>
-    <div class="cbody">${lines}
-      <div class="cl prompt">&gt; next run 00:00 KST<span class="cursor"></span></div>
-    </div>
-    <div class="cfoot">LAST RUN ${status ? status.generated_at : "-"}</div>
-  </section>`;
-  return el;
-}
 const RENDERERS = {
-  sea: duoBox, linerlytica: duoBox, alphaliner: alphaBox,
+  sea: duoBox, linerlytica: duoBox, alphaliner: duoBox,
   forwarders: fwdBox, air: airBox, oil: oilBox, macro: macroBox,
 };
 async function load(){
   const grid = document.getElementById("grid");
-  let summary = null, status = null;
+  let summary = null;
   try {
     summary = await (await fetch("summary.json?t=" + Date.now())).json();
   } catch (e) {
@@ -361,19 +327,14 @@ async function load(){
       "summary.json 없음 — run_all.py 실행 필요";
     return;
   }
-  try { status = await (await fetch("status.json?t=" + Date.now())).json(); } catch (e) {}
-  const chips = (summary.modules || []).map(m => {
-    const r = (status && status.runs || []).find(x => x.module === m.id);
-    return r ? `<span class="chip ${r.ok ? "ok" : "fail"}">${m.id.toUpperCase()}</span>` : "";
-  }).join("");
-  document.getElementById("meta").innerHTML = `DATA ${summary.generated_at || "-"} ${chips}`;
+  document.getElementById("meta").textContent =
+    `DATA ${summary.generated_at || "-"}`;
   document.getElementById("footmeta").textContent =
     `SUMMARY GENERATED ${summary.generated_at || "-"}`;
   (summary.modules || []).forEach(mod => {
     const render = RENDERERS[mod.id] || duoBox;
     grid.appendChild(render(mod));
   });
-  grid.appendChild(sysPanel(status));
 }
 load();
 </script>
