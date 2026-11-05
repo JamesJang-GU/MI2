@@ -525,6 +525,8 @@ SEA_SHELL = """<!DOCTYPE html>
   td:first-child,td:nth-child(2){text-align:left}
   td:first-child{color:var(--dim)}
   .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+  tfoot td{color:var(--amber);border-top:1px solid var(--line);
+           background:#141005;font-weight:700}
   footer{color:var(--dim);font-size:10px;letter-spacing:.06em;padding:8px 12px 20px;
          display:flex;flex-wrap:wrap;gap:12px}
   footer b{color:var(--amber);font-weight:400}
@@ -1630,32 +1632,16 @@ ALPHALINER_SHELL = """<!DOCTYPE html>
       <div class="phead"><span class="ptitle">GLOBAL FLEET — Active Ships & Top100 TEU</span></div>
       <div class="chartbox"><canvas id="c1"></canvas></div>
       <div class="navbox"><canvas id="n1"></canvas></div>
-      <div class="hint">스트립 드래그=기간 선택(4차트 동기화) · WHEEL=ZOOM · ALT+DRAG=PAN · 더블클릭=전체</div>
-    </div>
-    <div class="panel">
-      <div class="phead"><span class="ptitle">ORDERBOOK & TOP10 SHARE</span></div>
-      <div class="chartbox"><canvas id="c2"></canvas></div>
-      <div class="navbox"><canvas id="n2"></canvas></div>
-      <div class="hint">스트립 드래그=기간 선택(4차트 동기화) · WHEEL=ZOOM · ALT+DRAG=PAN · 더블클릭=전체</div>
-    </div>
-    <div class="panel wide">
-      <div class="phead"><span class="ptitle">선사별 선대 (TEU) 추이 — 선대 확보 누적</span>
-        <span class="chips" id="chips1"></span></div>
-      <div class="chartbox"><canvas id="c3"></canvas></div>
-      <div class="navbox"><canvas id="n3"></canvas></div>
-    </div>
-    <div class="panel wide">
-      <div class="phead"><span class="ptitle">선사별 Orderbook (TEU) 추이 — 발주 누적</span>
-        <span class="chips" id="chips2"></span></div>
-      <div class="chartbox"><canvas id="c4"></canvas></div>
-      <div class="navbox"><canvas id="n4"></canvas></div>
+      <div class="hint">스트립 드래그=기간 선택 · WHEEL=ZOOM · ALT+DRAG=PAN · 더블클릭=전체</div>
     </div>
   </div>
   <div class="panel">
     <div class="phead"><span class="ptitle">SUMMARY TABLE — TOP 10 SHARE</span></div>
-    <div class="tblbox auto" style="max-height:260px"><table id="sumtable">
+    <div class="tblbox auto" style="max-height:300px"><table id="sumtable">
       <thead><tr><th class="txt">RANK</th><th class="txt">OPERATOR</th>
-        <th>MARKET SHARE</th></tr></thead><tbody></tbody></table></div>
+        <th>MARKET SHARE</th></tr></thead><tbody></tbody>
+      <tfoot><tr><td class="txt" colspan="2">Σ TOTAL (TOP 10 MARKET SHARE)</td>
+        <td id="sumtotal"></td></tr></tfoot></table></div>
   </div>
   <div class="panel">
     <div class="tbar"><span class="ptitle">DETAILED FLEET STRUCTURE</span>
@@ -1835,6 +1821,8 @@ new Chart(document.getElementById("barchart"), {
 document.querySelector("#sumtable tbody").innerHTML = top10.map(r =>
   `<tr><td class="txt">${r[0]}</td><td class="txt">${flagImg(r[13])}${r[1]}</td>
    <td>${r[4] === null ? "-" : r[4].toFixed(1) + "%"}</td></tr>`).join("");
+document.getElementById("sumtotal").textContent =
+  top10.reduce((a, r) => a + (r[4] || 0), 0).toFixed(1) + "%";
 
 let dSort = {i: 0, dir: 1}, dFilter = "";
 function renderDetail(){
@@ -1938,36 +1926,13 @@ function makeChart(cfg){
   const api = {cfg, sel: (cfg.initial || []).slice(),
     canvas: document.getElementById(cfg.canvas),
     nav: document.getElementById(cfg.nav), navDrag: null, full: null,
-    chipsEl: cfg.chips ? document.getElementById(cfg.chips) : null};
-  if (api.chipsEl){
-    const build = () => {
-      api.chipsEl.innerHTML = cfg.keys.map((k, i) =>
-        `<span class="chip ${api.sel.includes(k) ? "on" : ""}" data-k="${k}"
-          style="${api.sel.includes(k) ? "" :
-            `border-color:${PALETTE[i % PALETTE.length]};color:${PALETTE[i % PALETTE.length]}`}">
-          ${k}</span>`).join("");
-      api.chipsEl.querySelectorAll(".chip").forEach(ch => ch.onclick = () => {
-        const k = ch.dataset.k;
-        if (api.sel.includes(k)){
-          if (api.sel.length > 1) api.sel = api.sel.filter(x => x !== k);
-        } else api.sel.push(k);
-        build(); api.chart.data.datasets = dsOf(api);
-        api.chart.update("none"); });
-    };
-    build();
-  }
+  };
   function dsOf(a){
-    if (a.cfg.fixed) return a.cfg.fixed.map(f => ({
+    return a.cfg.fixed.map(f => ({
       label: f.label, yAxisID: f.axis || "y",
       data: pts(CFG.series[f.key]).map(p => ({x: p[0], y: p[1]})),
       borderColor: f.color, backgroundColor: "transparent", borderWidth: 1.5,
       pointRadius: 0, pointHoverRadius: 3, tension: .15 }));
-    return a.sel.map(k => ({
-      label: k, data: pts(CFG.operators[a.cfg.source][k] || [])
-        .map(p => ({x: p[0], y: p[1]})),
-      borderColor: PALETTE[CFG.operators.names.indexOf(k) % PALETTE.length],
-      backgroundColor: "transparent", borderWidth: 1.4, pointRadius: 0,
-      pointHoverRadius: 3, tension: .15 }));
   }
   api.chart = new Chart(api.canvas, {
     type: "line", data: {datasets: dsOf(api)},
@@ -2016,8 +1981,7 @@ function makeChart(cfg){
   return api;
 }
 function navSeries(api){
-  if (api.cfg.navFixed) return pts(CFG.series[api.cfg.navFixed]);
-  return pts(CFG.operators[api.cfg.source][api.sel[0]] || []);
+  return pts(CFG.series[api.cfg.navFixed || "teu"]);
 }
 function drawNav(api){
   const cv = api.nav, ctx = cv.getContext("2d");
@@ -2082,13 +2046,6 @@ function resetWin(){
 makeChart({canvas: "c1", nav: "n1", dual: true, navFixed: "teu",
   fixed: [{key: "ships", label: "Active Ships (global)", color: "#ffa500"},
           {key: "teu", label: "Top100 Fleet (TEU)", color: "#79c0ff", axis: "y1"}]});
-makeChart({canvas: "c2", nav: "n2", dual: true, navFixed: "ob",
-  fixed: [{key: "ob", label: "Orderbook (TEU)", color: "#d2a8ff"},
-          {key: "share", label: "Top10 Share (%)", color: "#7ee787", axis: "y1"}]});
-makeChart({canvas: "c3", nav: "n3", chips: "chips1", source: "teu",
-  keys: CFG.operators.names, initial: CFG.operators.names.slice(0, 4)});
-makeChart({canvas: "c4", nav: "n4", chips: "chips2", source: "ob",
-  keys: CFG.operators.names, initial: CFG.operators.names.slice(0, 4)});
 CHARTS.forEach(drawNav);
 
 /* ---------- 초기 렌더 ---------- */
@@ -2142,19 +2099,7 @@ def build_detail_alphaliner(conn) -> None:
         return
     dates = sorted(glob)
     series = {k: [[d, glob[d][k]] for d in dates if glob[d].get(k) is not None]
-              for k in ("ships", "teu", "share", "ob")}
-
-    ops = {}
-
-    def _add(d, name, teu, ob):
-        name = _clean(name)
-        if not name:
-            return
-        e = ops.setdefault(name, {"teu": {}, "ob": {}})
-        for key, val in (("teu", teu), ("ob", ob)):
-            v = _clean(val)
-            if v is not None:
-                e[key][d] = v
+              for k in ("ships", "teu")}
 
     rowsby = {}
 
@@ -2164,7 +2109,6 @@ def build_detail_alphaliner(conn) -> None:
             _clean(rank), _clean(name), _clean(teu), _clean(ships), _clean(share),
             _clean(ow_t), _clean(ow_s), _clean(ch_t), _clean(ch_s), _clean(ch_pct),
             _clean(ob_t), _clean(ob_s), _clean(ob_pct), _clean(cc)])
-        _add(d, name, teu, ob_t)
 
     for r in conn.execute(
         "SELECT m.data_date AS d, d.rank AS rk, d.operator_name AS nm, NULL AS cc, "
@@ -2194,19 +2138,9 @@ def build_detail_alphaliner(conn) -> None:
         rowsby[d].sort(key=lambda x: (x[0] is None, x[0]))
 
     latest = dates[-1]
-    names = [n for n, _ in sorted(
-        ops.items(), key=lambda kv: (kv[1]["teu"].get(latest) or 0),
-        reverse=True)[:12]]
     shell = (ALPHALINER_SHELL.replace("__CONFIG__", json.dumps({
         "id": "alphaliner", "updated": latest,
         "series": series,
-        "operators": {
-            "names": names,
-            "teu": {n: [[d, ops[n]["teu"][d]] for d in sorted(ops[n]["teu"])]
-                    for n in names},
-            "ob": {n: [[d, ops[n]["ob"][d]] for d in sorted(ops[n]["ob"])]
-                   for n in names},
-        },
         "snap": {"dates": sorted(rowsby, reverse=True), "meta": meta,
                  "rows": rowsby},
     }, ensure_ascii=False, separators=(",", ":"))))
