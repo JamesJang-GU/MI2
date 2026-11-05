@@ -32,7 +32,7 @@ MODULES = [
         "title": "SCFI / BDI",
         "cmd": ["sea/sea.py", "--cron"],
         "timeout": 1800,
-        "page": None,  # 정적 상세 페이지 없음(로컬 Flask 전용)
+        "page": "sea/index.html",
     },
     {
         "id": "linerlytica",
@@ -445,6 +445,156 @@ SUMMARIZERS = {
 }
 
 
+SEA_PAGE = """<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEA DETAIL — SCFI / BDI</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#000;--panel:#0b0b0b;--panel2:#101010;--line:#2b2b2b;--amber:#ffa500;
+        --txt:#e6e6e6;--dim:#8f8f8f;--up:#ff4d4d;--down:#58a6ff;--flat:#9a9a9a;
+        --mono:Consolas,"Liberation Mono",Menlo,"Malgun Gothic",monospace}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--mono)}
+  .topbar{display:flex;align-items:center;gap:10px;padding:8px 12px;
+          border-bottom:2px solid var(--amber);
+          background:linear-gradient(180deg,#151000,#000)}
+  .code{color:#000;background:var(--amber);font-weight:700;font-size:11px;
+        padding:1px 6px;letter-spacing:.08em}
+  .ttl{color:var(--amber);font-size:13px;letter-spacing:.08em}
+  .ref{color:var(--dim);font-size:10px}
+  .back{margin-left:auto;color:var(--amber);border:1px solid var(--amber);
+        font-size:10px;padding:2px 8px;text-decoration:none;letter-spacing:.06em}
+  .back:hover{background:var(--amber);color:#000}
+  .wrap{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);padding:10px}
+  .ptitle{color:var(--amber);font-size:12px;letter-spacing:.08em;
+          border-bottom:1px dashed #2a2a2a;padding-bottom:6px;margin-bottom:8px}
+  .pval{color:#fff;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+  .pval em{font-style:normal;font-size:11px;color:var(--dim);margin-left:6px}
+  .chg{font-size:11px} .chg.up{color:var(--up)} .chg.down{color:var(--down)}
+  .chg.flat{color:var(--flat)}
+  .chartbox{height:300px;position:relative;margin:10px 0}
+  table{width:100%;border-collapse:collapse;font-size:11px;
+        font-variant-numeric:tabular-nums}
+  th{color:var(--dim);text-align:right;font-weight:400;border-bottom:1px solid var(--line);
+     padding:3px 6px;position:sticky;top:0;background:var(--panel)}
+  th:first-child{text-align:left}
+  td{border-bottom:1px dotted #1c1c1c;padding:3px 6px;text-align:right}
+  td:first-child{text-align:left;color:var(--dim)}
+  .tblbox{max-height:320px;overflow:auto;border:1px solid var(--line);background:var(--panel2)}
+  footer{color:var(--dim);font-size:10px;letter-spacing:.06em;padding:8px 12px 20px}
+  footer b{color:var(--amber);font-weight:400}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="code">SEA</span>
+  <span class="ttl">SCFI / BDI — DETAIL</span>
+  <span class="ref">REF __UPDATED__</span>
+  <a class="back" href="../index.html">← TERMINAL</a>
+</div>
+<div class="wrap">
+__PANELS__
+</div>
+<footer>
+  <span><b>SOURCE</b> SCFI=Shanghai Shipping Exchange · BDI=Baltic Exchange (KSG 경유)</span>
+  <span><b>AUTO-CRAWL</b> DAILY 00:00 KST · GENERATED __GENERATED__</span>
+</footer>
+<script>
+const DATA = __DATA__;
+function fmt(v){ return v === null || v === undefined ? "-" :
+  Number(v).toLocaleString("ko-KR", {maximumFractionDigits: 2}); }
+function chg(cur, prev){
+  if (prev === null || prev === undefined) return "";
+  const d = cur - prev, p = prev ? d / Math.abs(prev) * 100 : 0;
+  const dir = d > 0 ? "up" : d < 0 ? "down" : "flat";
+  const arrow = d > 0 ? "↗" : d < 0 ? "↘" : "─";
+  const sign = d > 0 ? "+" : "";
+  return `<span class="chg ${dir}">${arrow} (${sign}${fmt(d)}, ${sign}${p.toFixed(1)}%)</span>`;
+}
+document.querySelectorAll("section.panel").forEach((panel, i) => {
+  const key = panel.dataset.key;
+  const pts = DATA[key];
+  const last = pts[pts.length - 1], prev = pts[pts.length - 2];
+  panel.querySelector(".pval").innerHTML = fmt(last[1]) + "<em>" + last[0] + "</em>";
+  panel.querySelector(".chgslot").innerHTML = chg(last[1], prev && prev[1]);
+  const rows = pts.slice().reverse().slice(0, 120);
+  panel.querySelector("tbody").innerHTML = rows.map((p, idx) => {
+    const before = rows[idx + 1];
+    return `<tr><td>${p[0]}</td><td>${fmt(p[1])}</td>
+      <td>${before ? chg(p[1], before[1]) : ""}</td></tr>`;
+  }).join("");
+  new Chart(panel.querySelector("canvas"), {
+    type: "line",
+    data: {labels: pts.map(p => p[0]),
+      datasets: [{data: pts.map(p => p[1]), borderColor: "#ffa500",
+        backgroundColor: "rgba(255,165,0,.08)", fill: true, borderWidth: 1.4,
+        pointRadius: 0, pointHoverRadius: 3.5, tension: .2}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: {mode: "index", intersect: false},
+      plugins: {legend: {display: false},
+        tooltip: {displayColors: false, backgroundColor: "#111",
+          borderColor: "#3a3a3a", borderWidth: 1, titleColor: "#ffa500",
+          bodyColor: "#e6e6e6",
+          callbacks: {title: it => "REF " + it[0].label,
+                      label: it => " " + fmt(it.parsed.y)}}},
+      scales: {x: {ticks: {color: "#777", maxTicksLimit: 8,
+                           font: {size: 9, family: "Consolas"}},
+                   grid: {color: "#161616"}},
+               y: {ticks: {color: "#777", font: {size: 9, family: "Consolas"}},
+                   grid: {color: "#161616"}}}},
+  });
+});
+</script>
+</body>
+</html>
+"""
+
+SEA_PANEL = """  <section class="panel" data-key="__KEY__">
+    <div class="ptitle">__TITLE__</div>
+    <div class="pval">-</div>
+    <div class="chgslot"></div>
+    <div class="chartbox"><canvas></canvas></div>
+    <div class="tblbox"><table>
+      <thead><tr><th>DATE</th><th>VALUE</th><th>Δ DAILY</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </section>
+"""
+
+
+def build_sea_page(conn) -> None:
+    """sea/index.html 정적 상세 페이지 생성 (차트 + 일별 테이블)."""
+    data, panels = {}, []
+    for key, index_name, region, title in (
+        ("scfi", "SCFI", "종합", "SCFI — Shanghai Containerized Freight Index"),
+        ("bdi", "BDI", "BDI", "BDI — Baltic Dry Index"),
+    ):
+        rows = conn.execute(
+            "SELECT dt, value FROM index_raw "
+            "WHERE index_name = ? AND region = ? ORDER BY dt",
+            (index_name, region),
+        ).fetchall()
+        points = [[r["dt"], r2(r["value"])] for r in rows]
+        data[key] = points
+        panels.append(SEA_PANEL.replace("__KEY__", key).replace("__TITLE__", title))
+    updated = conn.execute("SELECT MAX(dt) FROM index_raw").fetchone()[0] or "-"
+    html = (SEA_PAGE
+            .replace("__PANELS__", "\n".join(panels))
+            .replace("__DATA__", json.dumps(data, ensure_ascii=False))
+            .replace("__UPDATED__", str(updated))
+            .replace("__GENERATED__", datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    path = ROOT / "sea" / "index.html"
+    temp = path.with_suffix(".html.tmp")
+    temp.write_text(html, encoding="utf-8")
+    temp.replace(path)
+    log(f"sea/index.html 작성 완료 ({path.stat().st_size:,} bytes)")
+
+
 def build_summary() -> dict:
     modules = []
     for module in MODULES:
@@ -464,6 +614,8 @@ def build_summary() -> dict:
             continue
         try:
             entry.update(SUMMARIZERS[module["id"]](conn))
+            if module["id"] == "sea":
+                build_sea_page(conn)
         except Exception as exc:  # noqa: BLE001
             entry["error"] = f"{type(exc).__name__}: {exc}"
         finally:
