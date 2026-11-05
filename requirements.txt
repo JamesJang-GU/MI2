@@ -1,0 +1,10 @@
+requests
+beautifulsoup4
+lxml
+pandas
+flask
+selenium
+webdriver-manager
+playwright
+openpyxl
+plotly

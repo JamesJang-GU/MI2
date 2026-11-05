@@ -9,7 +9,7 @@ Alphaliner TOP 100 Liner Operators Static Dashboard Crawler (GitHub Optimized)
 - Dynamic SQLite Schema Migration & Strict Pre-persist Quality Gate
 
 Output files:
-- alphaliner_history.db
+- alphaliner.db
 - alphaliner_data.json
 - index.html
 """
@@ -42,7 +42,7 @@ except Exception:
 # 1. Configuration & Constants
 # =========================================================
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "alphaliner_history.db"
+DB_PATH = BASE_DIR / "alphaliner.db"
 JSON_PATH = BASE_DIR / "alphaliner_data.json"
 HTML_PATH = BASE_DIR / "index.html"
 

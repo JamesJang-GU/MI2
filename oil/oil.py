@@ -10,7 +10,7 @@ Generated files:
   ├── index.html
   ├── shipandbunker_vlsfo.csv
   ├── bunker_forecast.csv
-  ├── bunker_price_data.db
+  ├── oil.db
   └── OilPrice/
       ├── index.html
       └── opinet_oil_prices.csv
@@ -53,7 +53,7 @@ app = Flask(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent
 
-DB_FILENAME = "bunker_price_data.db"
+DB_FILENAME = "oil.db"
 
 PRODUCT_TABLE = "product_vlsfo"
 FORECAST_TABLE = "bunker_forecast"

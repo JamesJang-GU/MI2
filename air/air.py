@@ -8,9 +8,9 @@ Data source
 - Infogram embedded chart
 
 Output
-- TAC Index/TAC_Index.db
-- TAC Index/tac_index_data.json
-- TAC Index/index.html
+- air/air.db
+- air/air_data.json
+- air/index.html
 
 Database schema
 - tac_master
@@ -42,8 +42,8 @@ except ImportError:
 # =============================================================================
 BASE_DIR = Path(__file__).resolve().parent
 
-DB_PATH = BASE_DIR / "TAC_Index.db"
-JSON_PATH = BASE_DIR / "tac_index_data.json"
+DB_PATH = BASE_DIR / "air.db"
+JSON_PATH = BASE_DIR / "air_data.json"
 HTML_PATH = BASE_DIR / "index.html"
 LOG_PATH = BASE_DIR / "tac_index_crawl.log"
 
@@ -227,7 +227,7 @@ def get_db_connection() -> sqlite3.Connection:
     Create and migrate SQLite database.
 
     Existing file
-    - TAC Index/TAC_Index.db
+    - air/air.db
 
     Preserved tables
     - tac_master
