@@ -13,7 +13,7 @@ GitHub Actions / 배포 정적 생성 모드:
     - macro_data.json
     - gscpi_data.json
     - dashboard_meta.json
-    - gdp_inflation_gscpi_cache.db
+    - macro.db
 """
 
 import argparse
@@ -59,7 +59,7 @@ logging.basicConfig(
 logger = logging.getLogger("MI_MacroEconomies")
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "gdp_inflation_gscpi_cache.db"
+DB_PATH = BASE_DIR / "macro.db"
 MACRO_JSON_PATH = BASE_DIR / "macro_data.json"
 GSCPI_JSON_PATH = BASE_DIR / "gscpi_data.json"
 META_JSON_PATH = BASE_DIR / "dashboard_meta.json"

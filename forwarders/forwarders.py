@@ -64,7 +64,7 @@ DEFAULT_URL = (
     "3pl-market-information/aas-top-25-global-freight-forwarders-list/"
 )
 
-DB_PATH = SCRIPT_DIR / "freight_forwarders_data.db"
+DB_PATH = SCRIPT_DIR / "forwarders.db"
 STATIC_HTML_PATH = SCRIPT_DIR / "index.html"
 STATIC_CSV_PATH = SCRIPT_DIR / "freight_forwarders_history.csv"
 

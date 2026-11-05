@@ -96,7 +96,7 @@ BASE_DIR = (
 )
 
 LOG_FILE = os.path.join(BASE_DIR, "index_crawl.log")
-DB_FILE = os.path.join(BASE_DIR, "index_history.db")
+DB_FILE = os.path.join(BASE_DIR, "sea.db")
 BASE_URL = "https://www.ksg.co.kr/"
 
 DEFAULT_INDEX_NAME = "SCFI"
@@ -214,6 +214,14 @@ def parse_args():
     parser.add_argument("--user", default=os.getenv("KSG_ID"))
     parser.add_argument("--password", default=os.getenv("KSG_PW"))
     parser.add_argument("--output", default=BASE_DIR)
+    parser.add_argument(
+        "--cron",
+        action="store_true",
+        help=(
+            "GitHub Actions 배치 모드: 웹 서버 없이 "
+            "전체 지수를 순차 동기화한 후 종료합니다."
+        ),
+    )
 
     parser.add_argument(
         "--driver-path",
@@ -4136,6 +4144,24 @@ if __name__ == "__main__":
     activate_file_logging()
     cleanup_invalid_regions()
 
+    if args.cron:
+        logger.info("[CRON] 배치 동기화 모드 시작 (웹 서버 미실행)")
+        failed = 0
+        for index_name in SUPPORTED_INDEXES:
+            logger.info("[CRON] %s 동기화 시작", index_name)
+            _sync_worker(index_name)
+            with sync_state_lock:
+                state = dict(SYNC_STATE)
+            logger.info(
+                "[CRON] %s 결과: %s",
+                index_name,
+                state.get("message"),
+            )
+            if state.get("status") != "SUCCESS":
+                failed += 1
+        logger.info("[CRON] 배치 동기화 완료 (실패 %d건)", failed)
+        sys.exit(1 if failed else 0)
+
     logger.info("Shipping Index Dashboard 시작")
     logger.info("Database: %s", DB_FILE)
     logger.info("Supported indexes: %s", SUPPORTED_INDEXES)
@@ -4182,59 +4208,3 @@ if __name__ == "__main__":
         use_reloader=False,
         threaded=True,
     )
-```
-
-## 적용된 주요 개선 사항
-
-- 소스 코드에서 KSG 계정 기본값을 제거하고 환경변수로만 받도록 변경했습니다.
-- 누락 패키지를 실행 중 자동 설치하는 로직을 제거했습니다.
-- `rows_added`와 `rows_updated`를 실제 신규·수정 건수로 구분합니다.
-- 기존 데이터의 `created_at`이 매번 변경되지 않도록 수정했습니다.
-- SQLite WAL, busy timeout 및 조회 인덱스를 적용했습니다.
-- 기존 DB에 `updated_at`, `rows_updated`가 없으면 자동 추가합니다.
-- 출력 폴더를 기준으로 기존 Excel 파일을 검색합니다.
-- Excel은 임시 파일에 작성한 뒤 원자적으로 교체합니다.
-- Refresh를 GET이 아닌 CSRF 보호된 POST 요청으로 변경했습니다.
-- Selenium 작업을 백그라운드 스레드에서 실행합니다.
-- 동기화 상태를 주기적으로 확인하고 완료 후 화면을 갱신합니다.
-- 선택적으로 Basic 인증을 적용할 수 있습니다.
-- 최고점·최저점 HTML의 외부 문자열을 escape 처리했습니다.
-- 날짜, 연도, 선 두께, 색상 등 요청값을 검증합니다.
-- DB 조회 시 날짜·연도·항로 조건을 SQL에 적용할 수 있도록 개선했습니다.
-- 로그 파일은 5MB 단위로 최대 5개까지 순환 보관합니다.
-- 다운로드 최대 행 수를 500,000건으로 제한했습니다.
-- BDI 차트 범례에 전체 지수 명칭을 표시합니다.
-
-### 패키지 설치
-
-```bash
-python -m pip install flask pandas plotly selenium openpyxl webdriver-manager kaleido
-```
-
-### Windows PowerShell 실행 예시
-
-```powershell
-$env:KSG_ID="사용자ID"
-$env:KSG_PW="비밀번호"
-$env:FLASK_SECRET_KEY="충분히-긴-임의의-비밀키"
-python app.py
-```
-
-외부 접속을 허용한다면 인증 정보도 설정하는 것이 좋습니다.
-
-```powershell
-$env:DASHBOARD_USER="admin"
-$env:DASHBOARD_PASSWORD="강력한비밀번호"
-python app.py --host 0.0.0.0
-```
-
-### Linux/macOS 실행 예시
-
-```bash
-export KSG_ID="사용자ID"
-export KSG_PW="비밀번호"
-export FLASK_SECRET_KEY="충분히-긴-임의의-비밀키"
-python app.py
-```
-
-기존 코드에 포함되어 공유된 비밀번호는 노출된 것으로 간주하고 변경하는 것이 안전합니다.

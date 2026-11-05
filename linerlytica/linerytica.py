@@ -78,7 +78,7 @@ except ImportError:
 # =============================================================================
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "Linerlytica.db"
+DB_PATH = BASE_DIR / "linerlytica.db"
 HTML_PATH = BASE_DIR / "index.html"
 
 TARGET_URL = os.getenv("LINERLYTICA_URL", "https://www.linerlytica.com/")

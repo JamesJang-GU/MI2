@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 실행 로그 / 임시 파일
+*.log
+*.tmp
+
+# SQLite WAL 사이드카 (커밋 금지)
+*.db-wal
+*.db-shm
+*.db-journal
+
+# OS
+.DS_Store
+Thumbs.db
