@@ -3,65 +3,95 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MI2 국제운송 통합 대시보드</title>
+<title>MI2 TERMINAL — 국제운송 지표</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root{
-    --bg:#0b0e14; --panel:#121722; --panel2:#0e131d; --line:#232b3a;
-    --txt:#e6edf3; --dim:#8b98ab; --accent:#ffb347; --up:#3fb950; --down:#f85149;
+    --bg:#000; --panel:#0b0b0b; --panel2:#101010; --line:#2b2b2b;
+    --amber:#ffa500; --amber2:#ff8c00; --txt:#e6e6e6; --dim:#8f8f8f;
+    --up:#00d26a; --down:#ff4d4d; --flat:#9a9a9a;
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,"Courier New",
+           "Malgun Gothic",monospace;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--txt);
-       font-family:"Segoe UI",system-ui,-apple-system,"Malgun Gothic",sans-serif}
-  header{padding:18px 20px 10px;border-bottom:1px solid var(--line);
-         position:sticky;top:0;background:rgba(11,14,20,.92);backdrop-filter:blur(6px);z-index:5}
-  h1{margin:0;font-size:19px;letter-spacing:.06em}
-  h1 span{color:var(--accent)}
-  .sub{color:var(--dim);font-size:12px;margin-top:6px;display:flex;flex-wrap:wrap;gap:8px}
-  .chip{border:1px solid var(--line);border-radius:20px;padding:2px 10px;font-size:11px}
-  .chip.ok{color:var(--up);border-color:#1d4429}
-  .chip.fail{color:var(--down);border-color:#5a2430}
-  main{padding:16px;display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;
-        padding:14px 16px;display:flex;flex-direction:column;gap:10px}
-  .card h2{margin:0;font-size:14px;letter-spacing:.04em;color:var(--accent);
-           display:flex;justify-content:space-between;align-items:center;gap:8px}
-  .card h2 a{color:var(--dim);font-size:11px;text-decoration:none;border:1px solid var(--line);
-             border-radius:6px;padding:2px 8px;white-space:nowrap}
-  .card h2 a:hover{color:var(--txt);border-color:var(--dim)}
-  .asof{color:var(--dim);font-size:11px}
-  .metrics{display:flex;flex-wrap:wrap;gap:8px}
-  .metric{background:var(--panel2);border:1px solid var(--line);border-radius:8px;
-          padding:8px 10px;min-width:104px;flex:1}
-  .metric .lbl{color:var(--dim);font-size:11px;margin-bottom:4px}
-  .metric .val{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
-  .metric .chg{font-size:11px;margin-left:6px}
-  .up{color:var(--up)} .down{color:var(--down)}
-  .chartbox{height:150px;position:relative}
-  table{width:100%;border-collapse:collapse;font-size:11.5px}
-  th,td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:right;
-        font-variant-numeric:tabular-nums;white-space:nowrap}
-  th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
-  th{color:var(--dim);font-weight:500}
-  .tblwrap{overflow-x:auto}
-  .tbl-label{color:var(--dim);font-size:11px;margin-bottom:2px}
-  .err{color:var(--down);font-size:12px}
-  footer{color:var(--dim);font-size:11px;padding:10px 20px 26px;text-align:center}
-  @media (max-width:480px){
-    main{grid-template-columns:1fr;padding:10px}
-    .metric .val{font-size:15px}
-  }
+  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--mono)}
+  /* ---- 상단 터미널 바 ---- */
+  .topbar{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;
+          padding:8px 12px;border-bottom:2px solid var(--amber);
+          background:linear-gradient(180deg,#151000,#000)}
+  .brand{color:var(--amber);font-weight:700;letter-spacing:.12em;font-size:15px}
+  .brand small{color:var(--dim);font-weight:400;letter-spacing:.05em;margin-left:8px}
+  .topmeta{color:var(--dim);font-size:11px;margin-left:auto;display:flex;
+           flex-wrap:wrap;gap:6px;align-items:center}
+  .chip{border:1px solid var(--line);padding:1px 7px;font-size:10px;color:var(--dim)}
+  .chip.ok{color:var(--up);border-color:#14532d}
+  .chip.fail{color:var(--down);border-color:#7f1d1d}
+  /* ---- 그리드 ---- */
+  .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:8px}
+  @media(max-width:1180px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:680px){.grid{grid-template-columns:1fr}}
+  /* ---- 박스 ---- */
+  .box{background:var(--panel);border:1px solid var(--line);display:flex;
+       flex-direction:column;min-width:0}
+  .box>header{display:flex;align-items:center;gap:8px;padding:6px 8px;
+              border-bottom:1px solid var(--line);background:var(--panel2)}
+  .code{color:#000;background:var(--amber);font-weight:700;font-size:11px;
+        padding:1px 6px;letter-spacing:.08em}
+  .ttl{color:var(--amber);font-size:12px;letter-spacing:.06em;white-space:nowrap;
+       overflow:hidden;text-overflow:ellipsis}
+  .go{margin-left:auto;color:var(--amber);border:1px solid var(--amber2);
+      font-size:10px;padding:2px 7px;text-decoration:none;letter-spacing:.05em;
+      white-space:nowrap}
+  .go:hover{background:var(--amber);color:#000}
+  .go.off{color:var(--dim);border-color:var(--line);cursor:default}
+  .body{padding:8px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .asof{color:var(--dim);font-size:10px;letter-spacing:.04em}
+  /* 핵심 숫자 */
+  .head .lbl{color:var(--dim);font-size:11px;margin-bottom:3px;white-space:nowrap;
+             overflow:hidden;text-overflow:ellipsis}
+  .head .val{color:#fff;font-size:26px;font-weight:700;line-height:1.1;
+             font-variant-numeric:tabular-nums;word-break:break-all}
+  .head .val em{font-style:normal;font-size:12px;color:var(--dim);margin-left:4px}
+  .chg{font-size:11px;margin-top:3px;font-variant-numeric:tabular-nums}
+  .chg.up{color:var(--up)} .chg.down{color:var(--down)} .chg.flat{color:var(--flat)}
+  /* 서브 지표 행 */
+  .subrow{display:flex;justify-content:space-between;gap:8px;border-top:1px dashed #222;
+          padding-top:6px;font-size:11.5px;align-items:baseline}
+  .subrow .lbl{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .subrow .v{color:var(--txt);font-variant-numeric:tabular-nums;text-align:right}
+  .subrow .chg{margin:0 0 0 6px;display:inline}
+  /* SCFI/BDI 2단 */
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .duo .cell{background:var(--panel2);border:1px solid var(--line);padding:7px;
+             display:flex;flex-direction:column;gap:5px;min-width:0}
+  .duo .val{color:#fff;font-size:21px;font-weight:700;font-variant-numeric:tabular-nums}
+  /* 차트 */
+  .chartbox{height:120px;position:relative;margin-top:auto}
+  .duo .chartbox{height:105px}
+  /* 시스템 패널 */
+  .sysrow{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;
+          border-bottom:1px dotted #1f1f1f}
+  .sysrow .st.ok{color:var(--up)} .sysrow .st.fail{color:var(--down)}
+  .sysrow .t{color:var(--dim)}
+  footer{color:var(--dim);font-size:10px;letter-spacing:.08em;padding:6px 12px 18px;
+         border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px}
+  footer b{color:var(--amber);font-weight:400}
+  .err{color:var(--down);font-size:11px}
 </style>
 </head>
 <body>
-<header>
-  <h1>MI2 <span>국제운송 통합 대시보드</span></h1>
-  <div class="sub" id="meta">데이터 로딩 중…</div>
-</header>
-<main id="grid"></main>
-<footer id="foot"></footer>
+<div class="topbar">
+  <span class="brand">MI2 <small>INTERNATIONAL TRANSPORT TERMINAL</small></span>
+  <span class="topmeta" id="meta">LOADING…</span>
+</div>
+<main class="grid" id="grid"></main>
+<footer>
+  <span><b>AUTO-CRAWL</b> DAILY 00:00 KST · GITHUB ACTIONS</span>
+  <span><b>↗/↘</b> 직전 크롤링 대비 증감 (숫자, %)</span>
+  <span id="footmeta"></span>
+</footer>
 <script>
-const COLORS = ["#ffb347","#58a6ff","#3fb950","#bc8cff","#f778ba","#79c0ff"];
+const AMBER = "#ffa500";
 
 function fmt(v){
   if (v === null || v === undefined) return "-";
@@ -69,100 +99,129 @@ function fmt(v){
   if (!isFinite(n)) return String(v);
   return n.toLocaleString("ko-KR", {maximumFractionDigits: 2});
 }
-function chgHtml(m){
-  if (m.change === null || m.change === undefined) return "";
-  const up = m.change >= 0;
-  const unit = m.change_unit === "%" ? "%" : (m.change_unit === "p" ? "p" : "");
-  return `<span class="chg ${up ? "up" : "down"}">${up ? "▲" : "▼"}${fmt(Math.abs(m.change))}${unit}</span>`;
+/* 직전 크롤링 대비: ↗ / ↘ / ─ + (숫자, 0.0%▲/▼) */
+function chgHtml(m, withLabel){
+  if (m.change === null || m.change === undefined || m.pct === null || m.pct === undefined)
+    return `<span class="chg flat">─</span>`;
+  const dir = m.change > 0 ? "up" : m.change < 0 ? "down" : "flat";
+  const arrow = m.change > 0 ? "↗" : m.change < 0 ? "↘" : "─";
+  const mark = m.change > 0 ? "▲" : m.change < 0 ? "▼" : "";
+  const sign = m.change > 0 ? "+" : "";
+  return `<span class="chg ${dir}">${arrow} (${sign}${fmt(m.change)}, ${sign}${m.pct.toFixed(1)}%${mark})</span>`;
 }
-
-function card(mod, run){
-  const el = document.createElement("section");
-  el.className = "card";
-  const link = mod.page
-    ? `<a href="${mod.page}">상세 ↳</a>` : "";
-  const status = run
-    ? (run.ok ? `<span class="chip ok">크롤링 OK</span>`
-              : `<span class="chip fail">크롤링 실패</span>`)
-    : "";
-  const metrics = (mod.metrics || []).map(m => `
-    <div class="metric">
-      <div class="lbl">${m.label}${m.asof ? ` <span class="asof">(${m.asof})</span>` : ""}</div>
-      <div class="val">${fmt(m.value)}${chgHtml(m)}</div>
-    </div>`).join("");
-  const tables = (mod.tables || []).map(t => `
-    <div>
-      <div class="tbl-label">${t.label}</div>
-      <div class="tblwrap"><table>
-        <tr>${t.columns.map(c => `<th>${c}</th>`).join("")}</tr>
-        ${t.rows.map(r => `<tr>${r.map(c => `<td>${fmt(c)}</td>`).join("")}</tr>`).join("")}
-      </table></div>
-    </div>`).join("");
-  const err = mod.error ? `<div class="err">요약 추출 실패: ${mod.error}</div>` : "";
-  el.innerHTML = `
-    <h2>${mod.title} ${status}${link}</h2>
-    <div class="asof">기준일: ${mod.updated || "-"}</div>
-    <div class="metrics">${metrics || '<span class="asof">표시 데이터 없음</span>'}</div>
-    ${(mod.series && mod.series.length) ? '<div class="chartbox"><canvas></canvas></div>' : ""}
-    ${tables}${err}`;
-  return el;
-}
-
-function drawChart(el, series){
-  const canvas = el.querySelector("canvas");
-  if (!canvas || typeof Chart === "undefined") return;
-  const labels = series[0].points.map(p => p[0]);
+function chart(canvas, series, height){
+  if (!canvas || typeof Chart === "undefined" || !series || !series.points.length) return;
   new Chart(canvas, {
     type: "line",
     data: {
-      labels,
-      datasets: series.slice(0, 3).map((s, i) => ({
-        label: s.label,
-        data: s.points.map(p => p[1]),
-        borderColor: COLORS[i % COLORS.length],
-        backgroundColor: "transparent",
-        borderWidth: 1.6,
-        pointRadius: 0,
-        tension: .25,
-      })),
+      labels: series.points.map(p => p[0]),
+      datasets: [{
+        label: series.label,
+        data: series.points.map(p => p[1]),
+        borderColor: AMBER, backgroundColor: "rgba(255,165,0,.08)",
+        fill: true, borderWidth: 1.4, pointRadius: 0, tension: .2,
+      }],
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: {mode: "index", intersect: false},
-      plugins: {legend: {labels: {color: "#8b98ab", boxWidth: 10, font: {size: 10}}}},
+      responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: {legend: {display: false},
+        tooltip: {displayColors: false,
+          callbacks: {title: i => i[0].label,
+                      label: i => `${series.label}: ${fmt(i.parsed.y)}`}}},
       scales: {
-        x: {ticks: {color: "#8b98ab", maxTicksLimit: 6, font: {size: 9}},
-            grid: {color: "#1a2130"}},
-        y: {ticks: {color: "#8b98ab", font: {size: 9}}, grid: {color: "#1a2130"}},
+        x: {ticks: {color: "#777", maxTicksLimit: 5, font: {size: 9, family: "Consolas"}},
+            grid: {color: "#161616"}},
+        y: {ticks: {color: "#777", maxTicksLimit: 4, font: {size: 9, family: "Consolas"}},
+            grid: {color: "#161616"}},
       },
     },
   });
 }
-
+function headMetric(m){
+  return `<div class="head">
+    <div class="lbl">${m.label}</div>
+    <div class="val">${fmt(m.value)}</div>
+    ${chgHtml(m)}
+    <div class="asof">REF ${m.asof || "-"}</div>
+  </div>`;
+}
+function subMetric(m){
+  return `<div class="subrow">
+    <span class="lbl">${m.label} <span class="asof">(${m.asof || "-"})</span></span>
+    <span class="v">${fmt(m.value)}${chgHtml(m)}</span>
+  </div>`;
+}
+function boxShell(mod, inner){
+  const btn = mod.page
+    ? `<a class="go" href="${mod.page}" title="상세 내역">DETAIL ↗</a>`
+    : `<span class="go off" title="상세는 로컬 Flask 서버에서 제공">LOCAL</span>`;
+  return `<section class="box">
+    <header><span class="code">${mod.id.toUpperCase()}</span>
+      <span class="ttl">${mod.title}</span>${btn}</header>
+    <div class="body">${inner}</div>
+  </section>`;
+}
+function seaBox(mod){
+  const cells = mod.metrics.slice(0, 2).map((m, i) => `
+    <div class="cell">
+      <div class="lbl" style="color:var(--dim);font-size:11px">${m.label}</div>
+      <div class="val">${fmt(m.value)}</div>
+      ${chgHtml(m)}
+      <div class="asof">REF ${m.asof || "-"}</div>
+      <div class="chartbox"><canvas data-s="${i}"></canvas></div>
+    </div>`).join("");
+  const el = document.createElement("div");
+  el.innerHTML = boxShell(mod,
+    `<div class="duo">${cells}</div>` +
+    (mod.error ? `<div class="err">${mod.error}</div>` : ""));
+  el.querySelectorAll("canvas").forEach(cv =>
+    chart(cv, mod.series[Number(cv.dataset.s) || 0]));
+  return el.firstElementChild;
+}
+function stdBox(mod){
+  const head = mod.metrics[0] ? headMetric(mod.metrics[0]) :
+    `<div class="asof">표시 데이터 없음</div>`;
+  const subs = mod.metrics.slice(1).map(subMetric).join("");
+  const el = document.createElement("div");
+  el.innerHTML = boxShell(mod,
+    head + subs +
+    `<div class="chartbox"><canvas></canvas></div>` +
+    (mod.error ? `<div class="err">${mod.error}</div>` : ""));
+  chart(el.querySelector("canvas"), mod.series && mod.series[0]);
+  return el.firstElementChild;
+}
+function sysPanel(status){
+  const rows = (status && status.runs || []).map(r => `
+    <div class="sysrow">
+      <span class="st ${r.ok ? "ok" : "fail"}">${r.ok ? "OK  " : "FAIL"} ${r.module.toUpperCase()}</span>
+      <span class="t">${(r.finished_at || "").slice(5, 16)} · ${r.seconds}s</span>
+    </div>`).join("") || `<div class="asof">실행 기록 없음 (첫 크롤링 대기)</div>`;
+  return boxShell({id: "sys", title: "CRAWL STATUS", page: null},
+    rows + `<div class="asof" style="margin-top:auto">LAST RUN ${status ? status.generated_at : "-"}</div>`);
+}
 async function load(){
   const grid = document.getElementById("grid");
   let summary = null, status = null;
-  try { summary = await (await fetch("summary.json?t=" + Date.now())).json(); }
-  catch (e) { document.getElementById("meta").textContent = "summary.json 을 불러올 수 없습니다. run_all.py 를 먼저 실행하세요."; return; }
+  try {
+    summary = await (await fetch("summary.json?t=" + Date.now())).json();
+  } catch (e) {
+    document.getElementById("meta").textContent =
+      "summary.json 없음 — run_all.py 실행 필요";
+    return;
+  }
   try { status = await (await fetch("status.json?t=" + Date.now())).json(); } catch (e) {}
-  const runs = {};
-  (status && status.runs || []).forEach(r => runs[r.module] = r);
-
   const chips = (summary.modules || []).map(m => {
-    const r = runs[m.id];
-    if (!r) return "";
-    return `<span class="chip ${r.ok ? "ok" : "fail"}">${m.id} ${r.ok ? "OK" : "FAIL"}</span>`;
+    const r = (status && status.runs || []).find(x => x.module === m.id);
+    return r ? `<span class="chip ${r.ok ? "ok" : "fail"}">${m.id.toUpperCase()}</span>` : "";
   }).join("");
   document.getElementById("meta").innerHTML =
-    `데이터 생성: ${summary.generated_at || "-"} ${status ? `· 크롤링: ${status.generated_at}` : ""} ${chips}`;
-
+    `DATA ${summary.generated_at || "-"} ${chips}`;
+  document.getElementById("footmeta").textContent =
+    `SUMMARY GENERATED ${summary.generated_at || "-"}`;
   (summary.modules || []).forEach(mod => {
-    const el = card(mod, runs[mod.id]);
-    grid.appendChild(el);
-    if (mod.series && mod.series.length) drawChart(el, mod.series);
+    grid.appendChild(mod.id === "sea" ? seaBox(mod) : stdBox(mod));
   });
-  document.getElementById("foot").textContent =
-    "MI2 · 매일 KST 00:00 GitHub Actions 자동 크롤링 · 모듈별 상세 페이지는 카드 우측 상단 링크";
+  grid.appendChild(sysPanel(status));
 }
 load();
 </script>
