@@ -476,13 +476,18 @@ SEA_SHELL = """<!DOCTYPE html>
         font-size:10px;padding:2px 8px;text-decoration:none;letter-spacing:.06em}
   .back:hover{background:var(--amber);color:#000}
   .wrap{padding:8px;display:flex;flex-direction:column;gap:8px}
-  .charts{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
-  @media(max-width:980px){.charts{grid-template-columns:1fr}}
+  /* 좌우 패널 7행(헤더/칩/차트/스트립/가이드/필터/테이블) subgrid 정렬 */
+  .charts{display:grid;grid-template-columns:1fr 1fr;
+          grid-template-rows:repeat(7,auto);gap:8px}
   .panel{background:var(--panel);border:1px solid var(--line);padding:8px;
-         display:flex;flex-direction:column;gap:6px;min-width:0}
+         display:grid;grid-template-rows:subgrid;grid-row:span 7;gap:6px;min-width:0}
+  @media(max-width:980px){
+    .charts{grid-template-columns:1fr;grid-template-rows:none}
+    .panel{display:flex;flex-direction:column;grid-row:auto}
+  }
   .phead{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
   .ptitle{color:var(--amber);font-size:12px;letter-spacing:.08em}
-  .chips{display:flex;flex-wrap:wrap;gap:4px}
+  .chips{display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
   .chip{border:1px solid var(--line);color:var(--dim);font-size:10px;
         padding:1px 7px;cursor:pointer;user-select:none}
   .chip.on{color:#000;background:var(--amber);border-color:var(--amber);font-weight:700}
@@ -526,11 +531,11 @@ SEA_SHELL = """<!DOCTYPE html>
   <div class="charts">
     <div class="panel">
       <div class="phead"><span class="ptitle">SCFI — 권역 비교</span>
-        <span class="chips" id="chips-scfi"></span>
         <span class="spacer"></span>
         <button class="btn" data-reset="ds">FULL</button>
         <button class="btn" data-dl="ds-csv">CSV ↓</button>
         <button class="btn" data-dl="ds-xlsx">XLSX ↓</button></div>
+      <div class="chips" id="chips-scfi"></div>
       <div class="chartbox"><canvas id="c-ds"></canvas></div>
       <div class="navbox"><canvas id="n-ds-nav"></canvas></div>
       <div class="hint">하단 스트립 드래그=기간 선택 · 차트 WHEEL=ZOOM · ALT+DRAG=PAN · 더블클릭=전체</div>
@@ -547,11 +552,11 @@ SEA_SHELL = """<!DOCTYPE html>
     </div>
     <div class="panel">
       <div class="phead"><span class="ptitle">BDI — 지수 비교</span>
-        <span class="chips" id="chips-bdi"></span>
         <span class="spacer"></span>
         <button class="btn" data-reset="db">FULL</button>
         <button class="btn" data-dl="db-csv">CSV ↓</button>
         <button class="btn" data-dl="db-xlsx">XLSX ↓</button></div>
+      <div class="chips" id="chips-bdi"></div>
       <div class="chartbox"><canvas id="c-db"></canvas></div>
       <div class="navbox"><canvas id="n-db-nav"></canvas></div>
       <div class="hint">하단 스트립 드래그=기간 선택 · 차트 WHEEL=ZOOM · ALT+DRAG=PAN · 더블클릭=전체</div>
