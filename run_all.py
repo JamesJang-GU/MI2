@@ -1485,99 +1485,541 @@ def build_detail_linerlytica(conn) -> None:
     })
 
 
+ALPHALINER_SHELL = """<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ALPHALINER TOP 100 — DETAIL</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root{--bg:#000;--panel:#0b0b0b;--panel2:#101010;--line:#2b2b2b;--amber:#ffa500;
+        --txt:#e6e6e6;--dim:#8f8f8f;--up:#ff4d4d;--down:#58a6ff;--flat:#9a9a9a;
+        --mono:Consolas,"Liberation Mono",Menlo,"Malgun Gothic",monospace}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--mono)}
+  .topbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;
+          border-bottom:2px solid var(--amber);
+          background:linear-gradient(180deg,#151000,#000)}
+  .code{color:#000;background:var(--amber);font-weight:700;font-size:11px;
+        padding:1px 6px;letter-spacing:.08em}
+  .ttl{color:var(--amber);font-size:13px;letter-spacing:.08em}
+  .ref{color:var(--dim);font-size:10px}
+  .btn{color:var(--amber);border:1px solid var(--amber);background:none;
+       font-family:var(--mono);font-size:10px;padding:2px 9px;cursor:pointer;
+       letter-spacing:.06em}
+  .btn:hover{background:var(--amber);color:#000}
+  .back{margin-left:auto;color:var(--amber);border:1px solid var(--amber);
+        font-size:10px;padding:2px 8px;text-decoration:none;letter-spacing:.06em}
+  .back:hover{background:var(--amber);color:#000}
+  .wrap{padding:8px;display:flex;flex-direction:column;gap:8px}
+  /* 공식 페이지 Global figures 밴드 */
+  .band{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  @media(max-width:980px){.band{grid-template-columns:repeat(2,1fr)}}
+  .bcard{background:var(--panel);border:1px solid var(--line);padding:8px 10px;
+         display:flex;flex-direction:column;gap:3px}
+  .blabel{color:var(--dim);font-size:10px;letter-spacing:.1em}
+  .bval{color:#fff;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+  .bval em{font-style:normal;font-size:10px;color:var(--dim);margin-left:5px}
+  .chg{font-size:11px} .chg.up{color:var(--up)} .chg.down{color:var(--down)}
+  .chg.flat{color:var(--flat)}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media(max-width:980px){.charts{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);padding:8px;
+         display:flex;flex-direction:column;gap:6px;min-width:0}
+  .panel.wide{grid-column:1/-1}
+  @media(max-width:980px){.panel.wide{grid-column:auto}}
+  .phead{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .ptitle{color:var(--amber);font-size:12px;letter-spacing:.08em}
+  .chips{display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
+  .chip{border:1px solid var(--line);color:var(--dim);font-size:10px;
+        padding:1px 7px;cursor:pointer;user-select:none}
+  .chip.on{color:#000;background:var(--amber);border-color:var(--amber);font-weight:700}
+  .spacer{margin-left:auto}
+  .chartbox{height:240px;position:relative}
+  .navbox{height:40px;position:relative;border:1px solid var(--line);
+          background:#0d0d0d;cursor:crosshair}
+  .navbox canvas{width:100%;height:100%;display:block}
+  .hint{color:#555;font-size:9px;letter-spacing:.05em}
+  .tbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .tbar input,.tbar select{background:var(--panel2);border:1px solid var(--line);
+      color:var(--txt);font-family:var(--mono);font-size:10px;padding:2px 6px}
+  .tbar input{width:150px}
+  .note{color:var(--dim);font-size:10px}
+  .tblbox{height:430px;overflow:auto;border:1px solid var(--line);background:var(--panel2)}
+  table{width:100%;border-collapse:collapse;font-size:11px;
+        font-variant-numeric:tabular-nums}
+  th{color:var(--dim);text-align:right;font-weight:400;border-bottom:1px solid var(--line);
+     padding:3px 6px;position:sticky;top:0;background:var(--panel2);cursor:pointer;
+     white-space:nowrap;z-index:2}
+  th.txt,td.txt{text-align:left}
+  th:hover{color:var(--amber)} th.sorted{color:var(--amber)}
+  td{border-bottom:1px dotted #1c1c1c;padding:3px 6px;text-align:right;white-space:nowrap}
+  td:first-child{color:var(--dim)}
+  .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+  .barcell{width:170px}
+  .barwrap{display:flex;height:10px;background:#141414;border:1px solid #222}
+  .bar-ex{background:#58a6ff} .bar-ob{background:#9ecbff}
+  .legend{display:flex;gap:12px;align-items:center;color:var(--dim);font-size:10px}
+  .sw{display:inline-block;width:10px;height:10px;margin-right:4px;vertical-align:-1px}
+  footer{color:var(--dim);font-size:10px;letter-spacing:.06em;padding:8px 12px 20px;
+         display:flex;flex-wrap:wrap;gap:12px}
+  footer b{color:var(--amber);font-weight:400}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="code">ALPHALINER</span>
+  <span class="ttl">TOP 100 — FLEET &amp; ORDERBOOK TERMINAL</span>
+  <span class="ref" id="ref"></span>
+  <a class="back" href="../index.html">← TERMINAL</a>
+</div>
+<div class="wrap">
+  <div class="band" id="band"></div>
+  <div class="charts" id="charts"></div>
+  <div class="panel" id="rankpanel">
+    <div class="tbar">
+      <span class="ptitle">TOP 100 OPERATORS — Existing / Owned / Chartered / Orderbook</span>
+      <select id="snapdate"></select>
+      <input id="rkfilter" placeholder="filter: operator">
+      <span class="note" id="rknote"></span>
+      <span class="legend"><span><span class="sw" style="background:#58a6ff"></span>Existing fleet</span>
+        <span><span class="sw" style="background:#9ecbff"></span>Orderbook</span></span>
+      <span class="spacer"></span>
+      <button class="btn" id="dlcsv">CSV ↓</button>
+      <button class="btn" id="dlxlsx">XLSX ↓</button>
+    </div>
+    <div class="tblbox"><table id="rktable">
+      <thead><tr id="rkhead"></tr></thead><tbody id="rkbody"></tbody>
+    </table></div>
+  </div>
+</div>
+<footer>
+  <span><b>SOURCE</b> Alphaliner Public Top100 (axsmarine) · 매일 00:00 KST 크롤 누적</span>
+  <span id="gen"></span>
+</footer>
+<script>
+const PALETTE = ["#ffa500", "#79c0ff", "#d2a8ff", "#7ee787", "#ff7b72", "#ffa657",
+                 "#a5d6ff", "#f778ba", "#d4a72c", "#8ddb8c", "#ff9bce", "#9ecbff"];
+const CFG = __CONFIG__;
+let WIN = null, SYNC = false;
+const CHARTS = [];
+
+function fmt(v){ return v === null || v === undefined ? "-" :
+  Number(v).toLocaleString("ko-KR", {maximumFractionDigits: 2}); }
+function sign(v){ if (v === null || v === undefined) return "-";
+  return (v > 0 ? "+" : "") + fmt(v); }
+function cls(v){ return v === null || v === undefined ? "flat" :
+  v > 0 ? "up" : v < 0 ? "down" : "flat"; }
+function ms(d){ return Date.parse(d + "T00:00:00Z"); }
+function dstr(t){ return new Date(t).toISOString().slice(0, 10); }
+function flagImg(cc){
+  const c = String(cc || "").toUpperCase().slice(0, 2);
+  if (!/^[A-Z]{2}$/.test(c)) return "";
+  const cps = [...c].map(ch => (0x1F1E6 + ch.charCodeAt(0) - 65).toString(16)).join("-");
+  return `<img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${cps}.svg"
+    alt="${c}" style="width:16px;height:12px;vertical-align:-2px;margin-right:6px;
+    border:1px solid #333;background:#111">`;
+}
+function pts(series){ return series.map(p => [ms(p[0]), p[1]]); }
+
+/* ---------- Global figures 밴드 ---------- */
+function bandCard(label, series, unit){
+  const p = pts(series);
+  const last = p[p.length - 1], prev = p[p.length - 2];
+  const ch = prev ? last[1] - prev[1] : null;
+  const pc = prev && prev[1] ? ch / Math.abs(prev[1]) * 100 : null;
+  const arrow = ch === null ? "" : ch > 0 ? "↗" : ch < 0 ? "↘" : "─";
+  return `<div class="bcard"><span class="blabel">${label}</span>
+    <span class="bval">${fmt(last[1])}<em>${unit} · ${dstr(last[0])}</em></span>
+    <span class="chg ${cls(ch)}">${arrow} (${sign(ch)}, ${
+      pc === null ? "-" : (pc > 0 ? "+" : "") + pc.toFixed(1)}%) vs ${
+      prev ? dstr(prev[0]) : "-"}</span></div>`;
+}
+document.getElementById("band").innerHTML =
+  bandCard("ACTIVE SHIPS (GLOBAL)", CFG.series.ships, "척") +
+  bandCard("TOP100 FLEET", CFG.series.teu, "TEU") +
+  bandCard("ORDERBOOK", CFG.series.ob, "TEU") +
+  bandCard("TOP10 SHARE", CFG.series.share, "%");
+document.getElementById("ref").textContent = "REF " + (CFG.updated || "-");
+document.getElementById("gen").innerHTML =
+  "<b>GENERATED</b> " + (CFG.generated || "-");
+if (window.ChartZoom) Chart.register(window.ChartZoom);
+
+/* ---------- 차트 + 기간 브러시 (윈도우 공유) ---------- */
+function makeChart(cfg){
+  const wrap = document.createElement("div");
+  wrap.className = "panel" + (cfg.wide ? " wide" : "");
+  wrap.innerHTML = `
+    <div class="phead"><span class="ptitle">${cfg.title}</span>
+      <span class="chips"></span><span class="spacer"></span>
+      <button class="btn">FULL</button></div>
+    <div class="chartbox"><canvas></canvas></div>
+    <div class="navbox"><canvas></canvas></div>
+    <div class="hint">하단 스트립 드래그=기간 선택(전 차트 동기화) · WHEEL=ZOOM · ALT+DRAG=PAN · 더블클릭=전체</div>`;
+  document.getElementById("charts").appendChild(wrap);
+  const api = {cfg, sel: (cfg.initial || cfg.keys || []).slice(), wrap,
+    chipsEl: wrap.querySelector(".chips"),
+    canvas: wrap.querySelectorAll("canvas")[0],
+    nav: wrap.querySelectorAll("canvas")[1], navDrag: null, full: null};
+  if (cfg.keys){
+    const build = () => {
+      api.chipsEl.innerHTML = cfg.keys.map((k, i) =>
+        `<span class="chip ${api.sel.includes(k) ? "on" : ""}" data-k="${k}"
+          style="${api.sel.includes(k) ? "" :
+            `border-color:${PALETTE[i % PALETTE.length]};color:${PALETTE[i % PALETTE.length]}`}">
+          ${k}</span>`).join("");
+      api.chipsEl.querySelectorAll(".chip").forEach(ch => ch.onclick = () => {
+        const k = ch.dataset.k;
+        if (api.sel.includes(k)){
+          if (api.sel.length > 1) api.sel = api.sel.filter(x => x !== k);
+        } else api.sel.push(k);
+        build(); api.chart.data.datasets = datasetsOf(api);
+        api.chart.update("none"); });
+    };
+    build();
+  }
+  function datasetsOf(a){
+    if (a.cfg.fixed){
+      return a.cfg.fixed.map(f => ({
+        label: f.label, yAxisID: f.axis || "y",
+        data: pts(CFG.series[f.key]).map(p => ({x: p[0], y: p[1]})),
+        borderColor: f.color, backgroundColor: "transparent", borderWidth: 1.5,
+        pointRadius: 0, pointHoverRadius: 3, tension: .15 }));
+    }
+    const src = a.cfg.source;
+    return a.sel.map((k, i) => ({
+      label: k, data: pts(CFG.operators[src][k] || []).map(p => ({x: p[0], y: p[1]})),
+      borderColor: PALETTE[CFG.operators.names.indexOf(k) % PALETTE.length],
+      backgroundColor: "transparent", borderWidth: 1.4, pointRadius: 0,
+      pointHoverRadius: 3, tension: .15 }));
+  }
+  api.datasetsOf = datasetsOf;
+  api.chart = new Chart(api.canvas, {
+    type: "line", data: {datasets: datasetsOf(api)},
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: {mode: "nearest", intersect: false},
+      plugins: {
+        legend: {display: !!cfg.keys, position: "top",
+                 labels: {color: "#8f8f8f", boxWidth: 8, font: {size: 9}}},
+        tooltip: {displayColors: false, backgroundColor: "#111",
+          borderColor: "#3a3a3a", borderWidth: 1, titleColor: "#ffa500",
+          bodyColor: "#e6e6e6",
+          callbacks: {title: it => dstr(it[0].parsed.x),
+                      label: it => ` ${it.dataset.label} ${fmt(it.parsed.y)}`}},
+        zoom: {zoom: {wheel: {enabled: true}, pinch: {enabled: true},
+            drag: {enabled: true, backgroundColor: "rgba(255,165,0,.12)",
+                   borderColor: "#ffa500", borderWidth: 1}, mode: "x",
+            onZoomComplete: c => onWin(c.chart)},
+          pan: {enabled: true, mode: "x", modifierKey: "Alt",
+                onPanComplete: c => onWin(c.chart)},
+          limits: {x: {min: "original", max: "original"}}},
+      },
+      scales: {
+        x: {type: "linear", ticks: {color: "#777", maxTicksLimit: 7,
+            callback: v => dstr(v), font: {size: 9, family: "Consolas"}},
+            grid: {color: "#161616"}},
+        y: {position: "left", ticks: {color: "#777",
+            font: {size: 9, family: "Consolas"}}, grid: {color: "#161616"}},
+        y1: {position: "right", display: !!cfg.dual,
+             ticks: {color: "#79c0ff", font: {size: 9, family: "Consolas"}},
+             grid: {drawOnChartArea: false}},
+      },
+    },
+  });
+  api.full = [api.chart.scales.x.min, api.chart.scales.x.max];
+  wrap.querySelector("button").onclick = () => resetWin();
+  api.canvas.ondblclick = () => resetWin();
+  api.nav.addEventListener("pointerdown", e => {
+    api.nav.setPointerCapture(e.pointerId);
+    api.navDrag = {x0: e.offsetX, x1: e.offsetX}; });
+  api.nav.addEventListener("pointermove", e => {
+    if (api.navDrag){ api.navDrag.x1 = e.offsetX; drawNav(api); } });
+  api.nav.addEventListener("pointerup", e => {
+    if (!api.navDrag) return;
+    const {x0, x1} = api.navDrag; api.navDrag = null;
+    if (Math.abs(x1 - x0) < 5){ drawNav(api); return; }
+    applyWin(api.navX2T(Math.min(x0, x1)), api.navX2T(Math.max(x0, x1))); });
+  api.navX2T = x => api.full[0] + (x / (api.nav.clientWidth || 1)) *
+    (api.full[1] - api.full[0]);
+  api.navT2X = t => ((t - api.full[0]) / (api.full[1] - api.full[0])) *
+    (api.nav.clientWidth || 1);
+  CHARTS.push(api);
+  return api;
+}
+function navSeries(api){
+  if (api.cfg.navFixed) return pts(CFG.series[api.cfg.navFixed]);
+  const k = api.sel[0];
+  return pts(CFG.operators[api.cfg.source][k] || []);
+}
+function drawNav(api){
+  const cv = api.nav, ctx = cv.getContext("2d");
+  const dpr = window.devicePixelRatio || 1;
+  const w = cv.clientWidth, h = cv.clientHeight;
+  if (!w || !h) return;
+  cv.width = w * dpr; cv.height = h * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = "#0d0d0d"; ctx.fillRect(0, 0, w, h);
+  const p = navSeries(api);
+  if (p.length){
+    let vmin = Infinity, vmax = -Infinity;
+    for (const q of p){ if (q[1] < vmin) vmin = q[1]; if (q[1] > vmax) vmax = q[1]; }
+    const span = (vmax - vmin) || 1;
+    ctx.strokeStyle = "rgba(255,165,0,.75)"; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i < p.length; i++){
+      const x = api.navT2X(p[i][0]);
+      const y = h - 4 - ((p[i][1] - vmin) / span) * (h - 8);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  const sel = api.navDrag ? [Math.min(api.navDrag.x0, api.navDrag.x1),
+      Math.max(api.navDrag.x0, api.navDrag.x1)]
+    : (WIN ? [api.navT2X(WIN[0]), api.navT2X(WIN[1])] : null);
+  if (sel){
+    ctx.fillStyle = "rgba(0,0,0,.62)";
+    ctx.fillRect(0, 0, sel[0], h); ctx.fillRect(sel[1], 0, w - sel[1], h);
+    ctx.strokeStyle = "#ffa500"; ctx.lineWidth = 1;
+    ctx.strokeRect(sel[0] + .5, .5, Math.max(sel[1] - sel[0] - 1, 1), h - 1);
+  }
+  ctx.fillStyle = "#555"; ctx.font = "9px Consolas,monospace";
+  ctx.fillText(dstr(api.full[0]), 3, h - 3);
+  const right = dstr(api.full[1]);
+  ctx.fillText(right, w - ctx.measureText(right).width - 3, h - 3);
+}
+function onWin(chart){
+  if (SYNC) return;
+  const x = chart.scales.x, DAY = 86400000;
+  const base = CHARTS[0].full;
+  WIN = (x.min <= base[0] + DAY && x.max >= base[1] - DAY) ? null : [x.min, x.max];
+  SYNC = true;
+  CHARTS.forEach(a => {
+    if (a.chart !== chart && WIN)
+      a.chart.zoomScale("x", {min: WIN[0], max: WIN[1]}, "none");
+    if (a.chart !== chart && !WIN) a.chart.resetZoom();
+    drawNav(a); });
+  SYNC = false;
+}
+function applyWin(t0, t1){
+  WIN = [t0, t1];
+  SYNC = true;
+  CHARTS.forEach(a => { a.chart.zoomScale("x", {min: t0, max: t1}, "none");
+    drawNav(a); });
+  SYNC = false;
+}
+function resetWin(){
+  WIN = null;
+  SYNC = true;
+  CHARTS.forEach(a => { a.chart.resetZoom(); drawNav(a); });
+  SYNC = false;
+}
+
+makeChart({title: "GLOBAL FLEET — Active Ships & Top100 TEU", dual: true,
+  navFixed: "teu",
+  fixed: [{key: "ships", label: "Active Ships (global)", color: "#ffa500"},
+          {key: "teu", label: "Top100 Fleet (TEU)", color: "#79c0ff", axis: "y1"}]});
+makeChart({title: "ORDERBOOK & TOP10 SHARE", dual: true, navFixed: "ob",
+  fixed: [{key: "ob", label: "Orderbook (TEU)", color: "#d2a8ff"},
+          {key: "share", label: "Top10 Share (%)", color: "#7ee787", axis: "y1"}]});
+makeChart({title: "선사별 선대 (TEU) 추이 — 선대 확보 누적", wide: true,
+  source: "teu", keys: CFG.operators.names,
+  initial: CFG.operators.names.slice(0, 4)});
+makeChart({title: "선사별 Orderbook (TEU) 추이 — 발주 누적", wide: true,
+  source: "ob", keys: CFG.operators.names,
+  initial: CFG.operators.names.slice(0, 4)});
+CHARTS.forEach(drawNav);
+
+/* ---------- 공식 스타일 순위표 ---------- */
+const SNAP = CFG.snap;
+const sel = document.getElementById("snapdate");
+sel.innerHTML = SNAP.dates.map(d => `<option>${d}</option>`).join("");
+const head = document.getElementById("rkhead");
+head.innerHTML = SNAP.cols.map((c, i) =>
+  `<th class="${c.txt ? "txt" : ""}" data-i="${i}">${c.t}</th>`).join("");
+let sortI = 0, sortDir = 1, rkFilter = "";
+function barHtml(r){
+  const ex = (r[SNAP.bar.owned] || 0) + (r[SNAP.bar.chartered] || 0);
+  const ob = r[SNAP.bar.orderbook] || 0;
+  const max = SNAP.barMax || 1;
+  return `<div class="barwrap" title="Existing ${fmt(ex)} + Orderbook ${fmt(ob)}">
+    <span class="bar-ex" style="width:${(ex / max * 100).toFixed(1)}%"></span>
+    <span class="bar-ob" style="width:${(ob / max * 100).toFixed(1)}%"></span></div>`;
+}
+function renderRank(){
+  let rows = (SNAP.rows[sel.value] || []).slice();
+  if (rkFilter) rows = rows.filter(r =>
+    String(r[1] || "").toLowerCase().includes(rkFilter));
+  const ci = SNAP.cols[sortI].i;
+  rows.sort((a, b) => {
+    const va = ci < 0 ? 0 : a[ci], vb = ci < 0 ? 0 : b[ci];
+    return (va < vb ? -1 : va > vb ? 1 : 0) * sortDir; });
+  document.getElementById("rkbody").innerHTML = rows.map(r =>
+    `<tr>${SNAP.cols.map(c => c.i < 0 ? `<td class="barcell">${barHtml(r)}</td>` :
+      `<td class="${c.txt ? "txt" : ""}">${c.flag ? flagImg(r[c.flag]) : ""}${
+        r[c.i] === null || r[c.i] === undefined ? "-" :
+        (c.pct ? fmt(r[c.i]) + "%" : fmt(r[c.i]))}</td>`).join("")}</tr>`).join("");
+  document.getElementById("rknote").textContent =
+    `${rows.length} rows · ${sel.value}`;
+  head.querySelectorAll("th").forEach((th, i) => {
+    th.classList.toggle("sorted", i === sortI);
+    th.textContent = th.textContent.replace(/ [▲▼]$/, "") +
+      (i === sortI ? (sortDir > 0 ? " ▲" : " ▼") : ""); });
+}
+sel.onchange = renderRank;
+document.getElementById("rkfilter").oninput = e => {
+  rkFilter = e.target.value.toLowerCase(); renderRank(); };
+head.querySelectorAll("th").forEach((th, i) => th.onclick = () => {
+  if (sortI === i) sortDir = -sortDir; else { sortI = i; sortDir = i <= 1 ? 1 : -1; }
+  renderRank(); });
+function rankAoa(){
+  const rows = SNAP.rows[sel.value] || [];
+  return [SNAP.cols.filter(c => c.i >= 0).map(c => c.t),
+    ...rows.map(r => SNAP.cols.filter(c => c.i >= 0).map(c => r[c.i]))];
+}
+document.getElementById("dlcsv").onclick = () => {
+  const aoa = rankAoa();
+  const csv = "\\uFEFF" + aoa.map(l => l.map(v =>
+    v === null || v === undefined ? "" : String(v)).join(",")).join("\\r\\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
+  a.download = `alphaliner_top100_${sel.value}.csv`; a.click();
+  URL.revokeObjectURL(a.href); };
+document.getElementById("dlxlsx").onclick = () => {
+  const ws = XLSX.utils.aoa_to_sheet(rankAoa());
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "TOP100");
+  XLSX.writeFile(wb, `alphaliner_top100_${sel.value}.xlsx`); };
+renderRank();
+window.addEventListener("resize", () => CHARTS.forEach(drawNav));
+</script>
+</body>
+</html>
+"""
+
+
 def build_detail_alphaliner(conn) -> None:
-    # Active Ships = 공식 글로벌(global_ships), TEU = Top100 합계
-    hist = {}
+    """공식 PublicTop100 스타일: 글로벌 밴드 + 시계열 + Existing/Orderbook 바 순위표."""
+    glob = {}
     for r in conn.execute(
         "SELECT data_date AS d, global_ships AS g, total_ships AS s, "
-        "       total_teu AS t FROM alphaliner_master"
+        "       total_teu AS teu FROM alphaliner_master"
     ):
-        hist[r["d"]] = (_clean(r["g"]) or _clean(r["s"]), _clean(r["t"]))
+        glob.setdefault(r["d"], {}).update(
+            ships=_clean(r["g"]) or _clean(r["s"]), teu=_clean(r["teu"]))
     for r in conn.execute(
-        "SELECT snapshot_date AS d, global_ships AS g, top100_teu AS t "
-        "FROM snapshot_meta"
+        "SELECT snapshot_date AS d, global_ships AS g, top100_teu AS teu, "
+        "       top10_share AS sh, orderbook_teu AS ob FROM snapshot_meta"
     ):
-        hist[r["d"]] = (_clean(r["g"]), _clean(r["t"]))
-    if not hist:
+        glob.setdefault(r["d"], {}).update(
+            ships=_clean(r["g"]), teu=_clean(r["teu"]),
+            share=_clean(r["sh"]), ob=_clean(r["ob"]))
+    if not glob:
         return
-    dates = sorted(hist)
-    datasets = {
-        "teu": {"label": "Top100 선대 (TEU)",
-                "points": [[d, hist[d][1]] for d in dates if hist[d][1] is not None]},
-        "ships": {"label": "Active Ships (공식 글로벌)",
-                  "points": [[d, hist[d][0]] for d in dates if hist[d][0] is not None]},
-    }
-    # Existing / Owned / Chartered / Orderbook 집계 (날짜별)
-    comp = {}
+    dates = sorted(glob)
+    series = {k: [[d, glob[d][k]] for d in dates if glob[d].get(k) is not None]
+              for k in ("ships", "teu", "share", "ob")}
 
-    def _add_comp(d, owned, chartered, orderbook):
-        owned, chartered, orderbook = (_clean(owned), _clean(chartered),
-                                       _clean(orderbook))
-        if owned is None and chartered is None and orderbook is None:
+    ops = {}
+
+    def _add(d, name, teu, ob, ow, ch):
+        name = _clean(name)
+        if not name:
             return
-        e = comp.setdefault(d, {"owned": 0, "chartered": 0, "orderbook": 0})
-        e["owned"] += owned or 0
-        e["chartered"] += chartered or 0
-        e["orderbook"] += orderbook or 0
+        e = ops.setdefault(name, {"teu": {}, "ob": {}, "ow": {}, "ch": {}})
+        for key, val in (("teu", teu), ("ob", ob), ("ow", ow), ("ch", ch)):
+            v = _clean(val)
+            if v is not None:
+                e[key][d] = v
+
+    for r in conn.execute(
+        "SELECT m.data_date AS d, d.operator_name AS nm, d.total_teu AS teu, "
+        "       d.orderbook_teu AS ob, d.existing_owned_teu AS ow, "
+        "       d.existing_chartered_teu AS ch FROM alphaliner_detail d "
+        "JOIN alphaliner_master m ON m.snapshot_id = d.snapshot_id"
+    ):
+        _add(r["d"], r["nm"], r["teu"], r["ob"], r["ow"], r["ch"])
+    for r in conn.execute(
+        "SELECT snapshot_date AS d, COALESCE(operator_name, operator) AS nm, "
+        "       total_teu AS teu, orderbook_teu AS ob, owned_teu AS ow, "
+        "       chartered_teu AS ch FROM operator_snapshots"
+    ):
+        _add(r["d"], r["nm"], r["teu"], r["ob"], r["ow"], r["ch"])
+    latest = dates[-1]
+    names = [n for n, _ in sorted(
+        ops.items(), key=lambda kv: (kv[1]["teu"].get(latest) or 0), reverse=True)[:12]]
+    operators = {m: {n: [[d, ops[n][m][d]] for d in sorted(ops[n][m])]
+                     for n in names} for m in ("teu", "ob")}
 
     rowsby = {}
+    bar_max = 0
+
+    def _row(d, rank, name, cc, teu, ships, ow_t, ow_s, ch_t, ch_s, ob_t, ob_s):
+        teu, ow_t, ch_t, ob_t = (_clean(teu), _clean(ow_t), _clean(ch_t),
+                                 _clean(ob_t))
+        ch_pct = round(ch_t / teu * 100, 1) if teu and ch_t is not None else None
+        existing = (ow_t or 0) + (ch_t or 0)
+        ob_pct = round(ob_t / existing * 100, 1) if existing and ob_t else None
+        rowsby.setdefault(d, []).append([
+            _clean(rank), _clean(name), teu, _clean(ships), ow_t, _clean(ow_s),
+            ch_t, _clean(ch_s), ch_pct, ob_t, _clean(ob_s), ob_pct, _clean(cc)])
+        nonlocal bar_max
+        bar_max = max(bar_max, existing + (ob_t or 0))
+
     for r in conn.execute(
-        "SELECT m.data_date AS d, d.rank AS rk, d.operator_name AS nm, "
-        "       d.total_teu AS teu, d.total_ships AS sh, d.market_share AS ms, "
-        "       d.existing_owned_teu AS ow, d.existing_chartered_teu AS ch, "
-        "       d.orderbook_teu AS ob, NULL AS cc "
-        "FROM alphaliner_detail d JOIN alphaliner_master m "
-        "  ON m.snapshot_id = d.snapshot_id"
+        "SELECT m.data_date AS d, d.rank AS rk, d.operator_name AS nm, NULL AS cc, "
+        "       d.total_teu AS teu, d.total_ships AS sh, d.existing_owned_teu AS owt, "
+        "       d.existing_owned_ships AS ows, d.existing_chartered_teu AS cht, "
+        "       d.existing_chartered_ships AS chs, d.orderbook_teu AS obt, "
+        "       d.orderbook_ships AS obs FROM alphaliner_detail d "
+        "JOIN alphaliner_master m ON m.snapshot_id = d.snapshot_id"
     ):
-        rowsby.setdefault(r["d"], []).append([
-            _clean(r["rk"]), _clean(r["nm"]), _clean(r["teu"]), _clean(r["sh"]),
-            _clean(r["ms"]), _clean(r["ow"]), _clean(r["ch"]), _clean(r["ob"]),
-            _clean(r["cc"])])
-        _add_comp(r["d"], r["ow"], r["ch"], r["ob"])
+        _row(r["d"], r["rk"], r["nm"], r["cc"], r["teu"], r["sh"], r["owt"],
+             r["ows"], r["cht"], r["chs"], r["obt"], r["obs"])
     for r in conn.execute(
-        "SELECT snapshot_date AS d, rank AS rk, operator_name AS nm1, "
-        "       operator AS nm2, total_teu AS teu, total_ships AS sh, "
-        "       market_share AS ms, owned_teu AS ow, chartered_teu AS ch, "
-        "       orderbook_teu AS ob, country AS cc FROM operator_snapshots"
+        "SELECT snapshot_date AS d, rank AS rk, "
+        "       COALESCE(operator_name, operator) AS nm, country AS cc, "
+        "       total_teu AS teu, total_ships AS sh, owned_teu AS owt, "
+        "       owned_ships AS ows, chartered_teu AS cht, chartered_ships AS chs, "
+        "       orderbook_teu AS obt, orderbook_ships AS obs "
+        "FROM operator_snapshots"
     ):
-        nm = _clean(r["nm1"]) or _clean(r["nm2"])
-        rowsby.setdefault(r["d"], []).append([
-            _clean(r["rk"]), nm, _clean(r["teu"]), _clean(r["sh"]),
-            _clean(r["ms"]), _clean(r["ow"]), _clean(r["ch"]), _clean(r["ob"]),
-            _clean(r["cc"])])
-        _add_comp(r["d"], r["ow"], r["ch"], r["ob"])
+        _row(r["d"], r["rk"], r["nm"], r["cc"], r["teu"], r["sh"], r["owt"],
+             r["ows"], r["cht"], r["chs"], r["obt"], r["obs"])
     for d in rowsby:
         rowsby[d].sort(key=lambda x: (x[0] is None, x[0]))
-    for key, label in (("existing", "Existing Fleet (TEU)"),
-                       ("owned", "Owned (TEU)"),
-                       ("chartered", "Chartered (TEU)"),
-                       ("orderbook", "Orderbook (TEU)")):
-        pts = []
-        for d in sorted(comp):
-            v = comp[d][key] if key != "existing" else comp[d]["owned"] + comp[d]["chartered"]
-            pts.append([d, v])
-        datasets[key] = {"label": label, "points": pts}
-    _detail_write("alphaliner", {
-        "id": "alphaliner", "title": "Top100 선사 — Alphaliner",
-        "updated": dates[-1], "datasets": datasets,
-        "panels": [
-            {"id": "ships", "title": "Active Ships (공식 글로벌) 추이",
-             "keys": ["ships"], "fixed": True, "initial": ["ships"]},
-            {"id": "teu", "title": "Top100 선대 (TEU) 추이", "keys": ["teu"],
-             "fixed": True, "initial": ["teu"]},
-            {"id": "comp", "title": "선대 구성 (TEU) — Existing/Owned/Chartered/Orderbook",
-             "span": 2, "keys": ["existing", "owned", "chartered", "orderbook"],
-             "initial": ["existing", "orderbook"], "navKey": "existing"},
-        ],
-        "sections": [{
-            "type": "rank", "title": "Top100 선사 순위 — 스냅샷 날짜 선택",
+
+    shell = (ALPHALINER_SHELL.replace("__CONFIG__", json.dumps({
+        "id": "alphaliner", "updated": latest,
+        "series": series, "operators": {"names": names, **operators},
+        "snap": {
             "dates": sorted(rowsby, reverse=True),
-            "cols": ["RANK", "OPERATOR", "TEU", "SHIPS", "SHARE (%)",
-                     "OWNED (TEU)", "CHARTERED (TEU)", "ORDERBOOK (TEU)"],
-            "nameCol": 1, "flagFrom": 8,
-            "rows": rowsby, "tag": "alphaliner_top100",
-        }],
-    })
+            "cols": [
+                {"t": "RANK", "i": 0, "txt": True},
+                {"t": "OPERATOR", "i": 1, "txt": True, "flag": 12},
+                {"t": "FLEET BAR", "i": -1},
+                {"t": "TOTAL TEU", "i": 2}, {"t": "SHIPS", "i": 3},
+                {"t": "OWNED TEU", "i": 4}, {"t": "OWNED SHIPS", "i": 5},
+                {"t": "CHARTERED TEU", "i": 6}, {"t": "CHARTERED SHIPS", "i": 7},
+                {"t": "% CHART", "i": 8, "pct": True},
+                {"t": "ORDERBOOK TEU", "i": 9}, {"t": "ORDERBOOK SHIPS", "i": 10},
+                {"t": "% EXISTING", "i": 11, "pct": True},
+            ],
+            "bar": {"owned": 4, "chartered": 6, "orderbook": 9},
+            "barMax": bar_max,
+            "rows": rowsby,
+        },
+    }, ensure_ascii=False, separators=(",", ":"))))
+    page_path = ROOT / "alphaliner" / "detail.html"
+    temp = page_path.with_suffix(".html.tmp")
+    temp.write_text(shell, encoding="utf-8")
+    temp.replace(page_path)
+    log(f"alphaliner/detail.html 작성 완료 ({page_path.stat().st_size:,} bytes)")
 
 
 def build_detail_forwarders(conn) -> None:
