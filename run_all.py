@@ -32,7 +32,7 @@ MODULES = [
         "title": "SCFI / BDI",
         "cmd": ["sea/sea.py", "--cron"],
         "timeout": 1800,
-        "page": None,  # 정적 상세 페이지 없음(로컬 Flask 전용)
+        "page": "sea/index.html",
     },
     {
         "id": "linerlytica",
@@ -445,6 +445,502 @@ SUMMARIZERS = {
 }
 
 
+SEA_SHELL = """<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEA DETAIL — SCFI / BDI</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root{--bg:#000;--panel:#0b0b0b;--panel2:#101010;--line:#2b2b2b;--amber:#ffa500;
+        --txt:#e6e6e6;--dim:#8f8f8f;--up:#ff4d4d;--down:#58a6ff;--flat:#9a9a9a;
+        --mono:Consolas,"Liberation Mono",Menlo,"Malgun Gothic",monospace}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--mono)}
+  .topbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;
+          border-bottom:2px solid var(--amber);
+          background:linear-gradient(180deg,#151000,#000)}
+  .code{color:#000;background:var(--amber);font-weight:700;font-size:11px;
+        padding:1px 6px;letter-spacing:.08em}
+  .ttl{color:var(--amber);font-size:13px;letter-spacing:.08em}
+  .ref{color:var(--dim);font-size:10px}
+  .btn{color:var(--amber);border:1px solid var(--amber);background:none;
+       font-family:var(--mono);font-size:10px;padding:2px 9px;cursor:pointer;
+       letter-spacing:.06em}
+  .btn:hover{background:var(--amber);color:#000}
+  .btn.on{background:var(--amber);color:#000}
+  .btn.dim{color:var(--dim);border-color:var(--line)}
+  .back{margin-left:auto;color:var(--amber);border:1px solid var(--amber);
+        font-size:10px;padding:2px 8px;text-decoration:none;letter-spacing:.06em}
+  .back:hover{background:var(--amber);color:#000}
+  .wrap{padding:8px;display:flex;flex-direction:column;gap:8px}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media(max-width:980px){.charts{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:1px solid var(--line);padding:8px;
+         display:flex;flex-direction:column;gap:6px;min-width:0}
+  .phead{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .ptitle{color:var(--amber);font-size:12px;letter-spacing:.08em}
+  .chips{display:flex;flex-wrap:wrap;gap:4px}
+  .chip{border:1px solid var(--line);color:var(--dim);font-size:10px;
+        padding:1px 7px;cursor:pointer;user-select:none}
+  .chip.on{color:#000;background:var(--amber);border-color:var(--amber);font-weight:700}
+  .spacer{margin-left:auto}
+  .chartbox{height:280px;position:relative}
+  .chartbox.tall{height:320px}
+  .hint{color:#555;font-size:9px;letter-spacing:.05em}
+  .tbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .tbar input{background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+              font-family:var(--mono);font-size:10px;padding:2px 6px;width:150px}
+  .note{color:var(--dim);font-size:10px}
+  .tblbox{max-height:340px;overflow:auto;border:1px solid var(--line);background:var(--panel2)}
+  table{width:100%;border-collapse:collapse;font-size:11px;
+        font-variant-numeric:tabular-nums}
+  th{color:var(--dim);text-align:right;font-weight:400;border-bottom:1px solid var(--line);
+     padding:3px 6px;position:sticky;top:0;background:var(--panel2);cursor:pointer;
+     white-space:nowrap}
+  th:first-child,th:nth-child(2){text-align:left}
+  th:hover{color:var(--amber)}
+  th.sorted{color:var(--amber)}
+  td{border-bottom:1px dotted #1c1c1c;padding:3px 6px;text-align:right;white-space:nowrap}
+  td:first-child,td:nth-child(2){text-align:left}
+  td:first-child{color:var(--dim)}
+  .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+  footer{color:var(--dim);font-size:10px;letter-spacing:.06em;padding:8px 12px 20px;
+         display:flex;flex-wrap:wrap;gap:12px}
+  footer b{color:var(--amber);font-weight:400}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="code">SEA</span>
+  <span class="ttl">SCFI / BDI — SHIPPING INDEX TERMINAL</span>
+  <span class="ref" id="ref"></span>
+  <button class="btn on" id="vbasic">BASIC</button>
+  <button class="btn" id="vdetails">DETAILS</button>
+  <a class="back" href="../index.html">← TERMINAL</a>
+</div>
+
+<div class="wrap" id="view-basic">
+  <div class="charts">
+    <div class="panel">
+      <div class="phead"><span class="ptitle">SCFI — 종합지수</span>
+        <span class="spacer"></span>
+        <button class="btn dim" data-reset="bs">FULL</button></div>
+      <div class="chartbox"><canvas id="c-bs"></canvas></div>
+      <div class="hint">WHEEL=ZOOM · DRAG=기간선택 · ALT+DRAG=PAN · HOVER=숫자</div>
+    </div>
+    <div class="panel">
+      <div class="phead"><span class="ptitle">BDI — 종합지수</span>
+        <span class="spacer"></span>
+        <button class="btn dim" data-reset="bb">FULL</button></div>
+      <div class="chartbox"><canvas id="c-bb"></canvas></div>
+      <div class="hint">WHEEL=ZOOM · DRAG=기간선택 · ALT+DRAG=PAN · HOVER=숫자</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="tbar">
+      <span class="ptitle">DATA TABLE — SCFI/BDI 종합</span>
+      <input id="f-basic" placeholder="filter: date / region">
+      <span class="note" id="n-basic"></span>
+      <span class="spacer"></span>
+      <button class="btn" data-dl="basic-csv">CSV ↓</button>
+      <button class="btn" data-dl="basic-xlsx">XLSX ↓</button>
+    </div>
+    <div class="tblbox"><table id="t-basic">
+      <thead><tr>
+        <th data-key="date">DATE</th><th data-key="index">INDEX</th>
+        <th data-key="region">REGION</th><th data-key="value">INDEX VALUE</th>
+        <th data-key="change">CHANGE</th><th data-key="pct">CHANGE RATE (%)</th>
+      </tr></thead><tbody></tbody>
+    </table></div>
+  </div>
+</div>
+
+<div class="wrap hidden" id="view-details">
+  <div class="charts">
+    <div class="panel">
+      <div class="phead"><span class="ptitle">SCFI — 권역 비교</span>
+        <span class="chips" id="chips-scfi"></span>
+        <span class="spacer"></span>
+        <button class="btn dim" data-reset="ds">FULL</button>
+        <button class="btn" data-dl="ds-csv">CSV ↓</button>
+        <button class="btn" data-dl="ds-xlsx">XLSX ↓</button></div>
+      <div class="chartbox tall"><canvas id="c-ds"></canvas></div>
+      <div class="hint">권역 칩 복수 선택 = 차트 중첩 · WHEEL=ZOOM · DRAG=기간선택 · ALT+DRAG=PAN</div>
+      <div class="tbar">
+        <input id="f-ds" placeholder="filter: date / region">
+        <span class="note" id="n-ds"></span></div>
+      <div class="tblbox"><table id="t-ds">
+        <thead><tr>
+          <th data-key="date">DATE</th><th data-key="region">REGION</th>
+          <th data-key="value">INDEX VALUE</th><th data-key="change">CHANGE</th>
+          <th data-key="pct">CHANGE RATE (%)</th>
+        </tr></thead><tbody></tbody>
+      </table></div>
+    </div>
+    <div class="panel">
+      <div class="phead"><span class="ptitle">BDI — 지수 비교</span>
+        <span class="chips" id="chips-bdi"></span>
+        <span class="spacer"></span>
+        <button class="btn dim" data-reset="db">FULL</button>
+        <button class="btn" data-dl="db-csv">CSV ↓</button>
+        <button class="btn" data-dl="db-xlsx">XLSX ↓</button></div>
+      <div class="chartbox tall"><canvas id="c-db"></canvas></div>
+      <div class="hint">지수 칩 복수 선택 = 차트 중첩 · WHEEL=ZOOM · DRAG=기간선택 · ALT+DRAG=PAN</div>
+      <div class="tbar">
+        <input id="f-db" placeholder="filter: date / region">
+        <span class="note" id="n-db"></span></div>
+      <div class="tblbox"><table id="t-db">
+        <thead><tr>
+          <th data-key="date">DATE</th><th data-key="region">REGION</th>
+          <th data-key="value">INDEX VALUE</th><th data-key="change">CHANGE</th>
+          <th data-key="pct">CHANGE RATE (%)</th>
+        </tr></thead><tbody></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span><b>SOURCE</b> SCFI=Shanghai Shipping Exchange · BDI/BCI/BPI/BSI=Baltic Exchange (KSG 경유)</span>
+  <span><b>AUTO-CRAWL</b> DAILY 00:00 KST</span>
+  <span id="gen"></span>
+</footer>
+
+<script>
+const PALETTE = ["#ffa500", "#79c0ff", "#d2a8ff", "#7ee787", "#ff7b72", "#ffa657",
+                 "#a5d6ff", "#f778ba", "#d4a72c", "#8ddb8c", "#ff9bce", "#9ecbff"];
+let DATA = null;
+const PANELS = {};
+
+function fmt(v){ return v === null || v === undefined ? "-" :
+  Number(v).toLocaleString("ko-KR", {maximumFractionDigits: 2}); }
+function sign(v){ if (v === null || v === undefined) return "-";
+  return (v > 0 ? "+" : "") + fmt(v); }
+function cls(v){ return v === null || v === undefined ? "flat" :
+  v > 0 ? "up" : v < 0 ? "down" : "flat"; }
+function ms(d){ return Date.parse(d + "T00:00:00Z"); }
+function dstr(t){ return new Date(t).toISOString().slice(0, 10); }
+function regionsOf(index){ return Object.keys(DATA[index].series); }
+function colorOf(index, region){
+  return PALETTE[regionsOf(index).indexOf(region) % PALETTE.length]; }
+function pointsOf(index, region){
+  const blk = DATA[index];
+  if (!blk._ms) blk._ms = blk.dates.map(ms);
+  const vals = blk.series[region], out = [];
+  for (let i = 0; i < blk._ms.length; i++){
+    const v = vals[i];
+    if (v !== null && v !== undefined) out.push([blk._ms[i], v]);
+  }
+  return out;
+}
+
+class Panel {
+  constructor(id, index, opts){
+    this.id = id; this.index = index; this.opts = opts || {};
+    this.sel = (opts.fixed || opts.initial || [regionsOf(index)[0]]).slice();
+    this.win = null; this.sort = {key: "date", dir: -1}; this.filter = "";
+    this.full = null;
+    this.chart = new Chart(opts.canvas, {
+      type: "line",
+      data: {datasets: this.datasets()},
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        interaction: {mode: "nearest", intersect: false},
+        plugins: {
+          legend: {display: !opts.fixed, position: "top",
+                   labels: {color: "#8f8f8f", boxWidth: 8, font: {size: 9}}},
+          tooltip: {displayColors: false, backgroundColor: "#111",
+            borderColor: "#3a3a3a", borderWidth: 1, titleColor: "#ffa500",
+            bodyColor: "#e6e6e6",
+            callbacks: {title: it => "REF " + dstr(it[0].parsed.x),
+                        label: it => ` ${it.dataset.label} ${fmt(it.parsed.y)}`}},
+          zoom: {
+            zoom: {wheel: {enabled: true}, pinch: {enabled: true},
+              drag: {enabled: true, backgroundColor: "rgba(255,165,0,.12)",
+                     borderColor: "#ffa500", borderWidth: 1},
+              mode: "x",
+              onZoomComplete: c => this.onWindow(c.chart)},
+            pan: {enabled: true, mode: "x", modifierKey: "Alt",
+                  onPanComplete: c => this.onWindow(c.chart)},
+            limits: {x: {min: "original", max: "original"}},
+          },
+        },
+        scales: {
+          x: {type: "linear", ticks: {color: "#777", maxTicksLimit: 8,
+              callback: v => dstr(v), font: {size: 9, family: "Consolas"}},
+              grid: {color: "#161616"}},
+          y: {ticks: {color: "#777", font: {size: 9, family: "Consolas"}},
+              grid: {color: "#161616"}},
+        },
+      },
+    });
+    this.full = [this.chart.scales.x.min, this.chart.scales.x.max];
+  }
+  datasets(){
+    return this.sel.map(r => ({
+      label: r,
+      data: pointsOf(this.index, r).map(p => ({x: p[0], y: p[1]})),
+      borderColor: colorOf(this.index, r), backgroundColor: "transparent",
+      borderWidth: 1.4, pointRadius: 0, pointHoverRadius: 3, tension: .15,
+    }));
+  }
+  onWindow(chart){
+    const x = chart.scales.x;
+    const DAY = 86400000;
+    if (this.full && x.min <= this.full[0] + DAY && x.max >= this.full[1] - DAY)
+      this.win = null;
+    else
+      this.win = [x.min, x.max];
+    this.renderTable();
+    if (this.opts.onTable) this.opts.onTable();
+  }
+  reset(){ this.chart.resetZoom(); this.win = null;
+    this.renderTable(); if (this.opts.onTable) this.opts.onTable(); }
+  refresh(){ this.chart.data.datasets = this.datasets();
+    this.chart.update("none"); this.renderTable();
+    if (this.opts.onTable) this.opts.onTable(); }
+  windowRows(){
+    const rows = [];
+    for (const r of this.sel){
+      const pts = pointsOf(this.index, r);
+      for (let i = 0; i < pts.length; i++){
+        const t = pts[i][0];
+        if (this.win && (t < this.win[0] || t > this.win[1])) continue;
+        const prev = i > 0 ? pts[i - 1][1] : null;
+        const cur = pts[i][1];
+        rows.push({
+          index: this.index.toUpperCase(), date: dstr(t), t, region: r, value: cur,
+          change: prev === null ? null : +((cur - prev).toFixed(2)),
+          pct: (prev === null || prev === 0) ? null
+               : +(((cur - prev) / Math.abs(prev)) * 100).toFixed(2),
+        });
+      }
+    }
+    return rows;
+  }
+  filtered(){
+    let rows = this.windowRows();
+    const f = this.filter.trim().toLowerCase();
+    if (f) rows = rows.filter(r =>
+      r.region.toLowerCase().includes(f) || r.date.includes(f) ||
+      r.index.toLowerCase().includes(f));
+    const {key, dir} = this.sort;
+    rows.sort((a, b) => {
+      const va = a[key], vb = b[key];
+      return (va < vb ? -1 : va > vb ? 1 : 0) * dir;
+    });
+    return rows;
+  }
+  renderTable(){
+    if (!this.opts.table) return;
+    const rows = this.filtered();
+    this.lastRows = rows;
+    const show = rows.slice(0, 500);
+    this.opts.table.querySelector("tbody").innerHTML = show.map(r => `
+      <tr><td>${r.date}</td>${this.opts.indexCol ? `<td>${r.index}</td>` : ""}
+      <td>${r.region}</td><td>${fmt(r.value)}</td>
+      <td class="${cls(r.change)}">${sign(r.change)}</td>
+      <td class="${cls(r.pct)}">${sign(r.pct)}</td></tr>`).join("");
+    this.opts.note.textContent =
+      `${rows.length.toLocaleString()} rows` +
+      (rows.length > 500 ? " · 최신 500행 표시" : "") +
+      (this.win ? ` · window ${dstr(this.win[0])}~${dstr(this.win[1])}` : " · 전체 기간");
+    this.opts.table.querySelectorAll("th").forEach(th => {
+      th.classList.toggle("sorted", th.dataset.key === this.sort.key);
+      th.textContent = th.textContent.replace(/ [▲▼]$/, "") +
+        (th.dataset.key === this.sort.key ? (this.sort.dir > 0 ? " ▲" : " ▼") : "");
+    });
+  }
+  download(kind){
+    const rows = this.filtered();
+    const head = ["Date", "Index", "Region", "Index Value", "Change",
+                  "Change Rate(%)"];
+    const aoa = [head, ...rows.map(r =>
+      [r.date, r.index, r.region, r.value, r.change, r.pct])];
+    const tag = `${this.index}_${this.sel.join("+")}`.replace(/[^A-Za-z가-힣+_]/g, "_");
+    if (kind === "csv"){
+      const csv = "\\uFEFF" + aoa.map(line => line.map(v =>
+        v === null || v === undefined ? "" : String(v)).join(",")).join("\\r\\n");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
+      a.download = `${tag}.csv`; a.click(); URL.revokeObjectURL(a.href);
+    } else {
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, this.index.toUpperCase());
+      XLSX.writeFile(wb, `${tag}.xlsx`);
+    }
+  }
+}
+
+function basicRows(){
+  return [...PANELS.bs.filtered(), ...PANELS.bb.filtered()];
+}
+const BASIC = {sort: {key: "date", dir: -1}, filter: "", rows: []};
+function renderBasicTable(){
+  let rows = basicRows();
+  const f = BASIC.filter.trim().toLowerCase();
+  if (f) rows = rows.filter(r =>
+    r.region.toLowerCase().includes(f) || r.date.includes(f) ||
+    r.index.toLowerCase().includes(f));
+  const {key, dir} = BASIC.sort;
+  rows.sort((a, b) => (a[key] < b[key] ? -1 : a[key] > b[key] ? 1 : 0) * dir);
+  BASIC.rows = rows;
+  const show = rows.slice(0, 500);
+  document.querySelector("#t-basic tbody").innerHTML = show.map(r => `
+    <tr><td>${r.date}</td><td>${r.index}</td><td>${r.region}</td>
+    <td>${fmt(r.value)}</td><td class="${cls(r.change)}">${sign(r.change)}</td>
+    <td class="${cls(r.pct)}">${sign(r.pct)}</td></tr>`).join("");
+  document.getElementById("n-basic").textContent =
+    `${rows.length.toLocaleString()} rows` +
+    (rows.length > 500 ? " · 최신 500행 표시" : "");
+  document.querySelectorAll("#t-basic th").forEach(th => {
+    th.classList.toggle("sorted", th.dataset.key === BASIC.sort.key);
+    th.textContent = th.textContent.replace(/ [▲▼]$/, "") +
+      (th.dataset.key === BASIC.sort.key ? (BASIC.sort.dir > 0 ? " ▲" : " ▼") : "");
+  });
+}
+function downloadBasic(kind){
+  const rows = BASIC.rows;
+  const head = ["Date", "Index", "Region", "Index Value", "Change",
+                "Change Rate(%)"];
+  const aoa = [head, ...rows.map(r =>
+    [r.date, r.index, r.region, r.value, r.change, r.pct])];
+  if (kind === "csv"){
+    const csv = "\\uFEFF" + aoa.map(line => line.map(v =>
+      v === null || v === undefined ? "" : String(v)).join(",")).join("\\r\\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
+    a.download = "SCFI_BDI_composite.csv"; a.click(); URL.revokeObjectURL(a.href);
+  } else {
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "SEA");
+    XLSX.writeFile(wb, "SCFI_BDI_composite.xlsx");
+  }
+}
+
+function buildChips(panel, el){
+  el.innerHTML = regionsOf(panel.index).map(r =>
+    `<span class="chip ${panel.sel.includes(r) ? "on" : ""}"
+          data-r="${r}" style="${panel.sel.includes(r) ?
+          "" : `border-color:${colorOf(panel.index, r)};color:${colorOf(panel.index, r)}`}">
+      ${r}</span>`).join("");
+  el.querySelectorAll(".chip").forEach(chip => chip.onclick = () => {
+    const r = chip.dataset.r;
+    if (panel.sel.includes(r)){
+      if (panel.sel.length > 1) panel.sel = panel.sel.filter(x => x !== r);
+    } else panel.sel.push(r);
+    buildChips(panel, el);
+    panel.refresh();
+  });
+}
+
+function setView(mode){
+  document.getElementById("view-basic").classList.toggle("hidden", mode !== "basic");
+  document.getElementById("view-details").classList.toggle("hidden", mode !== "details");
+  document.getElementById("vbasic").classList.toggle("on", mode === "basic");
+  document.getElementById("vdetails").classList.toggle("on", mode === "details");
+  Object.values(PANELS).forEach(p => p.chart.resize());
+}
+
+fetch("sea_data.json?t=" + Date.now()).then(r => r.json()).then(data => {
+  DATA = data;
+  document.getElementById("ref").textContent = "REF " + (data.updated || "-");
+  document.getElementById("gen").innerHTML =
+    "<b>GENERATED</b> " + (data.generated || "-");
+  if (window.ChartZoom) Chart.register(window.ChartZoom);
+
+  PANELS.bs = new Panel("bs", "scfi", {fixed: ["종합"],
+    canvas: document.getElementById("c-bs"), onTable: renderBasicTable});
+  PANELS.bb = new Panel("bb", "bdi", {fixed: ["BDI"],
+    canvas: document.getElementById("c-bb"), onTable: renderBasicTable});
+  PANELS.ds = new Panel("ds", "scfi", {initial: ["종합"],
+    canvas: document.getElementById("c-ds"),
+    table: document.getElementById("t-ds"), note: document.getElementById("n-ds")});
+  PANELS.db = new Panel("db", "bdi", {initial: ["BDI"],
+    canvas: document.getElementById("c-db"),
+    table: document.getElementById("t-db"), note: document.getElementById("n-db")});
+  buildChips(PANELS.ds, document.getElementById("chips-scfi"));
+  buildChips(PANELS.db, document.getElementById("chips-bdi"));
+
+  PANELS.bs.opts.table = PANELS.bb.opts.table = null;
+  renderBasicTable();
+  PANELS.ds.renderTable(); PANELS.db.renderTable();
+
+  document.getElementById("vbasic").onclick = () => setView("basic");
+  document.getElementById("vdetails").onclick = () => setView("details");
+  document.querySelectorAll("[data-reset]").forEach(b =>
+    b.onclick = () => PANELS[b.dataset.reset].reset());
+  document.querySelectorAll("[data-dl]").forEach(b => b.onclick = () => {
+    const [pid, kind] = b.dataset.dl.split("-");
+    if (pid === "basic") downloadBasic(kind);
+    else PANELS[pid].download(kind);
+  });
+  document.getElementById("f-basic").oninput = e => {
+    BASIC.filter = e.target.value; renderBasicTable(); };
+  document.getElementById("f-ds").oninput = e => {
+    PANELS.ds.filter = e.target.value; PANELS.ds.renderTable(); };
+  document.getElementById("f-db").oninput = e => {
+    PANELS.db.filter = e.target.value; PANELS.db.renderTable(); };
+  document.querySelectorAll("#t-basic th").forEach(th => th.onclick = () => {
+    const k = th.dataset.key;
+    BASIC.sort = {key: k, dir: BASIC.sort.key === k ? -BASIC.sort.dir : -1};
+    renderBasicTable(); });
+  [["#t-ds", PANELS.ds], ["#t-db", PANELS.db]].forEach(([sel, panel]) =>
+    document.querySelectorAll(sel + " th").forEach(th => th.onclick = () => {
+      const k = th.dataset.key;
+      panel.sort = {key: k, dir: panel.sort.key === k ? -panel.sort.dir : -1};
+      panel.renderTable(); }));
+}).catch(e => {
+  document.getElementById("ref").textContent = "sea_data.json 로드 실패: " + e;
+});
+</script>
+</body>
+</html>
+"""
+
+
+def build_sea_page(conn) -> None:
+    """sea/ 정적 상세 애플리케이션 생성 (index.html + sea_data.json)."""
+    updated = conn.execute("SELECT MAX(dt) FROM index_raw").fetchone()[0] or "-"
+    payload = {
+        "generated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "updated": updated,
+    }
+    for key, index_name in (("scfi", "SCFI"), ("bdi", "BDI")):
+        rows = conn.execute(
+            "SELECT region, dt, value FROM index_raw "
+            "WHERE index_name = ? ORDER BY region, dt",
+            (index_name,),
+        ).fetchall()
+        dates = sorted({r["dt"] for r in rows})
+        position = {d: i for i, d in enumerate(dates)}
+        series = {}
+        for r in rows:
+            series.setdefault(r["region"], [None] * len(dates))[position[r["dt"]]] = r2(r["value"])
+        payload[key] = {"dates": dates, "series": series}
+
+    data_path = ROOT / "sea" / "sea_data.json"
+    temp = data_path.with_suffix(".json.tmp")
+    temp.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
+                    encoding="utf-8")
+    temp.replace(data_path)
+    log(f"sea/sea_data.json 작성 완료 ({data_path.stat().st_size:,} bytes)")
+
+    page_path = ROOT / "sea" / "index.html"
+    temp = page_path.with_suffix(".html.tmp")
+    temp.write_text(SEA_SHELL, encoding="utf-8")
+    temp.replace(page_path)
+    log(f"sea/index.html 작성 완료 ({page_path.stat().st_size:,} bytes)")
+
+
 def build_summary() -> dict:
     modules = []
     for module in MODULES:
@@ -464,6 +960,8 @@ def build_summary() -> dict:
             continue
         try:
             entry.update(SUMMARIZERS[module["id"]](conn))
+            if module["id"] == "sea":
+                build_sea_page(conn)
         except Exception as exc:  # noqa: BLE001
             entry["error"] = f"{type(exc).__name__}: {exc}"
         finally:

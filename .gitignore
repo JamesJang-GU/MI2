@@ -16,3 +16,6 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+
+# 해운 모듈 크롤 다운로드 산출물 (커밋 금지)
+sea/*.xlsx
