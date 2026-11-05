@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-05T02:38:03.285578",
+  "generated_at": "2026-11-05T03:41:25.573379",
   "dates": [
     "2026-11-05"
   ],
@@ -9,24 +9,24 @@
       "meta": {
         "snapshot_date": "2026-11-05",
         "global_ships": 7672,
-        "global_teu": 34193780,
-        "top100_teu": 34193780,
-        "top100_ships": 6629,
-        "top10_share": 86.4,
+        "global_teu": 34193156,
+        "top100_teu": 34193156,
+        "top100_ships": 6628,
+        "top10_share": 86.39,
         "official_top10_share": 85.0,
         "orderbook_teu": 13698597,
-        "extracted_at": "2026-11-05T02:38:03.282563"
+        "extracted_at": "2026-11-05T03:41:25.570040"
       },
       "operators": [
         {
           "rank": 1,
           "operator_name": "Mediterranean Shg Co",
-          "total_teu": 7482184,
-          "total_ships": 1023,
+          "total_teu": 7481560,
+          "total_ships": 1022,
           "market_share": 21.5,
-          "owned_teu": 4811499,
-          "owned_ships": 772,
-          "owned_share": 64.31,
+          "owned_teu": 4810875,
+          "owned_ships": 771,
+          "owned_share": 64.3,
           "chartered_teu": 2670685,
           "chartered_ships": 251,
           "chartered_share": 35.7,
