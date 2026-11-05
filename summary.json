@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-05 03:06:51",
+ "generated_at": "2026-11-05 03:39:01",
  "modules": [
   {
    "id": "sea",
@@ -13,7 +13,8 @@
      "change": 6.01,
      "pct": 0.2,
      "unit": "",
-     "asof": "2026-10-30"
+     "asof": "2026-10-30",
+     "prev_asof": null
     },
     {
      "label": "BDI",
@@ -22,7 +23,8 @@
      "change": -58.0,
      "pct": -2.2,
      "unit": "",
-     "asof": "2026-11-03"
+     "asof": "2026-11-03",
+     "prev_asof": null
     }
    ],
    "series": [
@@ -1252,7 +1254,8 @@
      "change": 249.0,
      "pct": 4.5,
      "unit": "척",
-     "asof": "2026-10-17"
+     "asof": "2026-10-17",
+     "prev_asof": null
     },
     {
      "label": "운항 선대",
@@ -1261,7 +1264,8 @@
      "change": 1218741.0,
      "pct": 5.2,
      "unit": "TEU",
-     "asof": "2026-10-17"
+     "asof": "2026-10-17",
+     "prev_asof": null
     }
    ],
    "series": [
@@ -1383,26 +1387,36 @@
     {
      "label": "Active Ships",
      "value": 6629.0,
-     "prev": null,
-     "change": null,
-     "pct": null,
+     "prev": 6616.0,
+     "change": 13.0,
+     "pct": 0.2,
      "unit": "척",
-     "asof": "2026-11-05"
+     "asof": "2026-11-05",
+     "prev_asof": "2026-10-19"
     },
     {
      "label": "선대 (TEU)",
      "value": 34193780.0,
-     "prev": null,
-     "change": null,
-     "pct": null,
+     "prev": 34113905.0,
+     "change": 79875.0,
+     "pct": 0.2,
      "unit": "TEU",
-     "asof": "2026-11-05"
+     "asof": "2026-11-05",
+     "prev_asof": "2026-10-19"
     }
    ],
    "series": [
     {
      "label": "Active Ships",
      "points": [
+      [
+       "2026-10-18",
+       0
+      ],
+      [
+       "2026-10-19",
+       6616
+      ],
       [
        "2026-11-05",
        6629
@@ -1412,6 +1426,14 @@
     {
      "label": "선대 (TEU)",
      "points": [
+      [
+       "2026-10-18",
+       32688538
+      ],
+      [
+       "2026-10-19",
+       34113905
+      ],
       [
        "2026-11-05",
        34193780
@@ -1434,7 +1456,8 @@
      "change": 0.0,
      "pct": 0.0,
      "unit": "$M",
-     "asof": "2026-11-05"
+     "asof": "2026-11-05",
+     "prev_asof": "2026-11-03"
     },
     {
      "label": "TEU",
@@ -1443,7 +1466,8 @@
      "change": 0.0,
      "pct": 0.0,
      "unit": "",
-     "asof": "2026-11-05"
+     "asof": "2026-11-05",
+     "prev_asof": "2026-11-03"
     },
     {
      "label": "TON",
@@ -1452,7 +1476,8 @@
      "change": 0.0,
      "pct": 0.0,
      "unit": "ton",
-     "asof": "2026-11-05"
+     "asof": "2026-11-05",
+     "prev_asof": "2026-11-03"
     }
    ],
    "series": [],
@@ -1475,7 +1500,8 @@
      "change": 0.27,
      "pct": 11.3,
      "unit": "",
-     "asof": "2026-10-01"
+     "asof": "2026-10-01",
+     "prev_asof": null
     },
     {
      "label": "Hong Kong-Europe",
@@ -1484,7 +1510,8 @@
      "change": 0.51,
      "pct": 10.6,
      "unit": "",
-     "asof": "2026-10-01"
+     "asof": "2026-10-01",
+     "prev_asof": null
     },
     {
      "label": "Hong Kong-North America",
@@ -1493,7 +1520,8 @@
      "change": 0.62,
      "pct": 8.8,
      "unit": "",
-     "asof": "2026-10-01"
+     "asof": "2026-10-01",
+     "prev_asof": null
     },
     {
      "label": "TAC 종합",
@@ -1502,7 +1530,8 @@
      "change": 0.47,
      "pct": 9.8,
      "unit": "",
-     "asof": "2026-10-01"
+     "asof": "2026-10-01",
+     "prev_asof": null
     }
    ],
    "series": [
@@ -1688,7 +1717,8 @@
        "change": -1.27,
        "pct": -1.2,
        "unit": "$",
-       "asof": "2026-11-04"
+       "asof": "2026-11-04",
+       "prev_asof": null
       },
       {
        "label": "Brent",
@@ -1697,7 +1727,8 @@
        "change": -8.98,
        "pct": -8.7,
        "unit": "$",
-       "asof": "2026-11-04"
+       "asof": "2026-11-04",
+       "prev_asof": null
       },
       {
        "label": "WTI",
@@ -1706,7 +1737,8 @@
        "change": -7.97,
        "pct": -8.3,
        "unit": "$",
-       "asof": "2026-11-04"
+       "asof": "2026-11-04",
+       "prev_asof": null
       }
      ],
      "series": [
@@ -4857,7 +4889,8 @@
        "change": 6.0,
        "pct": 0.8,
        "unit": "$/ton",
-       "asof": "2026-10-22"
+       "asof": "2026-10-22",
+       "prev_asof": null
       },
       {
        "label": "Singapore",
@@ -4866,7 +4899,8 @@
        "change": 3.5,
        "pct": 0.4,
        "unit": "$/ton",
-       "asof": "2026-10-22"
+       "asof": "2026-10-22",
+       "prev_asof": null
       },
       {
        "label": "Fujairah",
@@ -4875,7 +4909,8 @@
        "change": -0.5,
        "pct": -0.1,
        "unit": "$/ton",
-       "asof": "2026-10-22"
+       "asof": "2026-10-22",
+       "prev_asof": null
       }
      ],
      "series": [
@@ -7965,7 +8000,8 @@
        "change": 0.08,
        "pct": 6.7,
        "unit": "",
-       "asof": "2026-09"
+       "asof": "2026-09",
+       "prev_asof": null
       }
      ],
      "series": [
@@ -8021,16 +8057,17 @@
      ]
     },
     {
-     "title": "GDP 성장률 (월드) 2025",
+     "title": "GDP 성장률 (월드) 2025 · YoY",
      "metrics": [
       {
        "label": "GDP 성장률 (월드)",
        "value": 2.92,
-       "prev": null,
-       "change": null,
-       "pct": null,
+       "prev": 2.9,
+       "change": 0.02,
+       "pct": 0.7,
        "unit": "%",
-       "asof": "2025"
+       "asof": "2025",
+       "prev_asof": "2024"
       }
      ],
      "series": [
@@ -8122,16 +8159,17 @@
      ]
     },
     {
-     "title": "물가상승률 (월드) 2025",
+     "title": "물가상승률 (월드) 2025 · YoY",
      "metrics": [
       {
        "label": "물가상승률 (월드)",
        "value": 3.04,
-       "prev": null,
-       "change": null,
-       "pct": null,
+       "prev": 3.01,
+       "change": 0.03,
+       "pct": 0.9,
        "unit": "%",
-       "asof": "2025"
+       "asof": "2025",
+       "prev_asof": "2024"
       }
      ],
      "series": [
