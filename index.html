@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MI2 TERMINAL — 국제운송 지표</title>
+<title>MI2 — Global Freight &amp; Trade Intelligence</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root{
@@ -19,15 +19,17 @@
   .topbar{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;
           padding:8px 12px;border-bottom:2px solid var(--amber);
           background:linear-gradient(180deg,#151000,#000)}
-  .brand{color:var(--amber);font-weight:700;letter-spacing:.12em;font-size:15px}
-  .brand small{color:var(--dim);font-weight:400;letter-spacing:.05em;margin-left:8px}
   .topmeta{color:var(--dim);font-size:11px;margin-left:auto;display:flex;
            flex-wrap:wrap;gap:6px;align-items:center}
   .chip{border:1px solid var(--line);padding:1px 7px;font-size:10px;color:var(--dim)}
   .chip.ok{color:var(--up);border-color:#5a2430}
   .chip.fail{color:var(--down);border-color:#1d3a5a}
-  .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:8px}
-  @media(max-width:1180px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  /* 상·하단 2행 동일 높이 */
+  .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+        grid-template-rows:repeat(2,minmax(430px,1fr));gap:8px;padding:8px;
+        min-height:calc(100vh - 92px)}
+  @media(max-width:1180px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));
+        grid-template-rows:none;grid-auto-rows:auto;min-height:0}}
   @media(max-width:680px){.grid{grid-template-columns:1fr}}
   .box{background:var(--panel);border:1px solid var(--line);display:flex;
        flex-direction:column;min-width:0}
@@ -52,20 +54,20 @@
   .chg{font-size:11px;margin-top:2px;font-variant-numeric:tabular-nums}
   .chg.up{color:var(--up)} .chg.down{color:var(--down)} .chg.flat{color:var(--flat)}
   /* 2단 (SCFI/BDI, 선박수/TEU, CRUDE/VLSFO) */
-  .duo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1 1 auto;min-height:0}
   .duo .cell{background:var(--panel2);border:1px solid var(--line);padding:7px;
-             display:flex;flex-direction:column;gap:5px;min-width:0}
+             display:flex;flex-direction:column;gap:5px;min-width:0;min-height:0}
   .duo .val{font-size:19px}
   .celltitle{color:var(--amber);font-size:11px;letter-spacing:.08em;
              border-bottom:1px dashed #2a2a2a;padding-bottom:4px}
   /* 미니 블록 (숫자 + 스파크라인) */
-  .mini{display:flex;flex-direction:column;gap:2px}
+  .mini{display:flex;flex-direction:column;gap:2px;flex:1 1 auto;min-height:0}
   .mini .row{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
   .mini .row .v{color:#fff;font-size:14px;font-weight:700;
                 font-variant-numeric:tabular-nums;white-space:nowrap}
   .mini .row .v em{font-style:normal;font-size:10px;color:var(--dim);margin-left:3px}
-  .sparkbox{height:36px;position:relative}
-  .chartbox{height:110px;position:relative;margin-top:auto}
+  .sparkbox{height:36px;flex:1 1 auto;min-height:26px;position:relative}
+  .chartbox{flex:1 1 auto;min-height:70px;position:relative}
   /* 3단 (TAC 항로) */
   .trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
   .trio .cell{background:var(--panel2);border:1px solid var(--line);padding:6px;min-width:0}
@@ -74,30 +76,29 @@
           padding-top:6px;font-size:11.5px;align-items:baseline}
   .subrow .v{color:var(--txt);font-variant-numeric:tabular-nums;text-align:right}
   .subrow .v em{font-style:normal;font-size:10px;color:var(--dim);margin-left:3px}
-      border:1px solid var(--line);padding:6px 7px}
-  .t3 .rk{color:#000;background:var(--amber);font-weight:700;font-size:11px;
-          padding:1px 5px;flex:none}
-  .t3 .nm{color:var(--txt);font-size:11.5px;flex:1;overflow:hidden;
-          text-overflow:ellipsis;white-space:nowrap}
-  .t3 .vv{color:#fff;font-size:12.5px;font-weight:700;text-align:right;
-          font-variant-numeric:tabular-nums;white-space:nowrap}
-  .t3 .vv em{font-style:normal;font-size:10px;color:var(--dim);margin-left:3px}
-  .t3 .sub{width:100%;display:flex;justify-content:space-between;gap:6px;
-           font-size:10px;color:var(--dim);margin-top:2px}
-  .t3wrap{display:flex;flex-direction:column}
   /* 거시 3단 스택 */
-  .stack{display:flex;flex-direction:column;gap:8px}
-  .stack .grp{background:var(--panel2);border:1px solid var(--line);padding:6px 7px}
+  .stack{display:flex;flex-direction:column;gap:8px;flex:1 1 auto;min-height:0}
+  .stack .grp{background:var(--panel2);border:1px solid var(--line);padding:6px 7px;
+              display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
   .stack .row{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
   .stack .v{color:#fff;font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
   .stack .v em{font-style:normal;font-size:10px;color:var(--dim);margin-left:3px}
-  .stack .chartbox{height:60px;margin-top:4px}
+  .stack .chartbox{flex:1 1 auto;min-height:48px;margin-top:4px}
   /* 헤더 기준일: 작고 회색톤 */
   .ref{color:#8f8f8f;font-size:10px;margin-left:8px;white-space:nowrap;
        overflow:hidden;text-overflow:ellipsis}
+  /* 상단 브랜드 바 */
+  .logo{background:var(--amber);color:#000;font-weight:800;font-size:14px;
+        padding:2px 9px;letter-spacing:.14em}
+  .brandname{color:#fff;font-size:12px;letter-spacing:.24em;font-weight:600;
+             white-space:nowrap}
+  .sectors{color:var(--dim);font-size:10px;letter-spacing:.2em;
+           border-left:1px solid var(--line);padding-left:12px;white-space:nowrap}
+  #clk{color:var(--amber);font-size:11px;margin-right:12px;white-space:nowrap}
+  @media(max-width:900px){.sectors{display:none}}
   /* 포워더 1위 헤더 */
   .fwdhead{display:flex;align-items:center;gap:8px}
-  .flag{font-size:22px;line-height:1}
+  .flagimg{width:22px;height:16px;flex:none;border:1px solid #333;background:#111}
   .fname{color:#fff;font-size:16px;font-weight:700;letter-spacing:.03em;
          overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .rk1{margin-left:auto;color:#000;background:var(--amber);font-size:10px;
@@ -110,8 +111,10 @@
 </head>
 <body>
 <div class="topbar">
-  <span class="brand">MI2 <small>INTERNATIONAL TRANSPORT TERMINAL</small></span>
-  <span class="topmeta" id="meta">LOADING…</span>
+  <span class="logo">MI2</span>
+  <span class="brandname">GLOBAL FREIGHT &amp; TRADE INTELLIGENCE</span>
+  <span class="sectors">OCEAN · AIR · ENERGY · MACRO</span>
+  <span class="topmeta"><span id="clk"></span><span id="meta">LOADING…</span></span>
 </div>
 <main class="grid" id="grid"></main>
 <footer>
@@ -120,6 +123,16 @@
   <span id="footmeta"></span>
 </footer>
 <script>
+/* 서울 시간 라이브 시계 */
+function tick(){
+  const now = new Date();
+  const d = now.toLocaleDateString("sv-SE", {timeZone: "Asia/Seoul"});
+  const t = now.toLocaleTimeString("en-GB", {timeZone: "Asia/Seoul", hour12: false});
+  const el = document.getElementById("clk");
+  if (el) el.textContent = `SEOUL ${d} ${t} KST`;
+}
+tick(); setInterval(tick, 1000);
+
 const AMBER = "#ffa500";
 const LINES = ["#ffa500", "#79c0ff", "#d2a8ff"];
 const ROUTE_SHORT = {
@@ -148,6 +161,7 @@ function chgHtml(m){
 function lineChart(canvas, seriesArr, opts = {}){
   if (!canvas || typeof Chart === "undefined" || !seriesArr || !seriesArr.length) return;
   const multi = seriesArr.length > 1;
+  const single = seriesArr.every(s => s.points.length === 1);
   new Chart(canvas, {
     type: "line",
     data: {
@@ -157,16 +171,26 @@ function lineChart(canvas, seriesArr, opts = {}){
         data: s.points.map(p => p[1]),
         borderColor: LINES[i % LINES.length],
         backgroundColor: multi ? "transparent" : "rgba(255,165,0,.08)",
-        fill: !multi, borderWidth: 1.4, pointRadius: 0, tension: .2,
+        fill: !multi, borderWidth: 1.4, tension: .2,
+        pointRadius: single ? 3 : 0, pointHoverRadius: 3.5,
+        pointBackgroundColor: LINES[i % LINES.length],
       })),
     },
     options: {
       responsive: true, maintainAspectRatio: false, animation: false,
+      interaction: {mode: "index", intersect: false},
       plugins: {
         legend: {display: !!opts.legend,
           labels: {color: "#8f8f8f", boxWidth: 8, font: {size: 9}}},
         tooltip: {displayColors: false,
-          callbacks: {label: i => `${i.dataset.label}: ${fmt(i.parsed.y)}`}},
+          backgroundColor: "#111", borderColor: "#3a3a3a", borderWidth: 1,
+          titleColor: "#ffa500", bodyColor: "#e6e6e6",
+          titleFont: {size: 10, family: "Consolas"},
+          bodyFont: {size: 10, family: "Consolas"},
+          callbacks: {
+            title: items => `REF ${items[0].label}`,
+            label: i => `${i.dataset.label || ""} ${fmt(i.parsed.y)}`,
+          }},
       },
       scales: {
         x: {ticks: {color: "#777", maxTicksLimit: opts.xticks || 5,
@@ -185,11 +209,19 @@ function spark(canvas, series){
       labels: series.points.map(p => p[0]),
       datasets: [{data: series.points.map(p => p[1]), borderColor: AMBER,
                   backgroundColor: "rgba(255,165,0,.10)", fill: true,
-                  borderWidth: 1.1, pointRadius: 0, tension: .25}],
+                  borderWidth: 1.1, pointRadius: 0, pointHoverRadius: 3,
+                  tension: .25}],
     },
     options: {
       responsive: true, maintainAspectRatio: false, animation: false,
-      plugins: {legend: {display: false}, tooltip: {enabled: false}},
+      interaction: {mode: "index", intersect: false},
+      plugins: {legend: {display: false},
+        tooltip: {displayColors: false, backgroundColor: "#111",
+          borderColor: "#3a3a3a", borderWidth: 1, titleColor: "#ffa500",
+          bodyColor: "#e6e6e6", titleFont: {size: 10, family: "Consolas"},
+          bodyFont: {size: 10, family: "Consolas"},
+          callbacks: {title: items => `REF ${items[0].label}`,
+                      label: i => ` ${fmt(i.parsed.y)}`}}},
       scales: {x: {display: false}, y: {display: false}},
     },
   });
@@ -223,30 +255,37 @@ function duoBox(mod){
     lineChart(cv, [mod.series[Number(cv.dataset.s) || 0]].filter(Boolean)));
   return box;
 }
-/* forwarders: 1위만 — 국기+회사명 상단, REV/TEU/TON 하단 */
-const FLAGS = {
-  "Denmark":"🇩🇰","Switzerland":"🇨🇭","Germany":"🇩🇪","France":"🇫🇷",
-  "United States":"🇺🇸","USA":"🇺🇸","Japan":"🇯🇵","China":"🇨🇳",
-  "United Kingdom":"🇬🇧","Netherlands":"🇳🇱","Spain":"🇪🇸","Italy":"🇮🇹",
-  "Sweden":"🇸🇪","Norway":"🇳🇴","South Korea":"🇰🇷","Korea":"🇰🇷",
-  "Singapore":"🇸🇬","United Arab Emirates":"🇦🇪","Belgium":"🇧🇪",
-  "Austria":"🇦🇹","Canada":"🇨🇦","Australia":"🇦🇺","Hong Kong":"🇭🇰",
-  "Taiwan":"🇹🇼","India":"🇮🇳","Brazil":"🇧🇷","Mexico":"🇲🇽","Turkey":"🇹🇷",
-  "Finland":"🇫🇮","Ireland":"🇮🇪","Luxembourg":"🇱🇺","Portugal":"🇵🇹",
-  "Greece":"🇬🇷","Israel":"🇮🇱","Saudi Arabia":"🇸🇦","Thailand":"🇹🇭",
-  "Vietnam":"🇻🇳","Malaysia":"🇲🇾","Indonesia":"🇮🇩","Poland":"🇵🇱",
-  "South Africa":"🇿🇦","New Zealand":"🇳🇿",
+/* forwarders: 1위만 — 국기(이미지)+회사명 상단, REV/TEU/TON 하단 */
+const ISO = {
+  "Denmark":"DK","Switzerland":"CH","Germany":"DE","France":"FR",
+  "United States":"US","USA":"US","Japan":"JP","China":"CN",
+  "United Kingdom":"GB","Netherlands":"NL","Spain":"ES","Italy":"IT",
+  "Sweden":"SE","Norway":"NO","South Korea":"KR","Korea":"KR",
+  "Singapore":"SG","United Arab Emirates":"AE","Belgium":"BE",
+  "Austria":"AT","Canada":"CA","Australia":"AU","Hong Kong":"HK",
+  "Taiwan":"TW","India":"IN","Brazil":"BR","Mexico":"MX","Turkey":"TR",
+  "Finland":"FI","Ireland":"IE","Luxembourg":"LU","Portugal":"PT",
+  "Greece":"GR","Israel":"IL","Saudi Arabia":"SA","Thailand":"TH",
+  "Vietnam":"VN","Malaysia":"MY","Indonesia":"ID","Poland":"PL",
+  "South Africa":"ZA","New Zealand":"NZ",
 };
+function flagUrl(hq){
+  const cc = (ISO[hq] || "").toLowerCase();
+  if (!cc) return "";
+  const cps = [...cc].map(c => (0x1F1E6 + c.charCodeAt(0) - 97).toString(16)).join("-");
+  return `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${cps}.svg`;
+}
 function fwdBox(mod){
   const t = mod.top1 || {};
   const trio = (mod.metrics || []).slice(0, 3).map(m => `
     <div class="cell">
       <div class="lbl">${m.label}</div>
       <div class="val">${fmt(m.value)}${unitHtml(m.unit)}</div>
-      ${chgHtml(m)}
+      ${chgHtml(m)}${m.prev_asof ? `<span class="chg flat"> vs ${m.prev_asof}</span>` : ""}
     </div>`).join("");
   return boxShell(mod,
-    `<div class="fwdhead"><span class="flag">${FLAGS[t.hq] || "🏳️"}</span>
+    `<div class="fwdhead"><img class="flagimg" src="${flagUrl(t.hq)}"
+        alt="${ISO[t.hq] || ""}">
        <span class="fname">${t.name || "-"}</span><span class="rk1">#1</span></div>
      <div class="trio">${trio}</div>` + errHtml(mod));
 }
@@ -264,7 +303,7 @@ function airBox(mod){
     (overall ? `<div class="subrow">
         <span class="lbl" style="margin:0">TAC 종합</span>
         <span class="v">${fmt(overall.value)}${chgHtml(overall)}</span></div>` : "") +
-    `<div class="chartbox" style="height:120px"><canvas></canvas></div>` +
+    `<div class="chartbox"><canvas></canvas></div>` +
     errHtml(mod));
   lineChart(box.querySelector("canvas"), mod.series.slice(0, 3),
             {legend: true, xticks: 4});
@@ -288,7 +327,10 @@ function oilBox(mod){
         </div>`).join("")}
     </div>`;
   }).join("");
-  const box = boxShell(mod, `<div class="duo">${cells}</div>` + errHtml(mod));
+  const box = boxShell(mod,
+    `<div class="duo">${cells}</div>` +
+    (mod.note ? `<div class="asof">VLSFO DIAG: ${mod.note}</div>` : "") +
+    errHtml(mod));
   box.querySelectorAll("canvas").forEach(cv => {
     const g = mod.groups[Number(cv.dataset.g)];
     spark(cv, g && g.series[Number(cv.dataset.s)]);

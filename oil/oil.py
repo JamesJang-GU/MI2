@@ -441,38 +441,47 @@ def extract_vlsfo_full_data(driver):
         return results;
     """)
 
-def collect_all_data():
-    log("[VLSFO] Ship & Bunker crawl started")
+URL_PORTS = {
+    "nl-rtm-rotterdam": "Rotterdam",
+    "ae-fjr-fujairah": "Fujairah",
+    "sg-sin-singapore": "Singapore",
+}
 
+_BROWSER_HEADERS = {
+    "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                   "AppleWebKit/537.36 (KHTML, like Gecko) "
+                   "Chrome/124.0.0.0 Safari/537.36"),
+    "Accept": ("text/html,application/xhtml+xml,application/xml;q=0.9,"
+               "image/avif,image/webp,*/*;q=0.8"),
+    "Accept-Language": "en-US,en;q=0.9",
+}
+
+
+def _port_of(url):
+    for key, port in URL_PORTS.items():
+        if key in url:
+            return port
+    return url.rsplit("/", 1)[-1].split("#")[0]
+
+
+def _vlsfo_rows_from_selenium():
     driver = make_driver()
-    all_rows = []
-
+    rows = []
     try:
         for url in URLS:
             log(f"[VLSFO] Accessing: {url}")
-
             driver.get(url)
             time.sleep(5)
-
             try_click_all_for_vlsfo(driver)
             time.sleep(2)
-
-            extracted = extract_vlsfo_full_data(driver)
-
-            for item in extracted:
-                port = item["seriesName"].replace(
-                    " VLSFO",
-                    "",
-                ).strip()
-
+            for item in extract_vlsfo_full_data(driver):
+                port = item["seriesName"].replace(" VLSFO", "").strip()
                 for point in item["data"]:
                     x = point.get("x")
                     y = point.get("y")
-
                     if x is None or y is None:
                         continue
-
-                    all_rows.append({
+                    rows.append({
                         "port": port,
                         "series_name": item["seriesName"],
                         "source_type": item["sourceType"],
@@ -480,57 +489,136 @@ def collect_all_data():
                         "price": y,
                         "source_url": url,
                     })
-
     finally:
         try:
             driver.quit()
         except Exception:
             pass
+    return rows
 
-    df = pd.DataFrame(all_rows)
+
+def _vlsfo_rows_from_http():
+    """Selenium 없이 HTML 내 인라인 Highcharts 데이터 배열을 추출."""
+    import urllib.request
+
+    pattern = re.compile(
+        r"\[\s*\[\s*\d{12,13}\s*,\s*\d+(?:\.\d+)?\s*\]"
+        r"(?:\s*,\s*\[\s*\d{12,13}\s*,\s*\d+(?:\.\d+)?\s*\])+\s*\]"
+    )
+    rows = []
+    for url in URLS:
+        port = _port_of(url)
+        request = urllib.request.Request(url, headers=_BROWSER_HEADERS)
+        with urllib.request.urlopen(request, timeout=45) as response:
+            html = response.read().decode("utf-8", "ignore")
+        best = []
+        for blob in pattern.findall(html):
+            try:
+                points = json.loads(blob)
+            except Exception:
+                continue
+            points = [
+                pt for pt in points
+                if isinstance(pt, list) and len(pt) >= 2 and 100 < float(pt[1]) < 3000
+            ]
+            if len(points) > len(best):
+                best = points
+        if len(best) >= 20:
+            log(f"[VLSFO] http inline series: {port} {len(best)} points")
+            for x, y in best:
+                rows.append({
+                    "port": port,
+                    "series_name": f"{port} VLSFO",
+                    "source_type": "http_inline",
+                    "timestamp_ms": x,
+                    "price": y,
+                    "source_url": url,
+                })
+    return rows
+
+
+def _vlsfo_rows_from_jina():
+    """렌더링 프록시(r.jina.ai) 텍스트에서 당일 VLSFO 가격 추출 (최후 폴백)."""
+    import urllib.request
+
+    rows = []
+    now_ms = int(time.time() * 1000)
+    for url in URLS:
+        port = _port_of(url)
+        request = urllib.request.Request(
+            "https://r.jina.ai/" + url, headers=_BROWSER_HEADERS)
+        with urllib.request.urlopen(request, timeout=60) as response:
+            text = response.read().decode("utf-8", "ignore")
+        match = re.search(r"VLSFO[^\d\n]{0,120}?(\d{3,4}(?:\.\d{1,2})?)", text)
+        if match:
+            log(f"[VLSFO] jina text price: {port} {match.group(1)}")
+            rows.append({
+                "port": port,
+                "series_name": f"{port} VLSFO",
+                "source_type": "jina_text",
+                "timestamp_ms": now_ms,
+                "price": float(match.group(1)),
+                "source_url": url,
+            })
+    return rows
+
+
+def _finalize_vlsfo_df(rows):
+    df = pd.DataFrame(rows)
 
     if df.empty:
         raise RuntimeError("No VLSFO data collected.")
 
-    df["timestamp_ms"] = pd.to_numeric(
-        df["timestamp_ms"],
-        errors="coerce",
-    )
-
-    df["price"] = pd.to_numeric(
-        df["price"],
-        errors="coerce",
-    )
-
-    df = df.dropna(
-        subset=["timestamp_ms", "price"],
-    )
-
-    df["date"] = pd.to_datetime(
-        df["timestamp_ms"],
-        unit="ms",
-        errors="coerce",
-    )
-
+    df["timestamp_ms"] = pd.to_numeric(df["timestamp_ms"], errors="coerce")
+    df["price"] = pd.to_numeric(df["price"], errors="coerce")
+    df = df.dropna(subset=["timestamp_ms", "price"])
+    df["date"] = pd.to_datetime(df["timestamp_ms"], unit="ms", errors="coerce")
     df = df.dropna(subset=["date"])
-
     df["date_str"] = df["date"].dt.strftime("%Y-%m-%d")
 
     df = (
-        df.drop_duplicates(
-            subset=["port", "date_str", "price"],
-        )
+        df.drop_duplicates(subset=["port", "date_str", "price"])
         .sort_values(["port", "date"])
         .reset_index(drop=True)
     )
 
-    save_dataframe_to_db(
-        df,
-        PRODUCT_TABLE,
-        PRODUCT_TABLE,
-    )
+    save_dataframe_to_db(df, PRODUCT_TABLE, PRODUCT_TABLE)
 
     return df
+
+
+def collect_all_data():
+    log("[VLSFO] Ship & Bunker crawl started")
+
+    errors = []
+    for method, crawler in (
+        ("selenium", _vlsfo_rows_from_selenium),
+        ("http_inline", _vlsfo_rows_from_http),
+        ("jina_text", _vlsfo_rows_from_jina),
+    ):
+        try:
+            rows = crawler()
+        except Exception as error:
+            errors.append(f"{method}: {type(error).__name__} {error}")
+            log(f"[VLSFO] {method} failed: {error}")
+            continue
+        if rows:
+            log(f"[VLSFO] collected via {method}: {len(rows)} rows")
+            try:
+                set_dataset_meta("vlsfo_diag", f"ok:{method}")
+            except Exception:
+                pass
+            return _finalize_vlsfo_df(rows)
+        errors.append(f"{method}: empty")
+        log(f"[VLSFO] {method} returned no rows")
+
+    message = " | ".join(errors)[:240]
+    try:
+        set_dataset_meta("vlsfo_diag", message)
+    except Exception:
+        pass
+    raise RuntimeError(f"No VLSFO data collected. {message}")
+
 
 def load_or_collect_data(force_refresh=False):
     if not force_refresh and DATA_CACHE["df"] is not None:

@@ -102,7 +102,7 @@ def connect(module_id: str):
     return conn
 
 
-def metric(label, value, prev, asof, unit=""):
+def metric(label, value, prev, asof, unit="", prev_asof=None):
     change = pct = None
     if value is not None and prev is not None:
         change = r2(float(value) - float(prev))
@@ -116,6 +116,7 @@ def metric(label, value, prev, asof, unit=""):
         "pct": pct,
         "unit": unit,
         "asof": asof,
+        "prev_asof": prev_asof,
     }
 
 
@@ -211,36 +212,37 @@ def summarize_alphaliner(conn):
     해당 테이블을 읽고, 비어 있을 때만 레거시 alphaliner_master 로 폴백.
     """
     out = {"metrics": [], "series": []}
-    rows = conn.execute(
-        "SELECT snapshot_date, top100_ships, top100_teu FROM snapshot_meta "
-        "ORDER BY snapshot_date DESC LIMIT 400"
-    ).fetchall()
-    if rows:
-        date_key, ships_key, teu_key = "snapshot_date", "top100_ships", "top100_teu"
-    else:
-        rows = conn.execute(
-            "SELECT data_date AS snapshot_date, total_ships AS top100_ships, "
-            "       total_teu AS top100_teu FROM alphaliner_master "
-            "ORDER BY data_date DESC LIMIT 400"
-        ).fetchall()
-        date_key, ships_key, teu_key = "snapshot_date", "top100_ships", "top100_teu"
-    if not rows:
+    # 레거시(alphaliner_master) 이력 + 신규(snapshot_meta) 스냅샷을 날짜별로 병합
+    hist = {}
+    for r in conn.execute(
+        "SELECT data_date AS d, total_ships AS ships, total_teu AS teu "
+        "FROM alphaliner_master ORDER BY data_date"
+    ):
+        hist[r["d"]] = (r["ships"], r["teu"])
+    for r in conn.execute(
+        "SELECT snapshot_date AS d, top100_ships AS ships, top100_teu AS teu "
+        "FROM snapshot_meta ORDER BY snapshot_date"
+    ):
+        hist[r["d"]] = (r["ships"], r["teu"])
+    if not hist:
         return out
-    latest, prev = rows[0], (rows[1] if len(rows) > 1 else None)
+    dates = sorted(hist)
+    latest_d = dates[-1]
+    prev_d = dates[-2] if len(dates) > 1 else None
+    ships, teu = hist[latest_d]
+    pships, pteu = hist[prev_d] if prev_d else (None, None)
     out["metrics"].append(
-        metric("Active Ships", latest[ships_key],
-               prev[ships_key] if prev else None, latest[date_key], unit="척")
+        metric("Active Ships", ships, pships, latest_d, unit="척", prev_asof=prev_d)
     )
     out["metrics"].append(
-        metric("선대 (TEU)", latest[teu_key],
-               prev[teu_key] if prev else None, latest[date_key], unit="TEU")
+        metric("선대 (TEU)", teu, pteu, latest_d, unit="TEU", prev_asof=prev_d)
     )
-    for key, label in ((ships_key, "Active Ships"), (teu_key, "선대 (TEU)")):
+    for idx, label in ((0, "Active Ships"), (1, "선대 (TEU)")):
         out["series"].append(
             {"label": label,
-             "points": year_filter([[r[date_key], r[key]] for r in reversed(rows)])}
+             "points": year_filter([[d, hist[d][idx]] for d in dates])}
         )
-    out["updated"] = latest[date_key]
+    out["updated"] = latest_d
     return out
 
 
@@ -276,7 +278,8 @@ def summarize_forwarders(conn):
                                 ("TON", "air_tons", "ton")):
         out["metrics"].append(
             metric(label, top1[column],
-                   prev_row[column] if prev_row else None, latest_date, unit=unit)
+                   prev_row[column] if prev_row else None, latest_date, unit=unit,
+                   prev_asof=prev_date if prev_row else None)
         )
     out["updated"] = latest_date
     return out
@@ -378,6 +381,11 @@ def summarize_oil(conn):
         )
         out.setdefault("updated", latest["date_str"])
     out["groups"] = [crude, vlsfo]
+    diag = conn.execute(
+        "SELECT fetched_at FROM data_meta WHERE dataset = 'vlsfo_diag'"
+    ).fetchone()
+    if diag and diag["fetched_at"] and not str(diag["fetched_at"]).startswith("ok"):
+        out["note"] = str(diag["fetched_at"])
     return out
 
 
@@ -410,11 +418,14 @@ def summarize_macro(conn):
         if not rows:
             continue
         latest = rows[-1]
+        prev = rows[-2] if len(rows) > 1 else None
         out["groups"].append(
             {
-                "title": f"{label} {latest['year']}",
-                "metrics": [metric(label, latest["value"], None,
-                                   str(latest["year"]), unit="%")],
+                "title": f"{label} {latest['year']} · YoY",
+                "metrics": [metric(label, latest["value"],
+                                   prev["value"] if prev else None,
+                                   str(latest["year"]), unit="%",
+                                   prev_asof=str(prev["year"]) if prev else None)],
                 "series": [{"label": label,
                             "points": [[str(r["year"]), r2(r["value"])]
                                        for r in rows[-20:]]}],
