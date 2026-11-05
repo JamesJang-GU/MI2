@@ -6,15 +6,15 @@ MI2 통합 크롤러 러너 + 대시보드 데이터 빌더
 - 7개 지표 모듈(air/alphaliner/forwarders/linerlytica/macro/oil/sea)을
   헤드리스(정적 생성) 모드로 순차 실행한다.
 - 실행 결과를 status.json 으로 기록한다.
-- 각 모듈의 SQLite DB에서 포털 대시보드(index.html)용
+- 각 모듈의 SQLite DB에서 포털 대시보드(index.html, Bloomberg 터미널 스타일)용
   요약 데이터 summary.json 을 생성한다.
+  - metric: 최신 크롤링 값 + 직전 스냅샷 대비 증감(change/pct)
+  - series: 최근 1년 그래프용 포인트
 
 사용법
     python run_all.py                # 전체 모듈 크롤링 + 요약 생성
     python run_all.py sea oil        # 지정 모듈만 크롤링 + 요약 생성
     python run_all.py --summary-only # 크롤링 없이 요약만 재생성
-
-GitHub Actions(매일 KST 00:00)에서는 이 파일 하나만 호출하면 된다.
 """
 
 import json
@@ -22,7 +22,7 @@ import sqlite3
 import subprocess
 import sys
 import time
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -32,53 +32,53 @@ ROOT = Path(__file__).resolve().parent
 # -----------------------------------------------------------------------------
 MODULES = [
     {
-        "id": "air",
-        "title": "항공운임 · TAC/Baltic ARI",
-        "cmd": ["air/air.py", "--cron"],
-        "timeout": 600,
-        "page": "air/index.html",
+        "id": "sea",
+        "title": "SCFI / BDI",
+        "cmd": ["sea/sea.py", "--cron"],
+        "timeout": 1800,
+        "page": None,  # Flask 기반이라 정적 상세 페이지 없음
+    },
+    {
+        "id": "linerlytica",
+        "title": "컨테이너 선대",
+        "cmd": ["linerlytica/linerytica.py"],
+        "timeout": 1800,
+        "page": "linerlytica/index.html",
     },
     {
         "id": "alphaliner",
-        "title": "선사 선대 · Alphaliner Top100",
+        "title": "Top100 선사",
         "cmd": ["alphaliner/alphaliner.py", "--cron"],
         "timeout": 900,
         "page": "alphaliner/index.html",
     },
     {
         "id": "forwarders",
-        "title": "포워더 순위 · A&A Top25",
+        "title": "포워더 순위",
         "cmd": ["forwarders/forwarders.py", "--refresh"],
         "timeout": 600,
         "page": "forwarders/index.html",
     },
     {
-        "id": "linerlytica",
-        "title": "컨테이너 선대 · Linerlytica",
-        "cmd": ["linerlytica/linerytica.py"],
-        "timeout": 1800,
-        "page": "linerlytica/index.html",
-    },
-    {
-        "id": "macro",
-        "title": "거시경제 · GDP/물가/GSCPI",
-        "cmd": ["macro/macro.py", "--cron"],
+        "id": "air",
+        "title": "TAC Index (항공)",
+        "cmd": ["air/air.py", "--cron"],
         "timeout": 600,
-        "page": "macro/index.html",
+        "page": "air/index.html",
     },
     {
         "id": "oil",
-        "title": "유가/벙커링 · VLSFO/원유",
+        "title": "유가 / 벙커링",
         "cmd": ["oil/oil.py"],
         "timeout": 900,
         "page": "oil/index.html",
     },
     {
-        "id": "sea",
-        "title": "해운운임 · SCFI/BDI",
-        "cmd": ["sea/sea.py", "--cron"],
-        "timeout": 1800,
-        "page": None,  # Flask 기반이라 정적 페이지 없음(포털 카드에서 확인)
+        "id": "macro",
+        "title": "거시경제",
+        "cmd": ["macro/macro.py", "--cron"],
+        "timeout": 600,
+        "page": "macro/index.html",
     },
 ]
 
@@ -88,7 +88,6 @@ def log(message: str) -> None:
 
 
 def r2(value):
-    """대시보드 표시용 반올림."""
     if value is None:
         return None
     try:
@@ -106,17 +105,41 @@ def connect(module_id: str):
     return conn
 
 
-def pct_change(current, previous):
-    if current is None or previous in (None, 0):
-        return None
-    return r2((float(current) - float(previous)) / abs(float(previous)) * 100)
+def metric(label, value, prev, asof, unit=""):
+    """최신값 + 직전 스냅샷 대비 증감(숫자, %)."""
+    change = None
+    pct = None
+    if value is not None and prev is not None:
+        change = r2(float(value) - float(prev))
+        if float(prev) != 0:
+            pct = round((float(value) - float(prev)) / abs(float(prev)) * 100, 1)
+    return {
+        "label": label,
+        "value": r2(value) if value is not None else None,
+        "prev": r2(prev) if prev is not None else None,
+        "change": change,
+        "pct": pct,
+        "unit": unit,
+        "asof": asof,
+    }
+
+
+def year_filter(points):
+    """그래프용 최근 1년 필터 (월 단위 키도 지원)."""
+    cutoff = (date.today() - timedelta(days=365)).replace(day=1).isoformat()
+    out = []
+    for key, value in points:
+        norm = key if len(str(key)) >= 10 else f"{key}-01"
+        if norm >= cutoff:
+            out.append([key, value])
+    return out
 
 
 # -----------------------------------------------------------------------------
-# 모듈별 요약 추출기 (DB 스키마 차이 absorber)
+# 모듈별 요약 추출기
 # -----------------------------------------------------------------------------
 def summarize_sea(conn):
-    out = {"metrics": [], "series": [], "tables": []}
+    out = {"metrics": [], "series": []}
     # SCFI는 region='종합', BDI는 region='BDI'가 종합 지수
     for index_name, region, label in (
         ("SCFI", "종합", "SCFI 종합"),
@@ -125,35 +148,21 @@ def summarize_sea(conn):
         rows = conn.execute(
             "SELECT dt, value FROM index_raw "
             "WHERE index_name = ? AND region = ? "
-            "ORDER BY dt DESC LIMIT 160",
+            "ORDER BY dt DESC LIMIT 400",
             (index_name, region),
         ).fetchall()
         if not rows:
             continue
-        latest, previous = rows[0], (rows[1] if len(rows) > 1 else None)
+        latest, prev = rows[0], (rows[1] if len(rows) > 1 else None)
         out["metrics"].append(
+            metric(label, latest["value"], prev["value"] if prev else None, latest["dt"])
+        )
+        out["series"].append(
             {
                 "label": label,
-                "value": r2(latest["value"]),
-                "change": pct_change(latest["value"], previous["value"] if previous else None),
-                "change_unit": "%",
-                "asof": latest["dt"],
-            }
-        )
-        points = [[r["dt"], r2(r["value"])] for r in reversed(rows)]
-        out["series"].append({"label": label, "points": points})
-    baltic = conn.execute(
-        "SELECT region, value, dt FROM index_raw "
-        "WHERE index_name = 'BDI' AND region IN ('BDI','BCI','BPI','BSI') "
-        "AND dt = (SELECT MAX(dt) FROM index_raw WHERE index_name = 'BDI') "
-        "ORDER BY region"
-    ).fetchall()
-    if baltic:
-        out["tables"].append(
-            {
-                "label": f"Baltic 지수 ({baltic[0]['dt']})",
-                "columns": ["지수", "값"],
-                "rows": [[r["region"], r2(r["value"])] for r in baltic],
+                "points": year_filter(
+                    [[r["dt"], r2(r["value"])] for r in reversed(rows)]
+                ),
             }
         )
     out["updated"] = conn.execute("SELECT MAX(dt) FROM index_raw").fetchone()[0]
@@ -161,118 +170,132 @@ def summarize_sea(conn):
 
 
 def summarize_air(conn):
-    out = {"metrics": [], "series": [], "tables": []}
+    out = {"metrics": [], "series": []}
     master = conn.execute(
-        "SELECT data_date, overall_index, weekly_change FROM tac_master "
-        "ORDER BY data_date DESC LIMIT 160"
+        "SELECT data_date, overall_index FROM tac_master "
+        "ORDER BY data_date DESC LIMIT 400"
     ).fetchall()
     if master:
+        latest, prev = master[0], (master[1] if len(master) > 1 else None)
         out["metrics"].append(
-            {
-                "label": "TAC 종합지수",
-                "value": r2(master[0]["overall_index"]),
-                "change": r2(master[0]["weekly_change"]),
-                "change_unit": "%",
-                "asof": master[0]["data_date"],
-            }
+            metric(
+                "TAC 종합지수",
+                latest["overall_index"],
+                prev["overall_index"] if prev else None,
+                latest["data_date"],
+            )
         )
         out["series"].append(
             {
                 "label": "TAC 종합지수",
-                "points": [
-                    [r["data_date"], r2(r["overall_index"])] for r in reversed(master)
-                ],
+                "points": year_filter(
+                    [[r["data_date"], r2(r["overall_index"])] for r in reversed(master)]
+                ),
             }
         )
-        out["updated"] = master[0]["data_date"]
-    detail = conn.execute(
-        "SELECT d.route_code, d.index_value, d.weekly_change "
-        "FROM tac_detail d JOIN tac_master m ON m.snapshot_id = d.snapshot_id "
-        "WHERE m.data_date = (SELECT MAX(data_date) FROM tac_master) "
-        "ORDER BY d.route_code"
-    ).fetchall()
-    if detail:
-        out["tables"].append(
-            {
-                "label": "항로별 지수",
-                "columns": ["항로", "지수", "주간 %"],
-                "rows": [
-                    [r["route_code"], r2(r["index_value"]), r2(r["weekly_change"])]
-                    for r in detail
-                ],
-            }
-        )
+        out["updated"] = latest["data_date"]
     return out
 
 
 def summarize_alphaliner(conn):
-    out = {"metrics": [], "series": [], "tables": []}
+    out = {"metrics": [], "series": []}
     master = conn.execute(
-        "SELECT data_date, total_teu, total_ships, operator_count "
-        "FROM alphaliner_master ORDER BY data_date DESC LIMIT 160"
+        "SELECT snapshot_id, data_date, total_teu FROM alphaliner_master "
+        "ORDER BY data_date DESC LIMIT 400"
     ).fetchall()
     if master:
-        latest = master[0]
-        out["metrics"].extend(
-            [
-                {"label": "Top100 선대(TEU)", "value": latest["total_teu"], "asof": latest["data_date"]},
-                {"label": "Top100 척수", "value": latest["total_ships"], "asof": latest["data_date"]},
-                {"label": "선사 수", "value": latest["operator_count"], "asof": latest["data_date"]},
-            ]
+        latest, prev = master[0], (master[1] if len(master) > 1 else None)
+        top1 = conn.execute(
+            "SELECT operator_name, total_teu FROM alphaliner_detail "
+            "WHERE snapshot_id = ? ORDER BY rank LIMIT 1",
+            (latest["snapshot_id"],),
+        ).fetchone()
+        prev_top1 = None
+        if prev:
+            row = conn.execute(
+                "SELECT total_teu FROM alphaliner_detail "
+                "WHERE snapshot_id = ? ORDER BY rank LIMIT 1",
+                (prev["snapshot_id"],),
+            ).fetchone()
+            prev_top1 = row["total_teu"] if row else None
+        if top1:
+            out["metrics"].append(
+                metric(
+                    f"1위 {top1['operator_name']} (TEU)",
+                    top1["total_teu"],
+                    prev_top1,
+                    latest["data_date"],
+                )
+            )
+        out["metrics"].append(
+            metric(
+                "Top100 합계 (TEU)",
+                latest["total_teu"],
+                prev["total_teu"] if prev else None,
+                latest["data_date"],
+            )
         )
         out["series"].append(
             {
-                "label": "Top100 선대(TEU)",
-                "points": [[r["data_date"], r["total_teu"]] for r in reversed(master)],
+                "label": "Top100 합계 (TEU)",
+                "points": year_filter(
+                    [[r["data_date"], r["total_teu"]] for r in reversed(master)]
+                ),
             }
         )
         out["updated"] = latest["data_date"]
-    top = conn.execute(
-        "SELECT d.rank, d.operator_name, d.total_teu, d.market_share "
-        "FROM alphaliner_detail d JOIN alphaliner_master m "
-        "ON m.snapshot_id = d.snapshot_id "
-        "WHERE m.data_date = (SELECT MAX(data_date) FROM alphaliner_master) "
-        "ORDER BY d.rank LIMIT 10"
-    ).fetchall()
-    if top:
-        out["tables"].append(
-            {
-                "label": "Top 10 선사",
-                "columns": ["#", "선사", "TEU", "점유율 %"],
-                "rows": [
-                    [r["rank"], r["operator_name"], r["total_teu"], r2(r["market_share"])]
-                    for r in top
-                ],
-            }
-        )
     return out
 
 
 def summarize_forwarders(conn):
-    out = {"metrics": [], "series": [], "tables": []}
-    latest_date = conn.execute("SELECT MAX(date) FROM forwarders").fetchone()[0]
-    if not latest_date:
-        return out
-    rows = conn.execute(
-        "SELECT rank, provider, revenue, teu FROM forwarders "
-        "WHERE date = ? ORDER BY rank LIMIT 10",
-        (latest_date,),
+    out = {"metrics": [], "series": []}
+    dates = conn.execute(
+        "SELECT DISTINCT date FROM forwarders ORDER BY date DESC LIMIT 2"
     ).fetchall()
-    if rows:
+    if not dates:
+        return out
+    latest_date = dates[0]["date"]
+    prev_date = dates[1]["date"] if len(dates) > 1 else None
+
+    # 원본 rank 컬럼 기준 1위 (동률이면 매출 상위)
+    top = conn.execute(
+        "SELECT provider, revenue, teu FROM forwarders "
+        "WHERE date = ? AND rank = (SELECT MIN(rank) FROM forwarders WHERE date = ?) "
+        "ORDER BY revenue DESC LIMIT 1",
+        (latest_date, latest_date),
+    ).fetchone()
+    if top:
+        prev_rev = prev_teu = None
+        if prev_date:
+            row = conn.execute(
+                "SELECT revenue FROM forwarders "
+                "WHERE date = ? AND rank = (SELECT MIN(rank) FROM forwarders WHERE date = ?) "
+                "ORDER BY revenue DESC LIMIT 1",
+                (prev_date, prev_date),
+            ).fetchone()
+            prev_rev = row["revenue"] if row else None
+            row2 = conn.execute(
+                "SELECT teu FROM forwarders WHERE date = ? AND provider = ?",
+                (prev_date, top["provider"]),
+            ).fetchone()
+            prev_teu = row2["teu"] if row2 else None
         out["metrics"].append(
-            {
-                "label": f"1위 TEU ({rows[0]['provider']})",
-                "value": rows[0]["teu"],
-                "asof": latest_date,
-            }
+            metric(f"1위 {top['provider']} 매출 ($M)", top["revenue"], prev_rev, latest_date)
         )
-        out["tables"].append(
+        out["metrics"].append(
+            metric(f"{top['provider']} TEU", top["teu"], prev_teu, latest_date)
+        )
+    # 1위 매출 추이 (일자별 rank=1 중 최대 매출)
+    series_rows = conn.execute(
+        "SELECT date, MAX(revenue) AS revenue FROM forwarders "
+        "WHERE rank = (SELECT MIN(rank) FROM forwarders f2 WHERE f2.date = forwarders.date) "
+        "GROUP BY date ORDER BY date"
+    ).fetchall()
+    if series_rows:
+        out["series"].append(
             {
-                "label": "Top 10 포워더",
-                "columns": ["#", "포워더", "매출($M)", "TEU"],
-                "rows": [
-                    [r["rank"], r["provider"], r2(r["revenue"]), r["teu"]] for r in rows
-                ],
+                "label": "1위 매출 ($M) 추이",
+                "points": year_filter([[r["date"], r2(r["revenue"])] for r in series_rows]),
             }
         )
     out["updated"] = latest_date
@@ -280,62 +303,81 @@ def summarize_forwarders(conn):
 
 
 def summarize_linerlytica(conn):
-    out = {"metrics": [], "series": [], "tables": []}
-    latest_date = conn.execute(
-        "SELECT MAX(snapshot_date) FROM fleet_snapshot"
-    ).fetchone()[0]
-    if not latest_date:
-        return out
-    rows = conn.execute(
-        "SELECT ship_status, ships, teu FROM fleet_snapshot "
-        "WHERE snapshot_date = ? ORDER BY teu DESC",
-        (latest_date,),
+    out = {"metrics": [], "series": []}
+    snaps = conn.execute(
+        "SELECT DISTINCT snapshot_date FROM fleet_snapshot "
+        "ORDER BY snapshot_date DESC LIMIT 2"
     ).fetchall()
-    status_map = {r["ship_status"]: r for r in rows}
-    active = status_map.get("Active Ships")
-    if active:
-        out["metrics"].extend(
-            [
-                {"label": "운항 선박 수", "value": active["ships"], "asof": latest_date},
-                {"label": "운항 선대(TEU)", "value": active["teu"], "asof": latest_date},
-            ]
+    if not snaps:
+        return out
+    latest_date = snaps[0]["snapshot_date"]
+    prev_date = snaps[1]["snapshot_date"] if len(snaps) > 1 else None
+
+    def active(d):
+        return conn.execute(
+            "SELECT ships, teu FROM fleet_snapshot "
+            "WHERE snapshot_date = ? AND ship_status = 'Active Ships'",
+            (d,),
+        ).fetchone()
+
+    cur = active(latest_date)
+    prv = active(prev_date) if prev_date else None
+    if cur:
+        out["metrics"].append(
+            metric(
+                "운항 선대 (TEU)",
+                cur["teu"],
+                prv["teu"] if prv else None,
+                latest_date,
+            )
         )
-    out["tables"].append(
-        {
-            "label": "선박 상태별 현황",
-            "columns": ["상태", "척수", "TEU"],
-            "rows": [[r["ship_status"], r["ships"], r["teu"]] for r in rows],
-        }
-    )
+        out["metrics"].append(
+            metric("운항 선박 수", cur["ships"], prv["ships"] if prv else None, latest_date)
+        )
+    series_rows = conn.execute(
+        "SELECT snapshot_date, teu FROM fleet_snapshot "
+        "WHERE ship_status = 'Active Ships' ORDER BY snapshot_date"
+    ).fetchall()
+    if series_rows:
+        out["series"].append(
+            {
+                "label": "운항 선대 (TEU)",
+                "points": year_filter(
+                    [[r["snapshot_date"], r["teu"]] for r in series_rows]
+                ),
+            }
+        )
     out["updated"] = latest_date
     return out
 
 
 def summarize_macro(conn):
-    out = {"metrics": [], "series": [], "tables": []}
+    out = {"metrics": [], "series": []}
     gscpi = conn.execute(
-        "SELECT date, value FROM gscpi_series ORDER BY date DESC LIMIT 160"
+        "SELECT date, value FROM gscpi_series ORDER BY date DESC LIMIT 400"
     ).fetchall()
     if gscpi:
-        latest, previous = gscpi[0], (gscpi[1] if len(gscpi) > 1 else None)
+        latest, prev = gscpi[0], (gscpi[1] if len(gscpi) > 1 else None)
         out["metrics"].append(
-            {
-                "label": "GSCPI (글로벌 공급망 압력)",
-                "value": r2(latest["value"]),
-                "change": r2(
-                    (latest["value"] - previous["value"]) if previous else None
-                ),
-                "change_unit": "p",
-                "asof": latest["date"],
-            }
+            metric(
+                "GSCPI (공급망 압력)",
+                latest["value"],
+                prev["value"] if prev else None,
+                latest["date"],
+            )
         )
         out["series"].append(
-            {"label": "GSCPI", "points": [[r["date"], r2(r["value"])] for r in reversed(gscpi)]}
+            {
+                "label": "GSCPI",
+                "points": year_filter(
+                    [[r["date"], r2(r["value"])] for r in reversed(gscpi)]
+                ),
+            }
         )
         out["updated"] = latest["date"]
     for indicator, label in (
-        ("GDP_GROWTH", "GDP 성장률(월드)"),
-        ("CPI_INFLATION", "물가상승률(월드)"),
+        ("GDP_GROWTH", "GDP 성장률 (월드)"),
+        ("CPI_INFLATION", "물가상승률 (월드)"),
     ):
         row = conn.execute(
             "SELECT year, value FROM macro_series "
@@ -345,57 +387,37 @@ def summarize_macro(conn):
         ).fetchone()
         if row:
             out["metrics"].append(
-                {
-                    "label": f"{label} {row['year']}",
-                    "value": r2(row["value"]),
-                    "change_unit": "%",
-                    "asof": str(row["year"]),
-                }
+                metric(f"{label} {row['year']} (%)", row["value"], None, str(row["year"]))
             )
     return out
 
 
 def summarize_oil(conn):
-    out = {"metrics": [], "series": [], "tables": []}
+    out = {"metrics": [], "series": []}
     prices = conn.execute(
         "SELECT DATE, Dubai, Brent, WTI FROM oil_prices "
-        "ORDER BY DATE DESC LIMIT 160"
+        "ORDER BY DATE DESC LIMIT 400"
     ).fetchall()
     if prices:
-        latest, previous = prices[0], (prices[1] if len(prices) > 1 else None)
+        latest, prev = prices[0], (prices[1] if len(prices) > 1 else None)
         for column in ("Dubai", "Brent", "WTI"):
             out["metrics"].append(
-                {
-                    "label": f"{column} 유가($)",
-                    "value": r2(latest[column]),
-                    "change": pct_change(
-                        latest[column], previous[column] if previous else None
-                    ),
-                    "change_unit": "%",
-                    "asof": latest["DATE"],
-                }
+                metric(
+                    f"{column} ($)",
+                    latest[column],
+                    prev[column] if prev else None,
+                    latest["DATE"],
+                )
             )
         out["series"].append(
             {
-                "label": "Dubai 유가($)",
-                "points": [[r["DATE"], r2(r["Dubai"])] for r in reversed(prices)],
+                "label": "Dubai ($)",
+                "points": year_filter(
+                    [[r["DATE"], r2(r["Dubai"])] for r in reversed(prices)]
+                ),
             }
         )
         out["updated"] = latest["DATE"]
-    vlsfo = conn.execute(
-        "SELECT port, price, date_str FROM product_vlsfo p1 "
-        "WHERE date_str = (SELECT MAX(date_str) FROM product_vlsfo p2 "
-        "                 WHERE p2.port = p1.port) "
-        "ORDER BY port"
-    ).fetchall()
-    if vlsfo:
-        out["tables"].append(
-            {
-                "label": "항만별 VLSFO($/ton)",
-                "columns": ["항만", "가격", "기준일"],
-                "rows": [[r["port"], r2(r["price"]), r["date_str"]] for r in vlsfo],
-            }
-        )
     return out
 
 
@@ -419,7 +441,6 @@ def build_summary() -> dict:
             "page": module["page"],
             "metrics": [],
             "series": [],
-            "tables": [],
             "updated": None,
             "error": None,
         }
@@ -429,8 +450,7 @@ def build_summary() -> dict:
             modules.append(entry)
             continue
         try:
-            data = SUMMARIZERS[module["id"]](conn)
-            entry.update(data)
+            entry.update(SUMMARIZERS[module["id"]](conn))
         except Exception as exc:  # noqa: BLE001
             entry["error"] = f"{type(exc).__name__}: {exc}"
         finally:
@@ -488,8 +508,13 @@ def main() -> int:
     if not summary_only:
         selected = [m for m in MODULES if not targets or m["id"] in targets]
         runs = [run_module(module) for module in selected]
-        write_json("status.json", {"generated_at": datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"), "runs": runs})
+        write_json(
+            "status.json",
+            {
+                "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "runs": runs,
+            },
+        )
         failed = [r["module"] for r in runs if not r["ok"]]
         if failed:
             log(f"크롤링 실패 모듈: {', '.join(failed)} (나머지 정상)")
