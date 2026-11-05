@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MI Terminal - Macro Economies & GSCPI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-base: #0a0a0c;
+      --bg-panel: #121318;
+      --bg-header: #181a20;
+      --bg-hover: #1f222e;
+      --border: #282a36;
+      --amber: #ff9800;
+      --cyan: #00e5ff;
+      --green: #00e676;
+      --red: #ff5252;
+      --text: #e0e2ec;
+      --text-muted: #8b8e9b;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-base);
+      color: var(--text);
+      font-family: 'Noto Sans KR', sans-serif;
+      padding: 16px;
+      font-size: 13px;
+    }
+
+    /* Top Standard Terminal Header */
+    .terminal-header {
+      background-color: var(--bg-header);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .terminal-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .terminal-title {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--amber);
+      letter-spacing: 0.5px;
+    }
+    .badge {
+      background: #232733;
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 229, 255, 0.3);
+    }
+    .terminal-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+    .nav-btn {
+      background: #1e222d;
+      color: var(--amber);
+      border: 1px solid var(--amber);
+      padding: 4px 12px;
+      border-radius: 3px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .nav-btn:hover {
+      background: var(--amber);
+      color: #000;
+    }
+
+    /* KPI Summary Cards */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 1024px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    .kpi-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--amber);
+      border-radius: 4px;
+      padding: 12px 14px;
+    }
+    .kpi-label {
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-bottom: 4px;
+      font-family: var(--font-mono);
+    }
+    .kpi-val {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--cyan);
+    }
+    .kpi-sub {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Main Grid Layout */
+    .grid-container {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 1024px) {
+      .grid-container { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .panel-title {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--amber);
+    }
+    .chart-container {
+      position: relative;
+      height: 300px;
+      width: 100%;
+    }
+
+    /* Tab Controls */
+    .tab-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .tab-btn {
+      background: #181a20;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .tab-btn.active {
+      background: #232733;
+      border-color: var(--cyan);
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    /* Data Table */
+    .table-container {
+      max-height: 680px;
+      overflow-y: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+    th, td {
+      padding: 8px 10px;
+      text-align: right;
+      border-bottom: 1px solid #1c1e26;
+    }
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+      background: #15171e;
+      position: sticky;
+      top: 0;
+    }
+    th:first-child, td:first-child { text-align: left; }
+    tr:hover td { background: var(--bg-hover); }
+    .pos { color: var(--green); }
+    .neg { color: var(--red); }
+  </style>
+</head>
+<body>
+
+  <!-- Bloomberg MI Header -->
+  <div class="terminal-header">
+    <div class="terminal-left">
+      <div class="terminal-title">MI TERMINAL // 03. MACRO ECONOMIES &amp; GSCPI</div>
+      <span class="badge">PROD LIVE</span>
+    </div>
+    <div class="terminal-right">
+      <span style="color: var(--text-muted)">SRC: World Bank / NY Fed</span>
+      <span style="color: var(--cyan)" id="liveClock">--:--:-- KST</span>
+      <a href="../index.html" class="nav-btn">PORTAL &lt;GO&gt;</a>
+    </div>
+  </div>
+
+  <!-- KPI Ribbon -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">GLOBAL SUPPLY CHAIN PRESSURE (GSCPI)</div>
+      <div class="kpi-val" id="kpiGscpi">--</div>
+      <div class="kpi-sub" id="kpiGscpiDate">Standard Deviations (0 = Average)</div>
+    </div>
+    <div class="kpi-card" style="border-left-color: var(--cyan)">
+      <div class="kpi-label">US GDP GROWTH (ANNUAL %)</div>
+      <div class="kpi-val" id="kpiUsGdp">--%</div>
+      <div class="kpi-sub" id="kpiUsGdpYear">World Bank Benchmark</div>
+    </div>
+    <div class="kpi-card" style="border-left-color: var(--green)">
+      <div class="kpi-label">US CPI INFLATION (ANNUAL %)</div>
+      <div class="kpi-val" id="kpiUsCpi">--%</div>
+      <div class="kpi-sub" id="kpiUsCpiYear">World Bank Benchmark</div>
+    </div>
+    <div class="kpi-card" style="border-left-color: #ffd600">
+      <div class="kpi-label">CHINA GDP GROWTH (ANNUAL %)</div>
+      <div class="kpi-val" id="kpiChnGdp">--%</div>
+      <div class="kpi-sub" id="kpiChnGdpYear">World Bank Benchmark</div>
+    </div>
+  </div>
+
+  <!-- Main Content Layout -->
+  <div class="grid-container">
+    <div>
+      <!-- GSCPI Chart Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">01. GLOBAL SUPPLY CHAIN PRESSURE INDEX (GSCPI)</span>
+          <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">Monthly Historical Trend</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="gscpiChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Macro Chart Panel with Tabs -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">02. MACRO INDICATORS BY MAJOR ECONOMIES</span>
+          <div class="tab-bar" style="margin-bottom:0;">
+            <button class="tab-btn active" onclick="switchMacroTab('GDP_GROWTH')">GDP GROWTH (%)</button>
+            <button class="tab-btn" onclick="switchMacroTab('CPI_INFLATION')">CPI INFLATION (%)</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="macroChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Country Snapshot Table Panel -->
+    <div>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">03. CROSS-COUNTRY SNAPSHOT</span>
+          <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">Latest WB Data</span>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Country</th>
+                <th>Group</th>
+                <th>GDP (%)</th>
+                <th>CPI (%)</th>
+              </tr>
+            </thead>
+            <tbody id="macroTableBody">
+              <tr><td colspan="4" style="text-align:center;">Loading Data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Live KST Clock Generator
+    function updateKstClock() {
+      const now = new Date();
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const kst = new Date(utc + (3600000 * 9));
+      document.getElementById('liveClock').textContent =
+        kst.toISOString().replace('T', ' ').substring(0, 19) + ' KST';
+    }
+    setInterval(updateKstClock, 1000);
+    updateKstClock();
+
+    let globalMacroData = {};
+    let currentIndicator = 'GDP_GROWTH';
+    let macroChartInstance = null;
+
+    async function initDashboard() {
+      try {
+        const [mRes, gRes] = await Promise.all([
+          fetch('macro_data.json'),
+          fetch('gscpi_data.json')
+        ]);
+        globalMacroData = await mRes.json();
+        const gscpiData = await gRes.json();
+
+        // 1. Render GSCPI
+        if (gscpiData && gscpiData.length > 0) {
+          const latest = gscpiData[gscpiData.length - 1];
+          const el = document.getElementById('kpiGscpi');
+          el.textContent = `${latest.value >= 0 ? '+' : ''}${latest.value.toFixed(2)}σ`;
+          el.className = 'kpi-val ' + (latest.value > 0 ? 'neg' : 'pos');
+          document.getElementById('kpiGscpiDate').textContent = `Latest: ${latest.date} (New York Fed)`;
+
+          renderGscpiChart(gscpiData);
+        }
+
+        // 2. Render Macro KPIs
+        const gdp = globalMacroData.GDP_GROWTH || {};
+        const cpi = globalMacroData.CPI_INFLATION || {};
+
+        if (gdp.USA?.series.length) {
+          const usLastGdp = gdp.USA.series[gdp.USA.series.length - 1];
+          document.getElementById('kpiUsGdp').textContent = `${usLastGdp.value.toFixed(2)}%`;
+          document.getElementById('kpiUsGdpYear').textContent = `Period: ${usLastGdp.year} Annual`;
+        }
+        if (cpi.USA?.series.length) {
+          const usLastCpi = cpi.USA.series[cpi.USA.series.length - 1];
+          document.getElementById('kpiUsCpi').textContent = `${usLastCpi.value.toFixed(2)}%`;
+          document.getElementById('kpiUsCpiYear').textContent = `Period: ${usLastCpi.year} Annual`;
+        }
+        if (gdp.CHN?.series.length) {
+          const chnLastGdp = gdp.CHN.series[gdp.CHN.series.length - 1];
+          document.getElementById('kpiChnGdp').textContent = `${chnLastGdp.value.toFixed(2)}%`;
+          document.getElementById('kpiChnGdpYear').textContent = `Period: ${chnLastGdp.year} Annual`;
+        }
+
+        // 3. Render Table & Macro Chart
+        renderMacroTable();
+        renderMacroChart(currentIndicator);
+
+      } catch (err) {
+        console.error('Data Loading Error:', err);
+      }
+    }
+
+    function renderGscpiChart(data) {
+      const ctx = document.getElementById('gscpiChart').getContext('2d');
+      const recent = data.slice(-72); // Last 6 years
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: recent.map(d => d.date),
+          datasets: [{
+            label: 'GSCPI (Standard Deviations)',
+            data: recent.map(d => d.value),
+            borderColor: '#00e5ff',
+            backgroundColor: 'rgba(0, 229, 255, 0.08)',
+            fill: true,
+            borderWidth: 1.5,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { grid: { color: '#1c1e26' }, ticks: { color: '#8b8e9b', font: { family: 'JetBrains Mono', size: 10 } } },
+            y: { grid: { color: '#1c1e26' }, ticks: { color: '#8b8e9b', font: { family: 'JetBrains Mono', size: 10 } } }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    function switchMacroTab(indicator) {
+      currentIndicator = indicator;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.includes(indicator === 'GDP_GROWTH' ? 'GDP' : 'CPI'));
+      });
+      renderMacroChart(indicator);
+    }
+
+    function renderMacroChart(indicator) {
+      const ctx = document.getElementById('macroChart').getContext('2d');
+      if (macroChartInstance) macroChartInstance.destroy();
+
+      const obj = globalMacroData[indicator] || {};
+      const targetCodes = ['WLD', 'USA', 'CHN', 'KOR', 'DEU', 'VNM'];
+      const years = obj.USA?.series.slice(-12).map(s => s.year) || [];
+
+      const datasets = targetCodes.map(code => {
+        const item = obj[code];
+        if (!item) return null;
+        const series = item.series.slice(-12);
+        return {
+          label: item.name,
+          data: series.map(s => s.value),
+          borderColor: item.color || '#2979ff',
+          borderWidth: 1.5,
+          fill: false,
+          pointRadius: 2
+        };
+      }).filter(Boolean);
+
+      macroChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels: years, datasets: datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { grid: { color: '#1c1e26' }, ticks: { color: '#8b8e9b', font: { family: 'JetBrains Mono', size: 10 } } },
+            y: { grid: { color: '#1c1e26' }, ticks: { color: '#8b8e9b', font: { family: 'JetBrains Mono', size: 10 } } }
+          },
+          plugins: {
+            legend: {
+              labels: { color: '#e0e2ec', font: { family: 'JetBrains Mono', size: 11 } }
+            }
+          }
+        }
+      });
+    }
+
+    function renderMacroTable() {
+      const tbody = document.getElementById('macroTableBody');
+      tbody.innerHTML = '';
+      const gdpObj = globalMacroData.GDP_GROWTH || {};
+      const cpiObj = globalMacroData.CPI_INFLATION || {};
+
+      Object.keys(gdpObj).forEach(code => {
+        const gItem = gdpObj[code];
+        const cItem = cpiObj[code];
+        const lastG = gItem?.series.length ? gItem.series[gItem.series.length - 1].value : null;
+        const lastC = cItem?.series.length ? cItem.series[cItem.series.length - 1].value : null;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color:#e0e2ec; font-weight:600;">${gItem.name} <span style="color:var(--text-muted); font-size:10px;">(${code})</span></td>
+          <td style="color:var(--text-muted); text-align:right;">${gItem.group}</td>
+          <td class="${lastG >= 0 ? 'pos' : 'neg'}">${lastG !== null ? lastG.toFixed(1) + '%' : '-'}</td>
+          <td style="color:var(--amber);">${lastC !== null ? lastC.toFixed(1) + '%' : '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', initDashboard);
+  </script>
+</body>
+</html>

@@ -1,0 +1,2364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MI Terminal | TAC Airfreight Index</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #02060b;
+      --panel: #07111c;
+      --panel2: #0a1724;
+      --line: #1c3448;
+      --text: #f1f6fa;
+      --muted: #8298aa;
+      --amber: #f6a623;
+      --cyan: #39c7e2;
+      --blue: #42a8f5;
+      --green: #35ca82;
+      --red: #ff6565;
+      --purple: #b791ff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      min-height: 44px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: #06101a;
+    }
+
+    .brand {
+      color: white;
+      font-weight: 900;
+      letter-spacing: .08em;
+      white-space: nowrap;
+    }
+
+    .brand-mark {
+      display: inline-block;
+      margin-right: 10px;
+      padding: 4px 7px;
+      color: #02060b;
+      background: var(--amber);
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 10px;
+      text-align: right;
+    }
+
+    .meta a {
+      color: var(--cyan);
+      text-decoration: none;
+    }
+
+    .terminal {
+      width: min(1600px, calc(100% - 24px));
+      margin: 12px auto 24px;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .kpi {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-top: 2px solid var(--blue);
+      background: var(--panel);
+    }
+
+    .kpi.amber {
+      border-top-color: var(--amber);
+    }
+
+    .kpi.green {
+      border-top-color: var(--green);
+    }
+
+    .kpi.purple {
+      border-top-color: var(--purple);
+    }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .06em;
+    }
+
+    .kpi-value {
+      margin-top: 8px;
+      font-size: 22px;
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .kpi-sub {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 9px;
+      text-align: right;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 10px;
+    }
+
+    .panel {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel2);
+    }
+
+    .panel-title {
+      color: var(--amber);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .06em;
+    }
+
+    .panel-meta {
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .panel-body {
+      padding: 10px;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .route-btn {
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: #040c14;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 9px;
+    }
+
+    .route-btn.active {
+      color: #02060b;
+      border-color: var(--amber);
+      background: var(--amber);
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 410px;
+    }
+
+    .table-wrap {
+      max-height: 455px;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      padding: 8px;
+      color: var(--amber);
+      border-bottom: 1px solid var(--line);
+      background: var(--panel2);
+      font-size: 9px;
+      text-align: right;
+    }
+
+    td {
+      padding: 8px;
+      border-bottom: 1px solid #132536;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    .status {
+      margin-top: 10px;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--green);
+      color: var(--muted);
+      background: #02070d;
+      font-size: 10px;
+    }
+
+    .up {
+      color: var(--green);
+      font-weight: 800;
+    }
+
+    .down {
+      color: var(--red);
+      font-weight: 800;
+    }
+
+    .flat {
+      color: var(--muted);
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .meta {
+        display: none;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .kpis {
+        grid-template-columns: 1fr;
+      }
+
+      .terminal {
+        width: calc(100% - 16px);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">MI&lt;GO&gt;</span>
+      AIR TERMINAL // TAC BAI
+    </div>
+
+    <div class="meta">
+      SRC:
+      <a href="https://www.aircargonews.net/data-hub/industry-data/baltic-exchange-airfreight-rate-index/" target="_blank" rel="noopener">
+        AIR CARGO NEWS
+      </a>
+      | UPDATED: 2026-11-05 01:40:17
+    </div>
+  </header>
+
+  <main class="terminal">
+    <section class="kpis" id="kpi-area"></section>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-head">
+          <span class="panel-title">
+            01. HISTORICAL SPOT RATE TIME-SERIES
+          </span>
+          <span class="panel-meta">USD / KG</span>
+        </div>
+
+        <div class="panel-body">
+          <div class="buttons" id="route-buttons"></div>
+
+          <div class="chart-wrap">
+            <canvas id="chart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <span class="panel-title">
+            02. ROUTE WATCHLIST
+          </span>
+          <span class="panel-meta">LATEST / PREV CHANGE</span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ROUTE</th>
+                <th>LATEST</th>
+                <th>CHANGE</th>
+                <th>DATE</th>
+              </tr>
+            </thead>
+            <tbody id="watchlist-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <footer class="status" id="status-bar">
+      SYSTEM STATUS: INITIALIZING
+    </footer>
+  </main>
+
+  <script type="application/json" id="tac-data">
+{
+  "generated_at": "2026-11-05 01:40:17",
+  "source": {
+    "name": "Baltic Exchange Airfreight Rate Index",
+    "publisher": "Air Cargo News",
+    "parent_url": "https://www.aircargonews.net/data-hub/industry-data/baltic-exchange-airfreight-rate-index/",
+    "embed_url": "https://e.infogram.com/_/SuAWaj6s2iFahJI4zPJw?src=embed",
+    "infogram_id": "SuAWaj6s2iFahJI4zPJw"
+  },
+  "definition": {
+    "overall_index": "Dashboard-derived arithmetic average of available route-level airfreight rates. This is not an official TAC composite index.",
+    "weekly_change": "Dashboard-derived average percentage change versus the preceding available period.",
+    "unit": "USD/kg"
+  },
+  "last_sync": {
+    "started_at": "2026-11-05 01:40:16",
+    "finished_at": "2026-11-05 01:40:17",
+    "status": "SUCCESS",
+    "message": "HISTORICAL_SYNC new=0, updated=0, unchanged=115, total=115",
+    "snapshot_id": 128,
+    "route_count": 3,
+    "data_date": "2026-10-01"
+  },
+  "history": [
+    {
+      "snapshot_id": 122,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2015-01-01",
+      "overall_index": 3.21,
+      "weekly_change": null,
+      "route_count": 2
+    },
+    {
+      "snapshot_id": 123,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2015-02-01",
+      "overall_index": 3.1,
+      "weekly_change": -3.204818564485757,
+      "route_count": 2
+    },
+    {
+      "snapshot_id": 124,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2015-03-01",
+      "overall_index": 3.1550000000000002,
+      "weekly_change": 0.9088421340686841,
+      "route_count": 2
+    },
+    {
+      "snapshot_id": 125,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2015-04-01",
+      "overall_index": 3.02,
+      "weekly_change": -3.6096256684491976,
+      "route_count": 2
+    },
+    {
+      "snapshot_id": 126,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2015-05-01",
+      "overall_index": 2.885,
+      "weekly_change": -4.243712084683613,
+      "route_count": 2
+    },
+    {
+      "snapshot_id": 127,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2015-06-01",
+      "overall_index": 2.8099999999999996,
+      "weekly_change": -2.0581039755351744,
+      "route_count": 2
+    },
+    {
+      "snapshot_id": 2,
+      "captured_at": "2026-10-21 07:43:27",
+      "data_date": "2016-09-01",
+      "overall_index": 2.4166666666666665,
+      "weekly_change": null,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 3,
+      "captured_at": "2026-10-21 07:43:27",
+      "data_date": "2016-10-01",
+      "overall_index": 2.723333333333333,
+      "weekly_change": 12.335592021693765,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 4,
+      "captured_at": "2026-10-21 07:43:27",
+      "data_date": "2016-11-01",
+      "overall_index": 3.1999999999999997,
+      "weekly_change": 17.42110353436287,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 5,
+      "captured_at": "2026-10-21 07:43:27",
+      "data_date": "2016-12-01",
+      "overall_index": 3.123333333333333,
+      "weekly_change": -0.6542615422661524,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 6,
+      "captured_at": "2026-10-21 07:43:27",
+      "data_date": "2017-01-01",
+      "overall_index": 2.75,
+      "weekly_change": -12.13696375566879,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 7,
+      "captured_at": "2026-10-21 07:43:27",
+      "data_date": "2017-02-01",
+      "overall_index": 2.436666666666667,
+      "weekly_change": -10.496720217746839,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 8,
+      "captured_at": "2026-10-21 07:43:27",
+      "data_date": "2017-03-01",
+      "overall_index": 2.6999999999999997,
+      "weekly_change": 10.08826761571577,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 9,
+      "captured_at": "2026-10-21 07:43:27",
+      "data_date": "2017-04-01",
+      "overall_index": 2.643333333333333,
+      "weekly_change": -1.1977611894241023,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 10,
+      "captured_at": "2026-10-21 07:43:27",
+      "data_date": "2017-05-01",
+      "overall_index": 2.5566666666666666,
+      "weekly_change": -3.2906462694925502,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 11,
+      "captured_at": "2026-10-21 07:43:27",
+      "data_date": "2017-06-01",
+      "overall_index": 2.5833333333333335,
+      "weekly_change": 0.7550650758588872,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 12,
+      "captured_at": "2026-10-21 07:43:27",
+      "data_date": "2017-07-01",
+      "overall_index": 2.5500000000000003,
+      "weekly_change": -1.8336799086981765,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 13,
+      "captured_at": "2026-10-21 07:43:27",
+      "data_date": "2017-08-01",
+      "overall_index": 2.5766666666666667,
+      "weekly_change": 2.120900538467579,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 14,
+      "captured_at": "2026-10-21 07:43:27",
+      "data_date": "2017-09-01",
+      "overall_index": 2.8766666666666665,
+      "weekly_change": 10.824555079640291,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 15,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2017-10-01",
+      "overall_index": 3.013333333333333,
+      "weekly_change": 16.353068914862362,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 16,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2017-11-01",
+      "overall_index": 3.5100000000000002,
+      "weekly_change": 15.861714261667105,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 17,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2017-12-01",
+      "overall_index": 3.66,
+      "weekly_change": 4.856952057337098,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 18,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2018-01-01",
+      "overall_index": 3.0833333333333335,
+      "weekly_change": -13.66690668579957,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 19,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2018-02-01",
+      "overall_index": 3.073333333333333,
+      "weekly_change": -0.2945266288970429,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 20,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2018-03-01",
+      "overall_index": 3.033333333333333,
+      "weekly_change": -1.580755173450795,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 21,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2018-04-01",
+      "overall_index": 3.016666666666667,
+      "weekly_change": -0.39848955213041926,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 22,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2018-05-01",
+      "overall_index": 3.0199999999999996,
+      "weekly_change": -0.33632498819083906,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 23,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2018-06-01",
+      "overall_index": 3.0,
+      "weekly_change": -0.39006113728205377,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 24,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2018-07-01",
+      "overall_index": 3.0700000000000003,
+      "weekly_change": 2.3485880054466812,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 25,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2018-08-01",
+      "overall_index": 3.073333333333333,
+      "weekly_change": -0.2831277543198447,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 26,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2018-09-01",
+      "overall_index": 3.223333333333333,
+      "weekly_change": 4.162761409849486,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 27,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2018-10-01",
+      "overall_index": 3.4633333333333334,
+      "weekly_change": 6.5317642832003004,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 28,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2018-11-01",
+      "overall_index": 3.733333333333333,
+      "weekly_change": 6.445496224379724,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 29,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2018-12-01",
+      "overall_index": 3.5833333333333335,
+      "weekly_change": -1.5066835100491367,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 30,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2019-01-01",
+      "overall_index": 2.92,
+      "weekly_change": -17.536960229567228,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 31,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2019-02-01",
+      "overall_index": 2.8366666666666664,
+      "weekly_change": -2.3625941351483615,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 32,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2019-03-01",
+      "overall_index": 2.8466666666666662,
+      "weekly_change": 1.1770244821092255,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 33,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2019-04-01",
+      "overall_index": 2.813333333333333,
+      "weekly_change": -2.0254014231233737,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 34,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2019-05-01",
+      "overall_index": 2.856666666666667,
+      "weekly_change": 1.3229325215626575,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 35,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2019-06-01",
+      "overall_index": 2.7466666666666666,
+      "weekly_change": -3.4778613912909093,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 36,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2019-07-01",
+      "overall_index": 2.7399999999999998,
+      "weekly_change": -0.22459764855481046,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 37,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2019-08-01",
+      "overall_index": 2.6700000000000004,
+      "weekly_change": -2.03688235236649,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 38,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2019-09-01",
+      "overall_index": 2.643333333333333,
+      "weekly_change": -2.0296258771436113,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 39,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2019-10-01",
+      "overall_index": 2.7099999999999995,
+      "weekly_change": 1.9700855022693515,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 40,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2019-11-01",
+      "overall_index": 2.9499999999999997,
+      "weekly_change": 7.261778776135902,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 41,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2019-12-01",
+      "overall_index": 2.8433333333333337,
+      "weekly_change": -2.8439904080241463,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 42,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2020-01-01",
+      "overall_index": 2.626666666666667,
+      "weekly_change": -4.965223798096726,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 43,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2020-02-01",
+      "overall_index": 2.516666666666667,
+      "weekly_change": -4.34220946077026,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 44,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2020-03-01",
+      "overall_index": 3.223333333333334,
+      "weekly_change": 29.228315135361616,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 45,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2020-04-01",
+      "overall_index": 4.816666666666666,
+      "weekly_change": 50.28845902081789,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 46,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2020-05-01",
+      "overall_index": 5.773333333333333,
+      "weekly_change": 17.329663396939342,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 47,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2020-06-01",
+      "overall_index": 4.753333333333334,
+      "weekly_change": -14.279325682285409,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 48,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2020-07-01",
+      "overall_index": 3.953333333333333,
+      "weekly_change": -16.3326692964544,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 49,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2020-08-01",
+      "overall_index": 4.243333333333333,
+      "weekly_change": 6.641241784934775,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 50,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2020-09-01",
+      "overall_index": 4.006666666666667,
+      "weekly_change": -5.016951492889555,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 51,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2020-10-01",
+      "overall_index": 4.113333333333333,
+      "weekly_change": 1.7709854165725722,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 52,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2020-11-01",
+      "overall_index": 5.6000000000000005,
+      "weekly_change": 37.33191688474688,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 53,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2020-12-01",
+      "overall_index": 6.03,
+      "weekly_change": 9.708014527473614,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 54,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2021-01-01",
+      "overall_index": 5.053333333333334,
+      "weekly_change": -16.233790498906775,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 55,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2021-02-01",
+      "overall_index": 5.08,
+      "weekly_change": 0.6282674773856487,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 56,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2021-03-01",
+      "overall_index": 4.66,
+      "weekly_change": -7.33479020101012,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 57,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2021-04-01",
+      "overall_index": 5.739999999999999,
+      "weekly_change": 20.46022493510579,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 58,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2021-05-01",
+      "overall_index": 5.946666666666666,
+      "weekly_change": 3.9923458386488018,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 59,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2021-06-01",
+      "overall_index": 5.433333333333334,
+      "weekly_change": -8.421779507814565,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 60,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2021-07-01",
+      "overall_index": 5.526666666666666,
+      "weekly_change": 2.1312657888151567,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 61,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2021-08-01",
+      "overall_index": 5.736666666666667,
+      "weekly_change": 2.1854508799910857,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 62,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2021-09-01",
+      "overall_index": 6.506666666666668,
+      "weekly_change": 13.295549723196425,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 63,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2021-10-01",
+      "overall_index": 6.8566666666666665,
+      "weekly_change": 5.268600944464938,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 64,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2021-11-01",
+      "overall_index": 7.966666666666666,
+      "weekly_change": 15.722660325885682,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 65,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2021-12-01",
+      "overall_index": 8.643333333333333,
+      "weekly_change": 9.480585077044017,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 66,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2022-01-01",
+      "overall_index": 7.376666666666668,
+      "weekly_change": -14.33585076674835,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 67,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2022-02-01",
+      "overall_index": 6.886666666666667,
+      "weekly_change": -3.775202930777617,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 68,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2022-03-01",
+      "overall_index": 6.053333333333334,
+      "weekly_change": -11.111900892465156,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 69,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2022-04-01",
+      "overall_index": 6.993333333333333,
+      "weekly_change": 15.165589692680228,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 70,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2022-05-01",
+      "overall_index": 6.756666666666667,
+      "weekly_change": -4.918503411532273,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 71,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2022-06-01",
+      "overall_index": 6.353333333333334,
+      "weekly_change": -4.9912473476221555,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 72,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2022-07-01",
+      "overall_index": 6.216666666666666,
+      "weekly_change": -2.5774028089804797,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 73,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2022-08-01",
+      "overall_index": 6.206666666666666,
+      "weekly_change": 0.5061904262688703,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 74,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2022-09-01",
+      "overall_index": 5.966666666666668,
+      "weekly_change": -3.5501356234703274,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 75,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2022-10-01",
+      "overall_index": 5.406666666666666,
+      "weekly_change": -8.198808990229809,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 76,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2022-11-01",
+      "overall_index": 5.453333333333333,
+      "weekly_change": 2.79583332061436,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 77,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2022-12-01",
+      "overall_index": 5.46,
+      "weekly_change": 0.3209863561477741,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 78,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2023-01-01",
+      "overall_index": 4.8500000000000005,
+      "weekly_change": -12.184982902573651,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 79,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2023-02-01",
+      "overall_index": 4.293333333333333,
+      "weekly_change": -9.366204082295654,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 80,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2023-03-01",
+      "overall_index": 4.3,
+      "weekly_change": -0.5414838901254306,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 81,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2023-04-01",
+      "overall_index": 4.09,
+      "weekly_change": -5.268829280033661,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 82,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2023-05-01",
+      "overall_index": 3.8366666666666664,
+      "weekly_change": -7.1084909242803995,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 83,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2023-06-01",
+      "overall_index": 3.6666666666666665,
+      "weekly_change": -5.334868855269416,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 84,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2023-07-01",
+      "overall_index": 3.4800000000000004,
+      "weekly_change": -5.66185351260848,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 85,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2023-08-01",
+      "overall_index": 3.563333333333333,
+      "weekly_change": 2.352381516497898,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 86,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2023-09-01",
+      "overall_index": 3.59,
+      "weekly_change": 0.37408401198826974,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 87,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2023-10-01",
+      "overall_index": 3.9766666666666666,
+      "weekly_change": 9.31743139866599,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 88,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2023-11-01",
+      "overall_index": 4.256666666666667,
+      "weekly_change": 3.922577930106329,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 89,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2023-12-01",
+      "overall_index": 4.9366666666666665,
+      "weekly_change": 16.550421512574587,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 90,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2024-01-01",
+      "overall_index": 3.763333333333333,
+      "weekly_change": -22.21149273113009,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 91,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2024-02-01",
+      "overall_index": 3.6766666666666663,
+      "weekly_change": 1.01201121288165,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 92,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2024-03-01",
+      "overall_index": 3.6799999999999997,
+      "weekly_change": 0.26134645732320455,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 93,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2024-04-01",
+      "overall_index": 3.956666666666667,
+      "weekly_change": 3.5303055648488892,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 94,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2024-05-01",
+      "overall_index": 3.973333333333334,
+      "weekly_change": 1.6429418696229083,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 95,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2024-06-01",
+      "overall_index": 4.079999999999999,
+      "weekly_change": 1.6181360665989895,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 96,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2024-07-01",
+      "overall_index": 4.046666666666667,
+      "weekly_change": -0.785221106381632,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 97,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2024-08-01",
+      "overall_index": 4.1466666666666665,
+      "weekly_change": 3.1370273245273217,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 98,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2024-09-01",
+      "overall_index": 4.213333333333334,
+      "weekly_change": 1.0294732229065222,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 99,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2024-10-01",
+      "overall_index": 4.13,
+      "weekly_change": -3.4865239879235035,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 100,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2024-11-01",
+      "overall_index": 4.526666666666666,
+      "weekly_change": 11.339937654106082,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 101,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2024-12-01",
+      "overall_index": 5.1033333333333335,
+      "weekly_change": 20.058665128470416,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 102,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2025-01-01",
+      "overall_index": 4.38,
+      "weekly_change": -12.99598479940066,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 103,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2025-02-01",
+      "overall_index": 4.216666666666667,
+      "weekly_change": -2.994274244274236,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 104,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2025-03-01",
+      "overall_index": 4.166666666666667,
+      "weekly_change": -1.3749585052011402,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 105,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2025-04-01",
+      "overall_index": 4.140000000000001,
+      "weekly_change": -2.0928828171240865,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 106,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2025-05-01",
+      "overall_index": 3.8666666666666667,
+      "weekly_change": -7.873480925235948,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 107,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2025-06-01",
+      "overall_index": 3.7900000000000005,
+      "weekly_change": -2.5397813635129407,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 108,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2025-07-01",
+      "overall_index": 3.883333333333333,
+      "weekly_change": 3.1761755260301023,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 109,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2025-08-01",
+      "overall_index": 3.89,
+      "weekly_change": -0.27803985708836026,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 110,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2025-09-01",
+      "overall_index": 3.9200000000000004,
+      "weekly_change": -0.4292324311217826,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 111,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2025-10-01",
+      "overall_index": 4.06,
+      "weekly_change": 1.7999302023366868,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 112,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2025-11-01",
+      "overall_index": 4.446666666666666,
+      "weekly_change": 10.546409596977194,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 113,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2025-12-01",
+      "overall_index": 4.873333333333333,
+      "weekly_change": 11.680186983099604,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 114,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2026-01-01",
+      "overall_index": 4.306666666666667,
+      "weekly_change": -7.931538365874894,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 115,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2026-02-01",
+      "overall_index": 4.183333333333334,
+      "weekly_change": -2.774983232729705,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 116,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2026-03-01",
+      "overall_index": 4.303333333333334,
+      "weekly_change": 3.7354884150940784,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 117,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2026-04-01",
+      "overall_index": 5.18,
+      "weekly_change": 17.201471085090336,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 118,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2026-05-01",
+      "overall_index": 5.23,
+      "weekly_change": -0.7677216259849745,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 119,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2026-06-01",
+      "overall_index": 5.286666666666666,
+      "weekly_change": 1.16938598379453,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 120,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2026-07-01",
+      "overall_index": 4.75,
+      "weekly_change": -9.561491071385294,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 121,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2026-08-01",
+      "overall_index": 4.646666666666667,
+      "weekly_change": -3.1410033460478775,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 1,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2026-09-01",
+      "overall_index": 4.739999999999999,
+      "weekly_change": 2.07229849560474,
+      "route_count": 3
+    },
+    {
+      "snapshot_id": 128,
+      "captured_at": "2026-11-02 01:31:35",
+      "data_date": "2026-10-01",
+      "overall_index": 5.206666666666666,
+      "weekly_change": 10.235636277302945,
+      "route_count": 3
+    }
+  ],
+  "latest_detail": [
+    {
+      "snapshot_id": 128,
+      "route_code": "Frankfurt-North America",
+      "origin": "Frankfurt",
+      "destination": "North America",
+      "index_value": 2.67,
+      "weekly_change": 11.250000000000002,
+      "monthly_change": null,
+      "ytd_change": null,
+      "data_date": "2026-10-01",
+      "captured_at": "2026-11-02 01:31:35"
+    },
+    {
+      "snapshot_id": 128,
+      "route_code": "Hong Kong-Europe",
+      "origin": "Hong Kong",
+      "destination": "Europe",
+      "index_value": 5.31,
+      "weekly_change": 10.624999999999996,
+      "monthly_change": null,
+      "ytd_change": null,
+      "data_date": "2026-10-01",
+      "captured_at": "2026-11-02 01:31:35"
+    },
+    {
+      "snapshot_id": 128,
+      "route_code": "Hong Kong-North America",
+      "origin": "Hong Kong",
+      "destination": "North America",
+      "index_value": 7.64,
+      "weekly_change": 8.831908831908834,
+      "monthly_change": null,
+      "ytd_change": null,
+      "data_date": "2026-10-01",
+      "captured_at": "2026-11-02 01:31:35"
+    }
+  ],
+  "raw_dataset": {
+    "labels": [
+      "2015-01-01",
+      "2015-02-01",
+      "2015-03-01",
+      "2015-04-01",
+      "2015-05-01",
+      "2015-06-01",
+      "2016-09-01",
+      "2016-10-01",
+      "2016-11-01",
+      "2016-12-01",
+      "2017-01-01",
+      "2017-02-01",
+      "2017-03-01",
+      "2017-04-01",
+      "2017-05-01",
+      "2017-06-01",
+      "2017-07-01",
+      "2017-08-01",
+      "2017-09-01",
+      "2017-10-01",
+      "2017-11-01",
+      "2017-12-01",
+      "2018-01-01",
+      "2018-02-01",
+      "2018-03-01",
+      "2018-04-01",
+      "2018-05-01",
+      "2018-06-01",
+      "2018-07-01",
+      "2018-08-01",
+      "2018-09-01",
+      "2018-10-01",
+      "2018-11-01",
+      "2018-12-01",
+      "2019-01-01",
+      "2019-02-01",
+      "2019-03-01",
+      "2019-04-01",
+      "2019-05-01",
+      "2019-06-01",
+      "2019-07-01",
+      "2019-08-01",
+      "2019-09-01",
+      "2019-10-01",
+      "2019-11-01",
+      "2019-12-01",
+      "2020-01-01",
+      "2020-02-01",
+      "2020-03-01",
+      "2020-04-01",
+      "2020-05-01",
+      "2020-06-01",
+      "2020-07-01",
+      "2020-08-01",
+      "2020-09-01",
+      "2020-10-01",
+      "2020-11-01",
+      "2020-12-01",
+      "2021-01-01",
+      "2021-02-01",
+      "2021-03-01",
+      "2021-04-01",
+      "2021-05-01",
+      "2021-06-01",
+      "2021-07-01",
+      "2021-08-01",
+      "2021-09-01",
+      "2021-10-01",
+      "2021-11-01",
+      "2021-12-01",
+      "2022-01-01",
+      "2022-02-01",
+      "2022-03-01",
+      "2022-04-01",
+      "2022-05-01",
+      "2022-06-01",
+      "2022-07-01",
+      "2022-08-01",
+      "2022-09-01",
+      "2022-10-01",
+      "2022-11-01",
+      "2022-12-01",
+      "2023-01-01",
+      "2023-02-01",
+      "2023-03-01",
+      "2023-04-01",
+      "2023-05-01",
+      "2023-06-01",
+      "2023-07-01",
+      "2023-08-01",
+      "2023-09-01",
+      "2023-10-01",
+      "2023-11-01",
+      "2023-12-01",
+      "2024-01-01",
+      "2024-02-01",
+      "2024-03-01",
+      "2024-04-01",
+      "2024-05-01",
+      "2024-06-01",
+      "2024-07-01",
+      "2024-08-01",
+      "2024-09-01",
+      "2024-10-01",
+      "2024-11-01",
+      "2024-12-01",
+      "2025-01-01",
+      "2025-02-01",
+      "2025-03-01",
+      "2025-04-01",
+      "2025-05-01",
+      "2025-06-01",
+      "2025-07-01",
+      "2025-08-01",
+      "2025-09-01",
+      "2025-10-01",
+      "2025-11-01",
+      "2025-12-01",
+      "2026-01-01",
+      "2026-02-01",
+      "2026-03-01",
+      "2026-04-01",
+      "2026-05-01",
+      "2026-06-01",
+      "2026-07-01",
+      "2026-08-01",
+      "2026-09-01",
+      "2026-10-01"
+    ],
+    "series": [
+      {
+        "name": "Frankfurt-North America",
+        "values": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          2.34,
+          2.46,
+          2.84,
+          3.08,
+          2.55,
+          2.64,
+          3.1,
+          2.56,
+          2.3,
+          2.22,
+          2.07,
+          2.31,
+          2.42,
+          2.42,
+          2.71,
+          2.94,
+          2.89,
+          3.06,
+          3.01,
+          2.9,
+          2.63,
+          2.54,
+          2.57,
+          2.43,
+          2.45,
+          2.5,
+          2.46,
+          2.57,
+          2.27,
+          2.36,
+          2.55,
+          2.19,
+          2.21,
+          2.12,
+          2.11,
+          2.16,
+          1.93,
+          1.82,
+          1.75,
+          1.76,
+          1.91,
+          1.84,
+          2.56,
+          3.83,
+          3.71,
+          3.87,
+          3.73,
+          4.02,
+          3.39,
+          2.92,
+          4.05,
+          5.0,
+          4.45,
+          4.52,
+          4.45,
+          4.13,
+          4.41,
+          4.07,
+          4.1,
+          3.94,
+          4.21,
+          3.95,
+          4.45,
+          5.21,
+          4.62,
+          5.18,
+          4.89,
+          5.4,
+          4.23,
+          4.08,
+          3.82,
+          3.95,
+          3.87,
+          3.7,
+          4.25,
+          4.36,
+          3.45,
+          3.55,
+          3.37,
+          3.08,
+          2.67,
+          2.35,
+          2.13,
+          2.19,
+          2.15,
+          2.18,
+          1.98,
+          2.35,
+          1.95,
+          2.19,
+          2.24,
+          1.86,
+          1.98,
+          1.93,
+          1.92,
+          2.05,
+          2.0,
+          1.78,
+          2.09,
+          3.09,
+          2.86,
+          2.91,
+          2.82,
+          2.49,
+          2.13,
+          2.02,
+          2.15,
+          2.12,
+          1.99,
+          1.89,
+          2.16,
+          2.58,
+          2.8,
+          2.7,
+          2.83,
+          2.81,
+          2.61,
+          2.7,
+          2.53,
+          2.38,
+          2.4,
+          2.67
+        ]
+      },
+      {
+        "name": "Hong Kong-Europe",
+        "values": [
+          2.81,
+          2.77,
+          2.57,
+          2.57,
+          2.5,
+          2.55,
+          1.99,
+          2.27,
+          2.69,
+          2.78,
+          2.46,
+          2.13,
+          2.11,
+          2.19,
+          2.21,
+          2.26,
+          2.24,
+          2.21,
+          2.43,
+          2.57,
+          2.99,
+          3.11,
+          2.67,
+          2.54,
+          2.44,
+          2.5,
+          2.55,
+          2.66,
+          2.76,
+          2.83,
+          2.91,
+          3.09,
+          3.37,
+          3.5,
+          2.83,
+          2.61,
+          2.61,
+          2.65,
+          2.65,
+          2.66,
+          2.67,
+          2.56,
+          2.56,
+          2.82,
+          3.26,
+          3.15,
+          2.83,
+          2.52,
+          3.08,
+          4.93,
+          5.88,
+          4.53,
+          3.17,
+          3.21,
+          3.37,
+          3.76,
+          5.38,
+          5.59,
+          4.28,
+          4.3,
+          4.05,
+          4.61,
+          4.73,
+          4.34,
+          4.58,
+          4.63,
+          5.57,
+          6.68,
+          7.91,
+          8.0,
+          6.61,
+          5.8,
+          5.09,
+          6.01,
+          6.35,
+          6.26,
+          6.34,
+          6.34,
+          6.09,
+          5.78,
+          5.62,
+          5.52,
+          4.96,
+          4.4,
+          4.15,
+          3.99,
+          3.77,
+          3.73,
+          3.62,
+          3.65,
+          3.72,
+          4.26,
+          4.64,
+          5.36,
+          4.12,
+          4.18,
+          3.92,
+          4.47,
+          4.41,
+          4.56,
+          4.5,
+          4.43,
+          4.66,
+          4.88,
+          5.29,
+          5.49,
+          4.68,
+          4.37,
+          4.39,
+          4.57,
+          4.39,
+          4.36,
+          4.39,
+          4.26,
+          4.41,
+          4.59,
+          5.0,
+          5.44,
+          4.44,
+          4.44,
+          4.97,
+          5.79,
+          5.71,
+          5.45,
+          4.76,
+          4.58,
+          4.8,
+          5.31
+        ]
+      },
+      {
+        "name": "Hong Kong-North America",
+        "values": [
+          3.61,
+          3.43,
+          3.74,
+          3.47,
+          3.27,
+          3.07,
+          2.92,
+          3.44,
+          4.07,
+          3.51,
+          3.24,
+          2.54,
+          2.89,
+          3.18,
+          3.16,
+          3.27,
+          3.34,
+          3.21,
+          3.78,
+          4.05,
+          4.83,
+          4.93,
+          3.69,
+          3.62,
+          3.65,
+          3.65,
+          3.88,
+          3.8,
+          3.88,
+          3.96,
+          4.31,
+          4.8,
+          5.37,
+          4.68,
+          3.66,
+          3.54,
+          3.38,
+          3.6,
+          3.71,
+          3.46,
+          3.44,
+          3.29,
+          3.44,
+          3.49,
+          3.84,
+          3.62,
+          3.14,
+          3.19,
+          4.03,
+          5.69,
+          7.73,
+          5.86,
+          4.96,
+          5.5,
+          5.26,
+          5.66,
+          7.37,
+          7.5,
+          6.43,
+          6.42,
+          5.48,
+          8.48,
+          8.7,
+          7.89,
+          7.9,
+          8.64,
+          9.74,
+          9.94,
+          11.54,
+          12.72,
+          10.9,
+          9.68,
+          8.18,
+          9.57,
+          9.69,
+          8.72,
+          8.49,
+          8.33,
+          7.94,
+          6.74,
+          6.49,
+          6.5,
+          6.14,
+          4.93,
+          5.38,
+          5.2,
+          5.07,
+          4.92,
+          4.69,
+          4.85,
+          4.9,
+          5.49,
+          6.15,
+          7.1,
+          5.22,
+          4.66,
+          4.88,
+          5.54,
+          5.53,
+          5.75,
+          5.72,
+          5.96,
+          5.98,
+          5.73,
+          6.2,
+          6.73,
+          5.6,
+          5.37,
+          5.29,
+          5.36,
+          5.08,
+          4.99,
+          5.11,
+          5.29,
+          5.36,
+          5.7,
+          6.18,
+          6.6,
+          5.68,
+          5.41,
+          5.11,
+          6.94,
+          7.37,
+          7.71,
+          6.96,
+          6.98,
+          7.02,
+          7.64
+        ]
+      }
+    ]
+  }
+}
+  </script>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var DATA = JSON.parse(
+        document.getElementById("tac-data").textContent
+      );
+
+      var selectedRoutes = {};
+      var chart = null;
+
+      var colors = [
+        "#f6a623",
+        "#42a8f5",
+        "#35ca82",
+        "#b791ff",
+        "#ff6565",
+        "#39c7e2"
+      ];
+
+      function number(value, digits) {
+        if (
+          value === null ||
+          value === undefined ||
+          isNaN(Number(value))
+        ) {
+          return "--";
+        }
+
+        return Number(value).toLocaleString("en-US", {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits
+        });
+      }
+
+      function percent(value) {
+        if (
+          value === null ||
+          value === undefined ||
+          isNaN(Number(value))
+        ) {
+          return "--";
+        }
+
+        var numericValue = Number(value);
+
+        return (
+          (numericValue >= 0 ? "+" : "") +
+          numericValue.toFixed(2) +
+          "%"
+        );
+      }
+
+      function deltaClass(value) {
+        if (value === null || value === undefined) {
+          return "flat";
+        }
+
+        if (Number(value) > 0) {
+          return "up";
+        }
+
+        if (Number(value) < 0) {
+          return "down";
+        }
+
+        return "flat";
+      }
+
+      function arrow(value) {
+        if (value === null || value === undefined) {
+          return "";
+        }
+
+        if (Number(value) > 0) {
+          return "▲ ";
+        }
+
+        if (Number(value) < 0) {
+          return "▼ ";
+        }
+
+        return "";
+      }
+
+      function getSeriesMap() {
+        var result = {};
+
+        ((DATA.raw_dataset || {}).series || []).forEach(
+          function (item) {
+            result[item.name] = item;
+          }
+        );
+
+        return result;
+      }
+
+      function renderKpi() {
+        var history = DATA.history || [];
+        var latest = history.length
+          ? history[history.length - 1]
+          : null;
+
+        var detail = DATA.latest_detail || [];
+
+        var cards = [
+          {
+            label: "LATEST DATE",
+            value: latest ? latest.data_date : "--",
+            sub: "SOURCE OBSERVATION",
+            cls: ""
+          },
+          {
+            label: "ROUTE SPOT AVERAGE",
+            value: latest
+              ? "$" + number(latest.overall_index, 2)
+              : "--",
+            sub: "USD / KG",
+            cls: "amber"
+          },
+          {
+            label: "PERIODIC DELTA",
+            value: latest &&
+              latest.weekly_change !== null
+              ? '<span class="' +
+                deltaClass(latest.weekly_change) +
+                '">' +
+                arrow(latest.weekly_change) +
+                percent(latest.weekly_change) +
+                "</span>"
+              : "--",
+            sub: "AVERAGE ROUTE CHANGE",
+            cls: "purple"
+          },
+          {
+            label: "TRACKED CORRIDORS",
+            value: (
+              latest
+                ? latest.route_count
+                : detail.length
+            ) + " PAIRS",
+            sub: "ACTIVE ROUTES",
+            cls: "green"
+          }
+        ];
+
+        document.getElementById("kpi-area").innerHTML =
+          cards.map(function (card) {
+            return (
+              '<div class="kpi ' + card.cls + '">' +
+                '<div class="kpi-label">' +
+                  card.label +
+                "</div>" +
+                '<div class="kpi-value">' +
+                  card.value +
+                "</div>" +
+                '<div class="kpi-sub">' +
+                  card.sub +
+                "</div>" +
+              "</div>"
+            );
+          }).join("");
+      }
+
+      function renderButtons() {
+        var routeMap = getSeriesMap();
+        var routes = Object.keys(routeMap);
+        var target = document.getElementById("route-buttons");
+
+        routes.forEach(function (route) {
+          if (selectedRoutes[route] === undefined) {
+            selectedRoutes[route] = true;
+          }
+        });
+
+        target.innerHTML = routes.map(function (route) {
+          return (
+            '<button class="route-btn ' +
+            (selectedRoutes[route] ? "active" : "") +
+            '" data-route="' +
+            route +
+            '">' +
+            route.toUpperCase() +
+            "</button>"
+          );
+        }).join("");
+
+        target.querySelectorAll(".route-btn").forEach(
+          function (button) {
+            button.addEventListener("click", function () {
+              var route = button.getAttribute("data-route");
+
+              selectedRoutes[route] = !selectedRoutes[route];
+
+              var activeRoutes = Object.keys(
+                selectedRoutes
+              ).filter(function (key) {
+                return selectedRoutes[key];
+              });
+
+              if (!activeRoutes.length) {
+                selectedRoutes[route] = true;
+              }
+
+              renderButtons();
+              renderChart();
+            });
+          }
+        );
+      }
+
+      function renderChart() {
+        if (typeof Chart === "undefined") {
+          return;
+        }
+
+        var routeMap = getSeriesMap();
+        var labels = (
+          (DATA.raw_dataset || {}).labels || []
+        );
+
+        var activeRoutes = Object.keys(routeMap).filter(
+          function (route) {
+            return selectedRoutes[route];
+          }
+        );
+
+        var datasets = activeRoutes.map(
+          function (route, index) {
+            var color = colors[index % colors.length];
+
+            return {
+              label: route.toUpperCase(),
+              data: routeMap[route].values,
+              borderColor: color,
+              backgroundColor: color + "18",
+              borderWidth: 2,
+              tension: 0.12,
+              spanGaps: true,
+              pointRadius: 1.5,
+              pointHoverRadius: 4,
+              pointBackgroundColor: color
+            };
+          }
+        );
+
+        if (chart) {
+          chart.data.labels = labels;
+          chart.data.datasets = datasets;
+          chart.update();
+          return;
+        }
+
+        chart = new Chart(
+          document.getElementById("chart").getContext("2d"),
+          {
+            type: "line",
+            data: {
+              labels: labels,
+              datasets: datasets
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: {
+                mode: "index",
+                intersect: false
+              },
+              plugins: {
+                legend: {
+                  position: "top",
+                  align: "end",
+                  labels: {
+                    color: "#8298aa",
+                    boxWidth: 10,
+                    font: {
+                      family: "Consolas, monospace",
+                      size: 9
+                    }
+                  }
+                },
+                tooltip: {
+                  backgroundColor: "#07111c",
+                  titleColor: "#f6a623",
+                  bodyColor: "#f1f6fa",
+                  borderColor: "#2b506d",
+                  borderWidth: 1,
+                  callbacks: {
+                    label: function (context) {
+                      return (
+                        " " +
+                        context.dataset.label +
+                        ": $" +
+                        number(context.parsed.y, 2) +
+                        " / kg"
+                      );
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  ticks: {
+                    color: "#8298aa",
+                    maxTicksLimit: 12,
+                    font: {
+                      family: "Consolas, monospace",
+                      size: 8
+                    }
+                  },
+                  grid: {
+                    color: "rgba(28, 52, 72, 0.4)"
+                  }
+                },
+                y: {
+                  title: {
+                    display: true,
+                    text: "USD / KG",
+                    color: "#8298aa",
+                    font: {
+                      family: "Consolas, monospace",
+                      size: 8
+                    }
+                  },
+                  ticks: {
+                    color: "#8298aa",
+                    callback: function (value) {
+                      return "$" + Number(value).toFixed(2);
+                    }
+                  },
+                  grid: {
+                    color: "rgba(28, 52, 72, 0.4)"
+                  }
+                }
+              }
+            }
+          }
+        );
+      }
+
+      function renderWatchlist() {
+        var rows = DATA.latest_detail || [];
+        var target = document.getElementById("watchlist-body");
+
+        if (!rows.length) {
+          target.innerHTML =
+            '<tr><td colspan="4" class="flat" ' +
+            'style="text-align:center;padding:18px;">' +
+            "NO ROUTE RECORDS" +
+            "</td></tr>";
+          return;
+        }
+
+        target.innerHTML = rows.map(function (row) {
+          return (
+            "<tr>" +
+              "<td><strong>" +
+                (row.route_code || "--") +
+              "</strong></td>" +
+              '<td style="font-weight:800;">$' +
+                number(row.index_value, 2) +
+              "</td>" +
+              '<td class="' +
+                deltaClass(row.weekly_change) +
+                '">' +
+                arrow(row.weekly_change) +
+                percent(row.weekly_change) +
+              "</td>" +
+              '<td class="flat">' +
+                (row.data_date || "--") +
+              "</td>" +
+            "</tr>"
+          );
+        }).join("");
+      }
+
+      function renderStatus() {
+        var sync = DATA.last_sync || {};
+        var status = sync.status || "NO_AUDIT_LOG";
+        var detail = sync.message || "Historical data loaded.";
+
+        document.getElementById("status-bar").innerHTML =
+          "SYSTEM STATUS: <strong>" +
+          status +
+          "</strong> | " +
+          detail;
+      }
+
+      renderKpi();
+      renderButtons();
+      renderChart();
+      renderWatchlist();
+      renderStatus();
+    })();
+  </script>
+</body>
+</html>

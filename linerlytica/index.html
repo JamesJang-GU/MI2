@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Linerlytica | MI Terminal</title>
+
+<link rel="stylesheet" href="../assets/mi_terminal.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+
+<style>
+/* =========================================================
+   Linerlytica Module Extension
+   공통 assets/mi_terminal.css 위에서만 동작하는 모듈 전용 보완 스타일
+   ========================================================= */
+
+body {
+    background: var(--mi-bg);
+}
+
+.mi-page {
+    width: min(1920px, calc(100% - 20px));
+    margin: 0 auto;
+    padding: 10px 0 18px;
+}
+
+.mi-terminal-header {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    min-height: 56px;
+    border: 1px solid var(--mi-border);
+    background: var(--mi-header);
+}
+
+.mi-terminal-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 62px;
+    flex: 0 0 62px;
+    color: var(--mi-bg-deep);
+    background: var(--mi-amber);
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: .12em;
+}
+
+.mi-terminal-title {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
+}
+
+.mi-terminal-title h1 {
+    margin: 0;
+    color: var(--mi-white);
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.mi-terminal-title p {
+    margin: 5px 0 0;
+    color: var(--mi-text-muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.mi-terminal-meta {
+    min-width: 350px;
+    padding: 9px 14px;
+    border-left: 1px solid var(--mi-border);
+    color: var(--mi-text-muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    line-height: 1.7;
+    text-align: right;
+    text-transform: uppercase;
+}
+
+.mi-terminal-meta strong {
+    color: var(--mi-white);
+}
+
+.fleet-ticker-wrap {
+    display: flex;
+    margin-top: 6px;
+    overflow-x: auto;
+    border: 1px solid var(--mi-border);
+    background: var(--mi-bg-deep);
+}
+
+.fleet-ticker-heading {
+    display: flex;
+    align-items: center;
+    flex: 0 0 118px;
+    padding: 0 12px;
+    color: var(--mi-bg-deep);
+    background: var(--mi-amber);
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.fleet-ticker {
+    min-width: 215px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 3px 10px;
+    padding: 8px 12px;
+    border-right: 1px solid var(--mi-border);
+}
+
+.fleet-ticker-label {
+    overflow: hidden;
+    color: var(--mi-text-muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.fleet-ticker-value {
+    color: var(--mi-white);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.fleet-ticker-delta {
+    grid-column: 1 / -1;
+    font-size: 9px;
+    font-weight: 800;
+    text-align: right;
+}
+
+.fleet-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.fleet-panel {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--mi-border);
+    background: var(--mi-panel);
+}
+
+.fleet-panel-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 33px;
+    gap: 10px;
+    margin: 0;
+    padding: 0 11px;
+    color: var(--mi-amber);
+    border-bottom: 1px solid var(--mi-border);
+    background: var(--mi-header-2);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+
+.fleet-panel-title small {
+    color: var(--mi-text-muted);
+    font-size: 8px;
+    font-weight: 700;
+}
+
+.fleet-kpi-grid {
+    grid-column: span 12;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.fleet-kpi {
+    min-height: 104px;
+    padding: 11px;
+    border: 1px solid var(--mi-border);
+    border-top: 3px solid var(--mi-cyan);
+    background: var(--mi-panel);
+}
+
+.fleet-kpi:nth-child(2) {
+    border-top-color: var(--mi-amber);
+}
+
+.fleet-kpi:nth-child(3) {
+    border-top-color: var(--mi-red);
+}
+
+.fleet-kpi:nth-child(4) {
+    border-top-color: var(--mi-blue);
+}
+
+.fleet-kpi-label {
+    color: var(--mi-text-muted);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+
+.fleet-kpi-value {
+    margin-top: 13px;
+    color: var(--mi-white);
+    font-size: clamp(20px, 2vw, 29px);
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.05em;
+    text-align: right;
+}
+
+.fleet-kpi-delta {
+    min-height: 16px;
+    margin-top: 8px;
+    font-size: 9px;
+    font-weight: 800;
+    text-align: right;
+}
+
+.fleet-chart-panel {
+    grid-column: span 8;
+}
+
+.fleet-watchlist-panel {
+    grid-column: span 4;
+}
+
+.fleet-chart-wrap {
+    position: relative;
+    height: 392px;
+    padding: 12px;
+}
+
+.fleet-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+}
+
+.fleet-table th {
+    padding: 9px 10px;
+    color: var(--mi-text-muted);
+    border-bottom: 1px solid var(--mi-border);
+    background: var(--mi-bg-deep);
+    font-size: 8px;
+    letter-spacing: .05em;
+    text-align: right;
+    text-transform: uppercase;
+}
+
+.fleet-table td {
+    padding: 11px 10px;
+    color: var(--mi-text);
+    border-bottom: 1px solid var(--mi-border-soft);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.fleet-table th:first-child,
+.fleet-table td:first-child {
+    text-align: left;
+}
+
+.fleet-status-name {
+    color: var(--mi-white) !important;
+    font-weight: 800;
+}
+
+.fleet-note {
+    padding: 9px 10px;
+    color: var(--mi-text-muted);
+    background: var(--mi-header-2);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    line-height: 1.6;
+    text-transform: uppercase;
+}
+
+.fleet-allocation-panel {
+    grid-column: span 4;
+}
+
+.fleet-insight-panel {
+    grid-column: span 4;
+}
+
+.fleet-risk-panel {
+    grid-column: span 4;
+}
+
+.fleet-allocation-content,
+.fleet-risk-content {
+    padding: 10px;
+}
+
+.fleet-allocation-row {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--mi-border-soft);
+}
+
+.fleet-allocation-row:last-child {
+    border-bottom: 0;
+}
+
+.fleet-allocation-header,
+.fleet-allocation-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.fleet-allocation-header {
+    color: var(--mi-text);
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.fleet-allocation-footer {
+    margin-top: 5px;
+    color: var(--mi-text-muted);
+    font-size: 8px;
+}
+
+.fleet-progress-track {
+    height: 7px;
+    margin-top: 6px;
+    overflow: hidden;
+    border: 1px solid var(--mi-border);
+    background: var(--mi-bg-deep);
+}
+
+.fleet-progress-track span {
+    display: block;
+    height: 100%;
+}
+
+.fleet-insight-list {
+    min-height: 278px;
+    margin: 0;
+    padding: 5px 15px 8px 30px;
+}
+
+.fleet-insight-list li {
+    padding: 9px 0;
+    color: var(--mi-text);
+    border-bottom: 1px solid var(--mi-border-soft);
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.55;
+}
+
+.fleet-insight-list li::marker {
+    color: var(--mi-amber);
+}
+
+.fleet-risk-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--mi-border-soft);
+}
+
+.fleet-risk-row:last-child {
+    border-bottom: 0;
+}
+
+.fleet-risk-label {
+    color: var(--mi-text-muted);
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.fleet-risk-value {
+    margin-top: 3px;
+    color: var(--mi-white);
+    font-size: 10px;
+    font-weight: 900;
+    text-align: right;
+}
+
+.fleet-status-footer {
+    grid-column: span 12;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 11px;
+    color: var(--mi-text-muted);
+    border: 1px solid var(--mi-border);
+    border-left: 3px solid var(--mi-green);
+    background: var(--mi-header-2);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.up {
+    color: var(--mi-green) !important;
+}
+
+.down {
+    color: var(--mi-red) !important;
+}
+
+.neutral {
+    color: var(--mi-text-muted) !important;
+}
+
+@media (max-width: 1200px) {
+    .mi-terminal-header {
+        flex-wrap: wrap;
+    }
+
+    .mi-terminal-meta {
+        width: 100%;
+        min-width: 100%;
+        border-top: 1px solid var(--mi-border);
+        border-left: 0;
+        text-align: left;
+    }
+
+    .fleet-chart-panel,
+    .fleet-watchlist-panel,
+    .fleet-allocation-panel,
+    .fleet-insight-panel,
+    .fleet-risk-panel {
+        grid-column: span 12;
+    }
+}
+
+@media (max-width: 760px) {
+    .fleet-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .fleet-status-footer {
+        flex-direction: column;
+    }
+
+    .fleet-watchlist-panel {
+        overflow-x: auto;
+    }
+
+    .fleet-table {
+        min-width: 700px;
+    }
+}
+
+@media (max-width: 480px) {
+    .fleet-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mi-terminal-title h1 {
+        font-size: 11px;
+    }
+}
+</style>
+</head>
+
+<body>
+<div class="mi-page">
+
+    <header class="mi-terminal-header">
+        <div class="mi-terminal-brand">MI</div>
+
+        <div class="mi-terminal-title">
+            <h1>Linerlytica | Global Containership Fleet</h1>
+            <p>
+                Fleet Supply Intelligence · Monthly 17th Snapshot History ·
+                Ships &amp; Capacity Monitoring
+            </p>
+        </div>
+
+        <div class="mi-terminal-meta">
+            <div>
+                DATA SNAPSHOT:
+                <strong>2026-10-17</strong>
+            </div>
+            <div>
+                PREVIOUS:
+                <strong>2026-09-17</strong>
+            </div>
+            <div>
+                SOURCE:
+                <strong>LINERLYTICA</strong>
+            </div>
+        </div>
+    </header>
+
+    <section class="fleet-ticker-wrap">
+        <div class="fleet-ticker-heading">Fleet Ticker</div>
+        
+        <div class="mi-ticker fleet-ticker">
+            <span class="fleet-ticker-label">Ships at port</span>
+            <strong class="fleet-ticker-value">1,129</strong>
+            <span class="down fleet-ticker-delta">↘ -27</span>
+        </div>
+        
+        <div class="mi-ticker fleet-ticker">
+            <span class="fleet-ticker-label">Active Ships</span>
+            <strong class="fleet-ticker-value">5,751</strong>
+            <span class="up fleet-ticker-delta">↗ +249</span>
+        </div>
+        
+        <div class="mi-ticker fleet-ticker">
+            <span class="fleet-ticker-label">Inactive Ships</span>
+            <strong class="fleet-ticker-value">74</strong>
+            <span class="up fleet-ticker-delta">↗ +10</span>
+        </div>
+        
+        <div class="mi-ticker fleet-ticker">
+            <span class="fleet-ticker-label">Ships at anchorage</span>
+            <strong class="fleet-ticker-value">968</strong>
+            <span class="down fleet-ticker-delta">↘ -186</span>
+        </div>
+        
+        <div class="mi-ticker fleet-ticker">
+            <span class="fleet-ticker-label">Ships in shipyard</span>
+            <strong class="fleet-ticker-value">235</strong>
+            <span class="up fleet-ticker-delta">↗ +22</span>
+        </div>
+        
+    </section>
+
+    <main class="fleet-grid">
+
+        <section class="fleet-kpi-grid">
+            <article class="fleet-kpi">
+                <div class="fleet-kpi-label">Active Fleet Capacity</div>
+                <div class="fleet-kpi-value">
+                    24,488,025
+                </div>
+                <div class="fleet-kpi-delta">
+                    <span class="up">↗ +1,218,741 (+5.2%)</span>
+                </div>
+            </article>
+
+            <article class="fleet-kpi">
+                <div class="fleet-kpi-label">Ships at Port</div>
+                <div class="fleet-kpi-value">
+                    1,129
+                </div>
+                <div class="fleet-kpi-delta">
+                    <span class="down">↘ -27 (-2.3%)</span>
+                </div>
+            </article>
+
+            <article class="fleet-kpi">
+                <div class="fleet-kpi-label">Inactive Fleet Capacity</div>
+                <div class="fleet-kpi-value">
+                    177,760
+                </div>
+                <div class="fleet-kpi-delta">
+                    <span class="up">↗ +7,177 (+4.2%)</span>
+                </div>
+            </article>
+
+            <article class="fleet-kpi">
+                <div class="fleet-kpi-label">Historical Observations</div>
+                <div class="fleet-kpi-value">
+                    34 MOS
+                </div>
+                <div class="fleet-kpi-delta">
+                    <span class="neutral">17TH OF EACH MONTH</span>
+                </div>
+            </article>
+        </section>
+
+        <section class="fleet-panel fleet-chart-panel">
+            <h2 class="fleet-panel-title">
+                <span>01. Fleet Capacity Trend | TEU</span>
+                <small>
+                    2024-01-17 — 2026-10-17
+                </small>
+            </h2>
+
+            <div class="fleet-chart-wrap">
+                <canvas id="teuChart"></canvas>
+            </div>
+        </section>
+
+        <section class="fleet-panel fleet-watchlist-panel">
+            <h2 class="fleet-panel-title">
+                <span>02. Fleet Status Watchlist</span>
+                <small>Latest Snapshot</small>
+            </h2>
+
+            <table class="fleet-table">
+                <thead>
+                    <tr>
+                        <th>Fleet Segment</th>
+                        <th>Ships</th>
+                        <th>Capacity</th>
+                        <th>Ships Δ</th>
+                        <th>TEU Δ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+        <tr>
+            <td class="fleet-status-name">Active Ships</td>
+            <td>5,751</td>
+            <td>24,488,025</td>
+            <td><span class="up">↗ +249 (+4.5%)</span></td>
+            <td><span class="up">↗ +1,218,741 (+5.2%)</span></td>
+        </tr>
+        
+        <tr>
+            <td class="fleet-status-name">Ships at port</td>
+            <td>1,129</td>
+            <td>5,639,764</td>
+            <td><span class="down">↘ -27 (-2.3%)</span></td>
+            <td><span class="down">↘ -80,512 (-1.4%)</span></td>
+        </tr>
+        
+        <tr>
+            <td class="fleet-status-name">Ships at anchorage</td>
+            <td>968</td>
+            <td>4,182,132</td>
+            <td><span class="down">↘ -186 (-16.1%)</span></td>
+            <td><span class="down">↘ -1,195,074 (-22.2%)</span></td>
+        </tr>
+        
+        <tr>
+            <td class="fleet-status-name">Ships in shipyard</td>
+            <td>235</td>
+            <td>832,537</td>
+            <td><span class="up">↗ +22 (+10.3%)</span></td>
+            <td><span class="up">↗ +268,304 (+47.6%)</span></td>
+        </tr>
+        
+        <tr>
+            <td class="fleet-status-name">Inactive Ships</td>
+            <td>74</td>
+            <td>177,760</td>
+            <td><span class="up">↗ +10 (+15.6%)</span></td>
+            <td><span class="up">↗ +7,177 (+4.2%)</span></td>
+        </tr>
+        
+                </tbody>
+            </table>
+
+            <div class="fleet-note">
+                DELTA VALUES COMPARE THE LATEST SNAPSHOT WITH THE IMMEDIATELY
+                PRECEDING COMPLETE MONTHLY SNAPSHOT.
+            </div>
+        </section>
+
+        <section class="fleet-panel fleet-allocation-panel">
+            <h2 class="fleet-panel-title">
+                <span>03. Capacity Allocation</span>
+                <small>TEU Distribution</small>
+            </h2>
+
+            <div class="fleet-allocation-content">
+                
+        <div class="fleet-allocation-row">
+            <div class="fleet-allocation-header">
+                <span>Active Ships</span>
+                <strong>24,488,025 TEU</strong>
+            </div>
+            <div class="fleet-progress-track">
+                <span
+                    style="width:100.00%; background:#31d0a0;"
+                ></span>
+            </div>
+            <div class="fleet-allocation-footer">
+                <span>CAPACITY LEVEL (RELATIVE SCALE)</span>
+            </div>
+        </div>
+        
+        <div class="fleet-allocation-row">
+            <div class="fleet-allocation-header">
+                <span>Ships at port</span>
+                <strong>5,639,764 TEU</strong>
+            </div>
+            <div class="fleet-progress-track">
+                <span
+                    style="width:23.03%; background:#f5a623;"
+                ></span>
+            </div>
+            <div class="fleet-allocation-footer">
+                <span>CAPACITY LEVEL (RELATIVE SCALE)</span>
+            </div>
+        </div>
+        
+        <div class="fleet-allocation-row">
+            <div class="fleet-allocation-header">
+                <span>Ships at anchorage</span>
+                <strong>4,182,132 TEU</strong>
+            </div>
+            <div class="fleet-progress-track">
+                <span
+                    style="width:17.08%; background:#4fa3ff;"
+                ></span>
+            </div>
+            <div class="fleet-allocation-footer">
+                <span>CAPACITY LEVEL (RELATIVE SCALE)</span>
+            </div>
+        </div>
+        
+        <div class="fleet-allocation-row">
+            <div class="fleet-allocation-header">
+                <span>Inactive Ships</span>
+                <strong>177,760 TEU</strong>
+            </div>
+            <div class="fleet-progress-track">
+                <span
+                    style="width:0.73%; background:#ff5b68;"
+                ></span>
+            </div>
+            <div class="fleet-allocation-footer">
+                <span>CAPACITY LEVEL (RELATIVE SCALE)</span>
+            </div>
+        </div>
+        
+        <div class="fleet-allocation-row">
+            <div class="fleet-allocation-header">
+                <span>Ships in shipyard</span>
+                <strong>832,537 TEU</strong>
+            </div>
+            <div class="fleet-progress-track">
+                <span
+                    style="width:3.40%; background:#27c7e8;"
+                ></span>
+            </div>
+            <div class="fleet-allocation-footer">
+                <span>CAPACITY LEVEL (RELATIVE SCALE)</span>
+            </div>
+        </div>
+        
+            </div>
+        </section>
+
+        <section class="fleet-panel fleet-insight-panel">
+            <h2 class="fleet-panel-title">
+                <span>04. Market Intelligence</span>
+                <small>Supply Narrative</small>
+            </h2>
+
+            <ul class="fleet-insight-list">
+                <li>
+                    ACTIVE FLEET CAPACITY STANDS AT
+                    24,488,025 TEU.
+                </li>
+                <li>
+                    ACTIVE CAPACITY SIGNAL:
+                    <strong>EXPANDING</strong>.
+                </li>
+                <li>
+                    PORT-BASED CAPACITY STANDS AT
+                    5,639,764 TEU.
+                </li>
+                <li>
+                    ANCHORAGE CAPACITY STANDS AT
+                    4,182,132 TEU.
+                </li>
+                <li>
+                    SHIPYARD CAPACITY STANDS AT
+                    832,537 TEU.
+                </li>
+            </ul>
+        </section>
+
+        <section class="fleet-panel fleet-risk-panel">
+            <h2 class="fleet-panel-title">
+                <span>05. Risk Indicators</span>
+                <small>Fleet Utilization Signals</small>
+            </h2>
+
+            <div class="fleet-risk-content">
+                <div class="fleet-risk-row">
+                    <div>
+                        <div class="fleet-risk-label">Active Capacity</div>
+                        <div class="fleet-risk-value">24,488,025 TEU</div>
+                    </div>
+                </div>
+
+                <div class="fleet-risk-row">
+                    <div>
+                        <div class="fleet-risk-label">Port Capacity</div>
+                        <div class="fleet-risk-value">5,639,764 TEU</div>
+                    </div>
+                </div>
+
+                <div class="fleet-risk-row">
+                    <div>
+                        <div class="fleet-risk-label">Anchorage Capacity</div>
+                        <div class="fleet-risk-value">4,182,132 TEU</div>
+                    </div>
+                </div>
+
+                <div class="fleet-risk-row">
+                    <div>
+                        <div class="fleet-risk-label">Inactive Fleet Signal</div>
+                        <div class="fleet-risk-value">
+                            177,760 TEU
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fleet-risk-row">
+                    <div>
+                        <div class="fleet-risk-label">Risk Assessment</div>
+                        <div class="fleet-risk-value up">
+                            NORMAL
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fleet-note">
+                INACTIVE CAPACITY MONTH-ON-MONTH CHANGE:
+                <span class="up">↗ +7,177 (+4.2%)</span>
+            </div>
+        </section>
+
+        <footer class="fleet-status-footer">
+            <div>
+                SYSTEM STATUS:
+                <strong>NORMAL</strong>
+                | DATASET:
+                <strong>COMPLETE MONTHLY SNAPSHOTS ONLY</strong>
+            </div>
+
+            <div>
+                GENERATED:
+                <strong>2026-11-05 01:39:52 UTC</strong>
+                | SOURCE:
+                <strong>LINERLYTICA.DB</strong>
+            </div>
+        </footer>
+
+    </main>
+</div>
+
+<script>
+const fleetLabels = ["2024-01-17", "2024-02-17", "2024-03-17", "2024-04-17", "2024-05-17", "2024-06-17", "2024-07-17", "2024-08-17", "2024-09-17", "2024-10-17", "2024-11-17", "2024-12-17", "2025-01-17", "2025-02-17", "2025-03-17", "2025-04-17", "2025-05-17", "2025-06-17", "2025-07-17", "2025-08-17", "2025-09-17", "2025-10-17", "2025-11-17", "2025-12-17", "2026-01-17", "2026-02-17", "2026-03-17", "2026-04-17", "2026-05-17", "2026-06-17", "2026-07-17", "2026-08-17", "2026-09-17", "2026-10-17"];
+
+new Chart(document.getElementById("teuChart"), {
+    type: "line",
+    data: {
+        labels: fleetLabels,
+        datasets: [
+            {
+                label: "ACTIVE SHIPS",
+                data: [20689180, 20689180, 20689180, 20689180, 20689180, 20689180, 20689180, 20689180, 20689180, 23915105, 23915105, 23915105, 23915105, 23915105, 23915105, 23915105, 23915105, 23915105, 23915105, 23915105, 23915105, 24734399, 24734399, 24734399, 24894939, 24894939, 24894939, 25030534, 25030534, 25030534, 23334936, 23334936, 23269284, 24488025],
+                borderColor: "#31d0a0",
+                backgroundColor: "rgba(49, 208, 160, .08)",
+                borderWidth: 2.4,
+                pointRadius: 2,
+                pointHoverRadius: 4,
+                fill: true,
+                tension: .20
+            },
+            {
+                label: "SHIPS AT PORT",
+                data: [4847288, 4847288, 4847288, 4847288, 4847288, 4847288, 4847288, 4847288, 4847288, 4280939, 4280939, 4280939, 4280939, 4280939, 4280939, 4280939, 4280939, 4280939, 4280939, 4280939, 4280939, 5069289, 5069289, 5069289, 4981004, 4981004, 4981004, 5094684, 5094684, 5094684, 5954266, 5954266, 5720276, 5639764],
+                borderColor: "#f5a623",
+                backgroundColor: "transparent",
+                borderWidth: 1.8,
+                pointRadius: 1.5,
+                pointHoverRadius: 3,
+                fill: false,
+                tension: .20
+            },
+            {
+                label: "SHIPS AT ANCHORAGE",
+                data: [1625067, 1625067, 1625067, 1625067, 1625067, 1625067, 1625067, 1625067, 1625067, 2262910, 2262910, 2262910, 2262910, 2262910, 2262910, 2262910, 2262910, 2262910, 2262910, 2262910, 2262910, 2789304, 2789304, 2789304, 3249633, 3249633, 3249633, 3283257, 3283257, 3283257, 4782043, 4782043, 5377206, 4182132],
+                borderColor: "#4fa3ff",
+                backgroundColor: "transparent",
+                borderWidth: 1.7,
+                pointRadius: 1.5,
+                pointHoverRadius: 3,
+                fill: false,
+                tension: .20
+            },
+            {
+                label: "INACTIVE SHIPS",
+                data: [405855, 405855, 405855, 405855, 405855, 405855, 405855, 405855, 405855, 117587, 117587, 117587, 117587, 117587, 117587, 117587, 117587, 117587, 117587, 117587, 117587, 122604, 122604, 122604, 127301, 127301, 127301, 99560, 99560, 99560, 135677, 135677, 170583, 177760],
+                borderColor: "#ff5b68",
+                backgroundColor: "transparent",
+                borderWidth: 1.7,
+                pointRadius: 1.5,
+                pointHoverRadius: 3,
+                fill: false,
+                tension: .20
+            },
+            {
+                label: "SHIPS IN SHIPYARD",
+                data: [840639, 840639, 840639, 840639, 840639, 840639, 840639, 840639, 840639, 723230, 723230, 723230, 723230, 723230, 723230, 723230, 723230, 723230, 723230, 723230, 723230, 806321, 806321, 806321, 682767, 682767, 682767, 760777, 760777, 760777, 590203, 590203, 564233, 832537],
+                borderColor: "#27c7e8",
+                backgroundColor: "transparent",
+                borderWidth: 1.7,
+                pointRadius: 1.5,
+                pointHoverRadius: 3,
+                fill: false,
+                tension: .20
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+            mode: "index",
+            intersect: false
+        },
+        plugins: {
+            legend: {
+                position: "bottom",
+                labels: {
+                    color: "#b6c7d7",
+                    boxWidth: 12,
+                    boxHeight: 2,
+                    padding: 14,
+                    font: {
+                        family: "Consolas, monospace",
+                        size: 9,
+                        weight: "700"
+                    }
+                }
+            },
+            tooltip: {
+                backgroundColor: "rgba(3, 11, 19, .97)",
+                titleColor: "#f2f6fa",
+                bodyColor: "#b6c7d7",
+                borderColor: "#16334b",
+                borderWidth: 1,
+                padding: 10,
+                callbacks: {
+                    label: function(context) {
+                        if (
+                            context.raw === null ||
+                            context.raw === undefined
+                        ) {
+                            return context.dataset.label + ": N/A";
+                        }
+
+                        return context.dataset.label + ": " +
+                            Number(context.raw).toLocaleString() + " TEU";
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    color: "rgba(22, 51, 75, .42)",
+                    drawBorder: false
+                },
+                ticks: {
+                    color: "#8298aa",
+                    maxRotation: 0,
+                    maxTicksLimit: 9,
+                    font: {
+                        family: "Consolas, monospace",
+                        size: 9
+                    }
+                }
+            },
+            y: {
+                grid: {
+                    color: "rgba(22, 51, 75, .42)",
+                    drawBorder: false
+                },
+                ticks: {
+                    color: "#8298aa",
+                    font: {
+                        family: "Consolas, monospace",
+                        size: 9
+                    },
+                    callback: function(value) {
+                        return (value / 1000000).toFixed(1) + "M";
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+</body>
+</html>
