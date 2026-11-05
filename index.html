@@ -90,7 +90,6 @@
   .t3wrap{display:flex;flex-direction:column}
   /* alphaliner 좌우 분할 */
   .split{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1}
-  .donutbox{position:relative;height:150px}
   /* 거시 3단 스택 */
   .stack{display:flex;flex-direction:column;gap:8px}
   .stack .grp{background:var(--panel2);border:1px solid var(--line);padding:6px 7px}
@@ -123,8 +122,6 @@
 <script>
 const AMBER = "#ffa500";
 const LINES = ["#ffa500", "#79c0ff", "#d2a8ff"];
-const DONUT = ["#ffa500","#e09400","#c28000","#a36b00","#855700",
-               "#664300","#4d3200","#3a2600","#261900","#1a1100","#3d3d3d"];
 const ROUTE_SHORT = {
   "Frankfurt-North America": "FRA→N.AM",
   "Hong Kong-Europe": "HKG→EUR",
@@ -197,26 +194,6 @@ function spark(canvas, series){
     },
   });
 }
-function donut(canvas, shares){
-  if (!canvas || typeof Chart === "undefined" || !shares || !shares.length) return;
-  new Chart(canvas, {
-    type: "doughnut",
-    data: {
-      labels: shares.map(s => s.name),
-      datasets: [{data: shares.map(s => s.pct),
-                  backgroundColor: DONUT.slice(0, shares.length),
-                  borderColor: "#000", borderWidth: 1}],
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, animation: false,
-      cutout: "58%",
-      plugins: {
-        legend: {display: false},
-        tooltip: {callbacks: {label: i => `${i.label}: ${i.parsed}%`}},
-      },
-    },
-  });
-}
 function boxShell(mod, inner){
   const btn = mod.page
     ? `<a class="go" href="${mod.page}" title="상세 내역">DETAIL ↗</a>`
@@ -224,7 +201,8 @@ function boxShell(mod, inner){
   const el = document.createElement("div");
   el.innerHTML = `<section class="box">
     <header><span class="code">${mod.id.toUpperCase()}</span>
-      <span class="ttl">${mod.title}</span>${btn}</header>
+      <span class="ttl">${mod.title}</span>
+      <span class="ref">${mod.updated ? "REF " + mod.updated : ""}</span>${btn}</header>
     <div class="body">${inner}</div>
   </section>`;
   return el.firstElementChild;
@@ -235,10 +213,9 @@ function errHtml(mod){ return mod.error ? `<div class="err">${mod.error}</div>` 
 function duoBox(mod){
   const cells = mod.metrics.slice(0, 2).map((m, i) => `
     <div class="cell">
-      <div class="lbl">${m.label}</div>
+      <div class="lbl">${m.label}${m.asof && m.asof !== mod.updated ? ` · ${m.asof}` : ""}</div>
       <div class="val">${fmt(m.value)}${unitHtml(m.unit)}</div>
       ${chgHtml(m)}
-      <div class="asof">REF ${m.asof || "-"}</div>
       <div class="chartbox"><canvas data-s="${i}"></canvas></div>
     </div>`).join("");
   const box = boxShell(mod, `<div class="duo">${cells}</div>` + errHtml(mod));
@@ -255,17 +232,20 @@ function alphaBox(mod){
       <span class="vv">${fmt(t.value)}${unitHtml(t.unit)}</span></div>`).join("");
   const box = boxShell(mod,
     (total ? `<div class="subrow" style="border-top:0;padding-top:0">
-        <span class="lbl" style="margin:0">${total.label}
-          <span class="asof">(${total.asof || "-"})</span></span>
+        <span class="lbl" style="margin:0">${total.label}</span>
         <span class="v">${fmt(total.value)}${unitHtml(total.unit)}${chgHtml(total)}</span>
       </div>` : "") +
     `<div class="split">
        <div class="top3">${list}</div>
-       <div class="donutbox"><canvas></canvas></div>
-     </div>
-     <div class="asof">도넛: Top10 선사 점유율(%) · REF ${mod.updated || "-"}</div>` +
+       <div class="sharelist">
+         <div class="celltitle">TOP 10 CARRIER SHARE</div>
+         ${(mod.shares || []).slice(0, 10).map((s, i) => `
+           <div class="shrow"><span class="rk2">${i + 1}</span>
+             <span class="nm">${s.name}</span>
+             <span class="pc">${Number(s.pct).toFixed(1)}%</span></div>`).join("")}
+       </div>
+     </div>` +
     errHtml(mod));
-  donut(box.querySelector("canvas"), mod.shares);
   return box;
 }
 /* forwarders: Top3 세로, 그래프 없음 */
@@ -280,7 +260,7 @@ function fwdBox(mod){
     </div>`).join("");
   return boxShell(mod,
     `<div class="top3">${list}</div>
-     <div class="asof">REF ${mod.updated || "-"} · 매출 기준</div>` + errHtml(mod));
+     <div class="asof">A&A Top 25 · 매출 기준</div>` + errHtml(mod));
 }
 /* air: 항로 3지수 상단 + 3라인 그래프 */
 function airBox(mod){
@@ -294,8 +274,7 @@ function airBox(mod){
   const box = boxShell(mod,
     `<div class="trio">${trio}</div>` +
     (overall ? `<div class="subrow">
-        <span class="lbl" style="margin:0">TAC 종합
-          <span class="asof">(${overall.asof || "-"})</span></span>
+        <span class="lbl" style="margin:0">TAC 종합</span>
         <span class="v">${fmt(overall.value)}${chgHtml(overall)}</span></div>` : "") +
     `<div class="chartbox" style="height:120px"><canvas></canvas></div>` +
     errHtml(mod));
@@ -305,20 +284,22 @@ function airBox(mod){
 }
 /* oil: 좌 CRUDE / 우 VLSFO, 각 3숫자 + 3스파크라인 */
 function oilBox(mod){
-  const cells = (mod.groups || []).map((g, gi) => `
+  const cells = (mod.groups || []).map((g, gi) => {
+    const gdate = g.metrics.map(m => m.asof).filter(Boolean).sort().pop();
+    return `
     <div class="cell">
-      <div class="celltitle">${g.title}</div>
+      <div class="celltitle">${g.title}${gdate && gdate !== mod.updated ? ` · ${gdate}` : ""}</div>
       ${g.metrics.map((m, i) => `
         <div class="mini">
           <div class="row">
-            <span class="lbl" style="margin:0">${m.label}
-              <span class="asof">(${m.asof || "-"})</span></span>
+            <span class="lbl" style="margin:0">${m.label}</span>
             <span class="v">${fmt(m.value)}${unitHtml(m.unit)}</span>
           </div>
           <div class="row">${chgHtml(m)}<span></span></div>
           <div class="sparkbox"><canvas data-g="${gi}" data-s="${i}"></canvas></div>
         </div>`).join("")}
-    </div>`).join("");
+    </div>`;
+  }).join("");
   const box = boxShell(mod, `<div class="duo">${cells}</div>` + errHtml(mod));
   box.querySelectorAll("canvas").forEach(cv => {
     const g = mod.groups[Number(cv.dataset.g)];
@@ -332,8 +313,7 @@ function macroBox(mod){
     const m = g.metrics[0] || {};
     return `<div class="grp">
       <div class="row">
-        <span class="lbl" style="margin:0">${g.title}
-          <span class="asof">(${m.asof || "-"})</span></span>
+        <span class="lbl" style="margin:0">${g.title}${m.asof && m.asof !== mod.updated ? ` · ${m.asof}` : ""}</span>
         <span class="v">${fmt(m.value)}${unitHtml(m.unit)}</span>
       </div>
       <div class="row">${chgHtml(m)}<span></span></div>
@@ -346,13 +326,26 @@ function macroBox(mod){
   return box;
 }
 function sysPanel(status){
-  const rows = (status && status.runs || []).map(r => `
-    <div class="sysrow">
-      <span class="st ${r.ok ? "ok" : "fail"}">${r.ok ? "OK  " : "FAIL"} ${r.module.toUpperCase()}</span>
-      <span class="t">${(r.finished_at || "").slice(5, 16)} · ${r.seconds}s</span>
-    </div>`).join("") || `<div class="asof">실행 기록 없음 (첫 크롤링 대기)</div>`;
-  return boxShell({id: "sys", title: "CRAWL STATUS", page: null},
-    rows + `<div class="asof" style="margin-top:auto">LAST RUN ${status ? status.generated_at : "-"}</div>`);
+  const runs = (status && status.runs || []);
+  const okCnt = runs.filter(r => r.ok).length;
+  const lines = runs.map(r => `
+    <div class="cl ${r.ok ? "ok" : "fail"}">
+      <span class="ts">${(r.finished_at || "").slice(5, 16)}</span>
+      <span class="st">${r.ok ? "OK" : "FAIL"}</span>
+      <span class="md">${r.module}</span>
+      <span class="du">${r.seconds}s</span>
+    </div>`).join("") ||
+    `<div class="cl wait">no run yet — awaiting first schedule</div>`;
+  const el = document.createElement("div");
+  el.innerHTML = `<section class="console">
+    <div class="chead"><span class="led"></span>SYSTEM CONSOLE
+      <span class="cmeta">${runs.length} mods · ${okCnt} ok · ${runs.length - okCnt} fail</span></div>
+    <div class="cbody">${lines}
+      <div class="cl prompt">&gt; next run 00:00 KST<span class="cursor"></span></div>
+    </div>
+    <div class="cfoot">LAST RUN ${status ? status.generated_at : "-"}</div>
+  </section>`;
+  return el;
 }
 const RENDERERS = {
   sea: duoBox, linerlytica: duoBox, alphaliner: alphaBox,
