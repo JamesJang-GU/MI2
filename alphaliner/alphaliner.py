@@ -168,6 +168,21 @@ def init_db():
                             f"Schema migration warning (operator): {e}"
                         )
 
+            meta_cols = [r[1] for r in cur.execute(
+                "PRAGMA table_info(snapshot_meta)").fetchall()]
+            for column in ("sum_active_ships", "sum_total_teu",
+                           "reg_atlantic", "reg_pacific", "reg_feast"):
+                if column not in meta_cols:
+                    try:
+                        cur.execute(
+                            f"ALTER TABLE snapshot_meta ADD COLUMN {column} TEXT"
+                        )
+                        logger.info(
+                            f"Migrated schema: Added snapshot_meta.{column}.")
+                    except Exception as e:
+                        logger.warning(
+                            f"Schema migration warning ({column}): {e}")
+
             conn.commit()
 
 # =========================================================
@@ -217,6 +232,40 @@ def get_driver():
 
     return webdriver.Chrome(options=options)
 
+PAGE_STATS = {}
+
+
+def extract_page_stats(driver):
+    """페이지 텍스트에서 Global figures / Regional Trades 주간 선복량 추출."""
+    return driver.execute_script(r"""
+        var out = {summary: {}, regional: {}};
+        try {
+            var txt = document.body.innerText || '';
+            var active = txt.match(/([0-9,]+) active ships/i);
+            var totalTeu = txt.match(/([0-9,]+) TEU/);
+            out.summary.totalActiveShips = active ? active[1] : null;
+            out.summary.totalTEU = totalTeu ? totalTeu[1] : null;
+            var regBlock = txt.match(/Regional Trades[\s\S]*?weekly capacities[\s\S]*?Trans-Atlantic[\s\S]*?Trans-Pacific[\s\S]*?Feast-Europe[\s\S]*?([0-9,]+) TEU[\s\S]*?([0-9,]+) TEU[\s\S]*?([0-9,]+) TEU/i);
+            if (regBlock) {
+                out.regional.transAtlantic = regBlock[1];
+                out.regional.transPacific = regBlock[2];
+                out.regional.feastEurope = regBlock[3];
+            }
+        } catch (e) {}
+        return out;
+    """)
+
+
+def _stat_int(value):
+    if value is None:
+        return None
+    text = str(value).replace(",", "").strip()
+    try:
+        return int(float(text))
+    except ValueError:
+        return None
+
+
 def fetch_alphaliner_data():
     logger.info(f"Connecting to target: {TARGET_URL}")
     driver = None
@@ -256,6 +305,11 @@ def fetch_alphaliner_data():
         logger.info(
             f"Extracted {len(records)} raw records from ExtJS Store."
         )
+
+        try:
+            PAGE_STATS.update(extract_page_stats(driver))
+        except Exception as stats_error:  # noqa: BLE001
+            logger.warning(f"Page stats extraction skipped: {stats_error}")
 
         return records
 
@@ -480,9 +534,14 @@ def persist_snapshot(snapshot_date, parsed_ops, raw_records):
                     extracted_at,
                     source_url,
                     raw_hash,
-                    updated_at
+                    updated_at,
+                    sum_active_ships,
+                    sum_total_teu,
+                    reg_atlantic,
+                    reg_pacific,
+                    reg_feast
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 
                 ON CONFLICT(snapshot_date) DO UPDATE SET
                     global_teu = excluded.global_teu,
@@ -494,7 +553,12 @@ def persist_snapshot(snapshot_date, parsed_ops, raw_records):
                     extracted_at = excluded.extracted_at,
                     source_url = excluded.source_url,
                     raw_hash = excluded.raw_hash,
-                    updated_at = excluded.updated_at
+                    updated_at = excluded.updated_at,
+                    sum_active_ships = excluded.sum_active_ships,
+                    sum_total_teu = excluded.sum_total_teu,
+                    reg_atlantic = excluded.reg_atlantic,
+                    reg_pacific = excluded.reg_pacific,
+                    reg_feast = excluded.reg_feast
             """, (
                 snapshot_date,
 
@@ -513,7 +577,12 @@ def persist_snapshot(snapshot_date, parsed_ops, raw_records):
                 now_str,
                 TARGET_URL,
                 raw_hash,
-                now_str
+                now_str,
+                _stat_int(PAGE_STATS.get("summary", {}).get("totalActiveShips")),
+                _stat_int(PAGE_STATS.get("summary", {}).get("totalTEU")),
+                _stat_int(PAGE_STATS.get("regional", {}).get("transAtlantic")),
+                _stat_int(PAGE_STATS.get("regional", {}).get("transPacific")),
+                _stat_int(PAGE_STATS.get("regional", {}).get("feastEurope")),
             ))
 
             cur.execute("""

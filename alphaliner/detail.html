@@ -25,44 +25,56 @@
        font-family:var(--mono);font-size:10px;padding:2px 9px;cursor:pointer;
        letter-spacing:.06em}
   .btn:hover{background:var(--amber);color:#000}
+  .btn.green{color:#7ee787;border-color:#2ea043}
+  .btn.green:hover{background:#2ea043;color:#000}
   .back{margin-left:auto;color:var(--amber);border:1px solid var(--amber);
         font-size:10px;padding:2px 8px;text-decoration:none;letter-spacing:.06em}
   .back:hover{background:var(--amber);color:#000}
+  .metabar{color:var(--dim);font-size:10px;padding:6px 12px 0;letter-spacing:.04em}
+  .metabar b{color:var(--amber);font-weight:400}
   .wrap{padding:8px;display:flex;flex-direction:column;gap:8px}
-  /* 공식 페이지 Global figures 밴드 */
-  .band{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-  @media(max-width:980px){.band{grid-template-columns:repeat(2,1fr)}}
+  .band{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  @media(max-width:1100px){.band{grid-template-columns:repeat(2,1fr)}}
+  .band4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  @media(max-width:1100px){.band4{grid-template-columns:repeat(2,1fr)}}
   .bcard{background:var(--panel);border:1px solid var(--line);padding:8px 10px;
-         display:flex;flex-direction:column;gap:3px}
+         display:flex;flex-direction:column;gap:3px;min-width:0}
   .blabel{color:var(--dim);font-size:10px;letter-spacing:.1em}
-  .bval{color:#fff;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+  .bval{color:#fff;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;
+        overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .bval em{font-style:normal;font-size:10px;color:var(--dim);margin-left:5px}
+  .bdesc{color:#666;font-size:9px;line-height:1.4}
   .chg{font-size:11px} .chg.up{color:var(--up)} .chg.down{color:var(--down)}
   .chg.flat{color:var(--flat)}
-  .charts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  @media(max-width:980px){.charts{grid-template-columns:1fr}}
   .panel{background:var(--panel);border:1px solid var(--line);padding:8px;
          display:flex;flex-direction:column;gap:6px;min-width:0}
   .panel.wide{grid-column:1/-1}
-  @media(max-width:980px){.panel.wide{grid-column:auto}}
   .phead{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
   .ptitle{color:var(--amber);font-size:12px;letter-spacing:.08em}
+  .psub{color:var(--dim);font-size:10px}
+  .spacer{margin-left:auto}
+  .tbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .tbar input,.tbar select{background:var(--panel2);border:1px solid var(--line);
+      color:var(--txt);font-family:var(--mono);font-size:10px;padding:3px 6px}
+  .note{color:var(--dim);font-size:10px}
+  .facts{color:var(--dim);font-size:10px;line-height:1.7;border:1px dashed #2a2a2a;
+         background:var(--panel2);padding:6px 8px}
+  .facts b{color:var(--txt);font-weight:700}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media(max-width:980px){.charts{grid-template-columns:1fr}
+    .panel.wide{grid-column:auto}}
   .chips{display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
   .chip{border:1px solid var(--line);color:var(--dim);font-size:10px;
         padding:1px 7px;cursor:pointer;user-select:none}
   .chip.on{color:#000;background:var(--amber);border-color:var(--amber);font-weight:700}
-  .spacer{margin-left:auto}
   .chartbox{height:240px;position:relative}
+  .chartbox.bar{height:300px}
   .navbox{height:40px;position:relative;border:1px solid var(--line);
           background:#0d0d0d;cursor:crosshair}
   .navbox canvas{width:100%;height:100%;display:block}
   .hint{color:#555;font-size:9px;letter-spacing:.05em}
-  .tbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-  .tbar input,.tbar select{background:var(--panel2);border:1px solid var(--line);
-      color:var(--txt);font-family:var(--mono);font-size:10px;padding:2px 6px}
-  .tbar input{width:150px}
-  .note{color:var(--dim);font-size:10px}
   .tblbox{height:430px;overflow:auto;border:1px solid var(--line);background:var(--panel2)}
+  .tblbox.auto{height:auto;max-height:430px}
   table{width:100%;border-collapse:collapse;font-size:11px;
         font-variant-numeric:tabular-nums}
   th{color:var(--dim);text-align:right;font-weight:400;border-bottom:1px solid var(--line);
@@ -70,14 +82,11 @@
      white-space:nowrap;z-index:2}
   th.txt,td.txt{text-align:left}
   th:hover{color:var(--amber)} th.sorted{color:var(--amber)}
+  th.sup{background:#1a1408;color:var(--amber);text-align:center;cursor:default;
+         border-bottom:1px solid var(--line);font-weight:700;letter-spacing:.06em}
   td{border-bottom:1px dotted #1c1c1c;padding:3px 6px;text-align:right;white-space:nowrap}
   td:first-child{color:var(--dim)}
   .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
-  .barcell{width:170px}
-  .barwrap{display:flex;height:10px;background:#141414;border:1px solid #222}
-  .bar-ex{background:#58a6ff} .bar-ob{background:#9ecbff}
-  .legend{display:flex;gap:12px;align-items:center;color:var(--dim);font-size:10px}
-  .sw{display:inline-block;width:10px;height:10px;margin-right:4px;vertical-align:-1px}
   footer{color:var(--dim);font-size:10px;letter-spacing:.06em;padding:8px 12px 20px;
          display:flex;flex-wrap:wrap;gap:12px}
   footer b{color:var(--amber);font-weight:400}
@@ -86,39 +95,92 @@
 <body>
 <div class="topbar">
   <span class="code">ALPHALINER</span>
-  <span class="ttl">TOP 100 — FLEET &amp; ORDERBOOK TERMINAL</span>
+  <span class="ttl">TOP 100 CARRIERS DASHBOARD</span>
   <span class="ref" id="ref"></span>
   <a class="back" href="../index.html">← TERMINAL</a>
 </div>
+<div class="metabar" id="metabar"></div>
 <div class="wrap">
-  <div class="band" id="band"></div>
-  <div class="charts" id="charts"></div>
-  <div class="panel" id="rankpanel">
+  <div class="panel">
     <div class="tbar">
-      <span class="ptitle">TOP 100 OPERATORS — Existing / Owned / Chartered / Orderbook</span>
-      <select id="snapdate"></select>
-      <input id="rkfilter" placeholder="filter: operator">
-      <span class="note" id="rknote"></span>
-      <span class="legend"><span><span class="sw" style="background:#58a6ff"></span>Existing fleet</span>
-        <span><span class="sw" style="background:#9ecbff"></span>Orderbook</span></span>
+      <span class="ptitle">COMPARISON BASIS</span>
+      <select id="mode">
+        <option value="previous">Previous snapshot</option>
+        <option value="1m">1 month ago</option>
+        <option value="3m">3 months ago</option>
+        <option value="custom">Custom date</option>
+      </select>
+      <input type="date" id="cdate">
+      <button class="btn" id="apply">APPLY</button>
+      <span class="note" id="basisnote"></span>
       <span class="spacer"></span>
-      <button class="btn" id="dlcsv">CSV ↓</button>
-      <button class="btn" id="dlxlsx">XLSX ↓</button>
+      <span class="ptitle">DOWNLOADS</span>
+      <button class="btn" id="d-csv">Current CSV</button>
+      <button class="btn green" id="d-xlsx">Current XLSX</button>
+      <button class="btn" id="dc-csv">Compare CSV</button>
+      <button class="btn green" id="dc-xlsx">Compare XLSX</button>
     </div>
-    <div class="tblbox"><table id="rktable">
-      <thead><tr id="rkhead"></tr></thead><tbody id="rkbody"></tbody>
-    </table></div>
+  </div>
+  <div class="band" id="band"></div>
+  <div class="band4" id="deltas"></div>
+  <div class="charts">
+    <div class="panel wide">
+      <div class="phead"><span class="ptitle">TOP 10 CARRIERS BY TOTAL CAPACITY</span>
+        <span class="psub">current snapshot</span></div>
+      <div class="chartbox bar"><canvas id="barchart"></canvas></div>
+      <div class="facts" id="facts"></div>
+    </div>
+    <div class="panel">
+      <div class="phead"><span class="ptitle">GLOBAL FLEET — Active Ships & Top100 TEU</span></div>
+      <div class="chartbox"><canvas id="c1"></canvas></div>
+      <div class="navbox"><canvas id="n1"></canvas></div>
+      <div class="hint">스트립 드래그=기간 선택 · WHEEL=ZOOM · ALT+DRAG=PAN · 더블클릭=전체</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="phead"><span class="ptitle">SUMMARY TABLE — TOP 10 SHARE</span></div>
+    <div class="tblbox auto" style="max-height:300px"><table id="sumtable">
+      <thead><tr><th class="txt">RANK</th><th class="txt">OPERATOR</th>
+        <th>MARKET SHARE</th></tr></thead><tbody></tbody>
+      <tfoot><tr><td class="txt" colspan="2">Σ TOTAL (TOP 10 MARKET SHARE)</td>
+        <td id="sumtotal"></td></tr></tfoot></table></div>
+  </div>
+  <div class="panel">
+    <div class="tbar"><span class="ptitle">DETAILED FLEET STRUCTURE</span>
+      <input id="dfilter" placeholder="filter: operator">
+      <span class="note" id="dnote"></span></div>
+    <div class="tblbox"><table id="dtable">
+      <thead>
+        <tr><th class="sup" rowspan="2">RANK</th><th class="sup txt" rowspan="2">OPERATOR</th>
+          <th class="sup" colspan="2">TOTAL</th><th class="sup" colspan="2">OWNED</th>
+          <th class="sup" colspan="3">CHARTERED</th><th class="sup" colspan="3">ORDERBOOK</th></tr>
+        <tr><th data-i="2">TEU</th><th data-i="3">SHIPS</th>
+          <th data-i="5">TEU</th><th data-i="6">SHIPS</th>
+          <th data-i="7">TEU</th><th data-i="8">SHIPS</th><th data-i="9">%</th>
+          <th data-i="10">TEU</th><th data-i="11">SHIPS</th><th data-i="12">%</th></tr>
+      </thead><tbody></tbody></table></div>
+  </div>
+  <div class="panel">
+    <div class="phead"><span class="ptitle">CURRENT vs COMPARISON SNAPSHOT DELTA</span>
+      <span class="note" id="delnote"></span></div>
+    <div class="tblbox"><table id="deltable">
+      <thead><tr>
+        <th class="txt" data-i="0">RANK</th><th class="txt" data-i="1">OPERATOR</th>
+        <th data-i="2">CURRENT TEU</th><th data-i="3">PREVIOUS TEU</th>
+        <th data-i="4">Δ TEU</th><th data-i="5">CURRENT SHARE</th>
+        <th data-i="6">PREVIOUS SHARE</th><th data-i="7">Δ SHARE</th>
+        <th data-i="8">RANK MOVE</th></tr></thead><tbody></tbody></table></div>
   </div>
 </div>
 <footer>
-  <span><b>SOURCE</b> Alphaliner Public Top100 (axsmarine) · 매일 00:00 KST 크롤 누적</span>
+  <span><b>SOURCE</b> Alphaliner Public Top 100 (axsmarine) · 매일 00:00 KST 크롤 누적</span>
   <span id="gen"></span>
 </footer>
 <script>
 const PALETTE = ["#ffa500", "#79c0ff", "#d2a8ff", "#7ee787", "#ff7b72", "#ffa657",
                  "#a5d6ff", "#f778ba", "#d4a72c", "#8ddb8c", "#ff9bce", "#9ecbff"];
-const CFG = {"id":"alphaliner","updated":"2026-11-05","series":{"ships":[["2026-10-18",0],["2026-10-19",7669],["2026-11-05",7672]],"teu":[["2026-10-18",32688538],["2026-10-19",34113905],["2026-11-05",34193156]],"share":[["2026-11-05",86.39]],"ob":[["2026-11-05",13698597]]},"operators":{"names":["Mediterranean Shg Co","Maersk","CMA CGM Group","COSCO Group","Hapag-Lloyd","ONE (Ocean Network Express)","Evergreen Line","HMM Co Ltd","Yang Ming Marine Transport Corp.","Zim","Wan Hai Lines","PIL (Pacific Int. Line)"],"teu":{"Mediterranean Shg Co":[["2026-10-18",7453718],["2026-10-19",7453718],["2026-11-05",7481560]],"Maersk":[["2026-10-18",4728084],["2026-10-19",4728084],["2026-11-05",4695758]],"CMA CGM Group":[["2026-10-18",4487464],["2026-10-19",4487464],["2026-11-05",4486882]],"COSCO Group":[["2026-10-18",3682244],["2026-10-19",3682244],["2026-11-05",3683714]],"Hapag-Lloyd":[["2026-10-18",2410123],["2026-10-19",2410123],["2026-11-05",2412966]],"ONE (Ocean Network Express)":[["2026-10-18",2191058],["2026-10-19",2191058],["2026-11-05",2219135]],"Evergreen Line":[["2026-10-18",2040707],["2026-10-19",2040707],["2026-11-05",2057263]],"HMM Co Ltd":[["2026-10-18",1034348],["2026-10-19",1034348],["2026-11-05",1034348]],"Yang Ming Marine Transport Corp.":[["2026-10-18",771280],["2026-10-19",771280],["2026-11-05",771280]],"Zim":[["2026-10-18",699460],["2026-10-19",699460],["2026-11-05",698193]],"Wan Hai Lines":[["2026-10-18",633064],["2026-10-19",633064],["2026-11-05",633064]],"PIL (Pacific Int. Line)":[["2026-10-18",470419],["2026-10-19",470419],["2026-11-05",470419]]},"ob":{"Mediterranean Shg Co":[["2026-10-19",2909318],["2026-11-05",3377390]],"Maersk":[["2026-10-19",1811602],["2026-11-05",1811602]],"CMA CGM Group":[["2026-10-19",1653855],["2026-11-05",1685992]],"COSCO Group":[["2026-10-19",1884798],["2026-11-05",1887518]],"Hapag-Lloyd":[["2026-10-19",489224],["2026-11-05",489224]],"ONE (Ocean Network Express)":[["2026-10-19",582736],["2026-11-05",569000]],"Evergreen Line":[["2026-10-19",851904],["2026-11-05",835348]],"HMM Co Ltd":[["2026-10-19",220642],["2026-11-05",327986]],"Yang Ming Marine Transport Corp.":[["2026-10-19",256660],["2026-11-05",256660]],"Zim":[["2026-10-19",226736],["2026-11-05",245216]],"Wan Hai Lines":[["2026-10-19",495800],["2026-11-05",495800]],"PIL (Pacific Int. Line)":[["2026-10-19",305798],["2026-11-05",305798]]}},"snap":{"dates":["2026-11-05","2026-10-19","2026-10-18"],"cols":[{"t":"RANK","i":0,"txt":true},{"t":"OPERATOR","i":1,"txt":true,"flag":12},{"t":"FLEET BAR","i":-1},{"t":"TOTAL TEU","i":2},{"t":"SHIPS","i":3},{"t":"OWNED TEU","i":4},{"t":"OWNED SHIPS","i":5},{"t":"CHARTERED TEU","i":6},{"t":"CHARTERED SHIPS","i":7},{"t":"% CHART","i":8,"pct":true},{"t":"ORDERBOOK TEU","i":9},{"t":"ORDERBOOK SHIPS","i":10},{"t":"% EXISTING","i":11,"pct":true}],"bar":{"owned":4,"chartered":6,"orderbook":9},"barMax":10858950,"rows":{"2026-10-18":[[1,"Mediterranean Shg Co",7453718,null,null,null,null,null,null,null,null,null,null],[2,"Maersk",4728084,null,null,null,null,null,null,null,null,null,null],[3,"CMA CGM Group",4487464,null,null,null,null,null,null,null,null,null,null],[4,"COSCO Group",3682244,null,null,null,null,null,null,null,null,null,null],[5,"Hapag-Lloyd",2410123,null,null,null,null,null,null,null,null,null,null],[6,"ONE (Ocean Network Express)",2191058,null,null,null,null,null,null,null,null,null,null],[7,"Evergreen Line",2040707,null,null,null,null,null,null,null,null,null,null],[8,"HMM Co Ltd",1034348,null,null,null,null,null,null,null,null,null,null],[9,"Yang Ming Marine Transport Corp.",771280,null,null,null,null,null,null,null,null,null,null],[10,"Zim",699460,null,null,null,null,null,null,null,null,null,null],[11,"Wan Hai Lines",633064,null,null,null,null,null,null,null,null,null,null],[12,"PIL (Pacific Int. Line)",470419,null,null,null,null,null,null,null,null,null,null],[13,"X-Press Feeders Group",190388,null,null,null,null,null,null,null,null,null,null],[14,"SITC",187297,null,null,null,null,null,null,null,null,null,null],[15,"KMTC",163876,null,null,null,null,null,null,null,null,null,null],[16,"DP World",146613,null,null,null,null,null,null,null,null,null,null],[17,"Global Feeder Shipping LLC",146063,null,null,null,null,null,null,null,null,null,null],[18,"IRISL Group",140184,null,null,null,null,null,null,null,null,null,null],[19,"Sinokor Merchant Marine",132526,null,null,null,null,null,null,null,null,null,null],[20,"TS Lines",125784,null,null,null,null,null,null,null,null,null,null],[21,"Emirates Shipping Line",114852,null,null,null,null,null,null,null,null,null,null],[22,"China United Lines (CULines)",109433,null,null,null,null,null,null,null,null,null,null],[23,"RCL (Regional Container L.)",95921,null,null,null,null,null,null,null,null,null,null],[24,"Ningbo Ocean Shg Co",87650,null,null,null,null,null,null,null,null,null,null],[25,"Interasia Lines",85077,null,null,null,null,null,null,null,null,null,null],[26,"Tangshan Port Hede Shipping",76020,null,null,null,null,null,null,null,null,null,null],[27,"Grimaldi (Napoli)",75158,null,null,null,null,null,null,null,null,null,null],[28,"Antong Holdings (QASC)",72564,null,null,null,null,null,null,null,null,null,null],[29,"Sinolines",68743,null,null,null,null,null,null,null,null,null,null],[30,"Matson",68420,null,null,null,null,null,null,null,null,null,null]],"2026-10-19":[[1,"Mediterranean Shg Co",7453718,null,null,null,null,null,null,null,null,null,null],[1,"Mediterranean Shg Co",7453718,1017,4784229,766,2669489,251,35.8,2909318,164,39.0,null],[1,"Mediterranean Shg Co",7453718,1017,4784229,766,2669489,251,35.8,2909318,164,39.0,null],[2,"Maersk",4728084,null,null,null,null,null,null,null,null,null,null],[2,"Maersk",4728084,750,2943996,359,1784088,391,37.7,1811602,138,38.3,null],[2,"Maersk",4728084,750,2943996,359,1784088,391,37.7,1811602,138,38.3,null],[3,"CMA CGM Group",4487464,null,null,null,null,null,null,null,null,null,null],[3,"CMA CGM Group",4487464,730,2998823,386,1488641,344,33.2,1653855,157,36.9,null],[3,"CMA CGM Group",4487464,730,2998823,386,1488641,344,33.2,1653855,157,36.9,null],[4,"COSCO Group",3682244,null,null,null,null,null,null,null,null,null,null],[4,"COSCO Group",3682244,567,2226498,211,1455746,356,39.5,1884798,155,51.2,null],[4,"COSCO Group",3682244,567,2226498,211,1455746,356,39.5,1884798,155,51.2,null],[5,"Hapag-Lloyd",2410123,null,null,null,null,null,null,null,null,null,null],[5,"Hapag-Lloyd",2410123,289,1455918,134,954205,155,39.6,489224,62,20.3,null],[5,"Hapag-Lloyd",2410123,289,1455918,134,954205,155,39.6,489224,62,20.3,null],[6,"ONE (Ocean Network Express)",2191058,null,null,null,null,null,null,null,null,null,null],[6,"ONE (Ocean Network Express)",2191058,271,1051480,112,1139578,159,52.0,582736,50,26.6,null],[6,"ONE (Ocean Network Express)",2191058,271,1051480,112,1139578,159,52.0,582736,50,26.6,null],[7,"Evergreen Line",2040707,null,null,null,null,null,null,null,null,null,null],[7,"Evergreen Line",2040707,243,1496083,170,544624,73,26.7,851904,75,41.7,null],[7,"Evergreen Line",2040707,243,1496083,170,544624,73,26.7,851904,75,41.7,null],[8,"HMM Co Ltd",1034348,null,null,null,null,null,null,null,null,null,null],[8,"HMM Co Ltd",1034348,97,847404,72,186944,25,18.1,220642,36,21.3,null],[8,"HMM Co Ltd",1034348,97,847404,72,186944,25,18.1,220642,36,21.3,null],[9,"Yang Ming Marine Transport Corp.",771280,null,null,null,null,null,null,null,null,null,null],[9,"Yang Ming Marine Transport Corp.",771280,99,397896,64,373384,35,48.4,256660,20,33.3,null],[9,"Yang Ming Marine Transport Corp.",771280,99,397896,64,373384,35,48.4,256660,20,33.3,null],[10,"Zim",699460,null,null,null,null,null,null,null,null,null,null],[10,"Zim",699460,114,92934,15,606526,99,86.7,226736,30,32.4,null],[10,"Zim",699460,114,92934,15,606526,99,86.7,226736,30,32.4,null],[11,"Wan Hai Lines",633064,null,null,null,null,null,null,null,null,null,null],[11,"Wan Hai Lines",633064,125,633064,125,null,null,null,495800,48,78.3,null],[11,"Wan Hai Lines",633064,125,633064,125,0,0,0.0,495800,48,78.3,null],[12,"PIL (Pacific Int. Line)",470419,null,null,null,null,null,null,null,null,null,null],[12,"PIL (Pacific Int. Line)",470419,101,346748,84,123671,17,26.3,305798,29,65.0,null],[12,"PIL (Pacific Int. Line)",470419,101,346748,84,123671,17,26.3,305798,29,65.0,null],[13,"X-Press Feeders Group",190388,null,null,null,null,null,null,null,null,null,null],[13,"X-Press Feeders Group",190388,104,116716,57,73672,47,38.7,79200,17,41.6,null],[13,"X-Press Feeders Group",190388,104,116716,57,73672,47,38.7,79200,17,41.6,null],[14,"SITC",187297,null,null,null,null,null,null,null,null,null,null],[14,"SITC",187297,121,163687,99,23610,22,12.6,66232,37,35.4,null],[14,"SITC",187297,121,163687,99,23610,22,12.6,66232,37,35.4,null],[15,"KMTC",163876,null,null,null,null,null,null,null,null,null,null],[15,"KMTC",163876,66,94721,30,69155,36,42.2,73356,11,44.8,null],[15,"KMTC",163876,66,94721,30,69155,36,42.2,73356,11,44.8,null],[16,"DP World",146613,null,null,null,null,null,null,null,null,null,null],[16,"DP World",146613,84,31341,10,115272,74,78.6,84841,17,57.9,null],[16,"DP World",146613,84,31341,10,115272,74,78.6,84841,17,57.9,null],[17,"Global Feeder Shipping LLC",146063,null,null,null,null,null,null,null,null,null,null],[17,"Global Feeder Shipping LLC",146063,56,61553,25,84510,31,57.9,11152,3,7.6,null],[17,"Global Feeder Shipping LLC",146063,56,61553,25,84510,31,57.9,11152,3,7.6,null],[18,"IRISL Group",140184,null,null,null,null,null,null,null,null,null,null],[18,"IRISL Group",140184,27,140184,27,null,null,null,null,null,null,null],[18,"IRISL Group",140184,27,140184,27,0,0,0.0,0,0,null,null],[19,"Sinokor Merchant Marine",132526,null,null,null,null,null,null,null,null,null,null],[19,"Sinokor Merchant Marine",132526,69,130741,68,1785,1,1.3,52000,4,39.2,null],[19,"Sinokor Merchant Marine",132526,69,130741,68,1785,1,1.3,52000,4,39.2,null],[20,"TS Lines",125784,null,null,null,null,null,null,null,null,null,null],[20,"TS Lines",125784,45,106059,38,19725,7,15.7,69432,15,55.2,null],[20,"TS Lines",125784,45,106059,38,19725,7,15.7,69432,15,55.2,null],[21,"Emirates Shipping Line",114852,null,null,null,null,null,null,null,null,null,null],[21,"Emirates Shipping Line",114852,25,null,null,114852,25,100.0,42510,3,37.0,null],[21,"Emirates Shipping Line",114852,25,0,0,114852,25,100.0,42510,3,37.0,null],[22,"China United Lines (CULines)",109433,null,null,null,null,null,null,null,null,null,null],[22,"China United Lines (CULines)",109433,47,18120,10,91313,37,83.4,91693,18,83.8,null],[22,"China United Lines (CULines)",109433,47,18120,10,91313,37,83.4,91693,18,83.8,null],[23,"RCL (Regional Container L.)",95921,null,null,null,null,null,null,null,null,null,null],[23,"RCL (Regional Container L.)",95921,33,85299,27,10622,6,11.1,153354,31,159.9,null],[23,"RCL (Regional Container L.)",95921,33,85299,27,10622,6,11.1,153354,31,159.9,null],[24,"Ningbo Ocean Shg Co",87650,null,null,null,null,null,null,null,null,null,null],[24,"Ningbo Ocean Shg Co",87650,87,61418,49,26232,38,29.9,60400,20,68.9,null],[24,"Ningbo Ocean Shg Co",87650,87,61418,49,26232,38,29.9,60400,20,68.9,null],[25,"Interasia Lines",85077,null,null,null,null,null,null,null,null,null,null],[25,"Interasia Lines",85077,28,64553,22,20524,6,24.1,65070,13,76.5,null],[25,"Interasia Lines",85077,28,64553,22,20524,6,24.1,65070,13,76.5,null],[26,"Tangshan Port Hede Shipping",76020,null,null,null,null,null,null,null,null,null,null],[26,"Tangshan Port Hede Shipping",76020,52,1874,3,74146,49,97.5,2693,1,3.5,null],[26,"Tangshan Port Hede Shipping",76020,52,1874,3,74146,49,97.5,2693,1,3.5,null],[27,"Grimaldi (Napoli)",75158,null,null,null,null,null,null,null,null,null,null],[27,"Grimaldi (Napoli)",75158,48,75158,48,null,null,null,null,null,null,null],[27,"Grimaldi (Napoli)",75158,48,75158,48,0,0,0.0,0,0,null,null],[28,"Antong Holdings (QASC)",72564,null,null,null,null,null,null,null,null,null,null],[28,"Antong Holdings (QASC)",72564,71,53994,37,18570,34,25.6,null,null,null,null],[28,"Antong Holdings (QASC)",72564,71,53994,37,18570,34,25.6,0,0,null,null],[29,"Sinolines",68743,null,null,null,null,null,null,null,null,null,null],[29,"Sinolines",68743,42,30566,19,38177,23,55.5,53075,13,77.2,null],[29,"Sinolines",68743,42,30566,19,38177,23,55.5,53075,13,77.2,null],[30,"Matson",68420,null,null,null,null,null,null,null,null,null,null],[30,"Matson",68420,28,40355,19,28065,9,41.0,10860,3,15.9,null],[30,"Matson",68420,28,40355,19,28065,9,41.0,10860,3,15.9,null],[31,"Shanghai Jin Jiang Shipping",67125,56,32449,27,34676,29,51.7,27200,16,40.5,null],[31,"Shanghai Jin Jiang Shipping",67125,56,32449,27,34676,29,51.7,27200,16,40.5,null],[32,"SM Line Corp.",66801,15,64188,13,2613,2,3.9,null,null,null,null],[32,"SM Line Corp.",66801,15,64188,13,2613,2,3.9,0,0,null,null],[33,"Swire Shipping",59502,30,47917,23,11585,7,19.5,null,null,null,null],[33,"Swire Shipping",59502,30,47917,23,11585,7,19.5,0,0,null,null],[34,"Zhonggu Logistics Corp.",55725,60,19957,12,35768,48,64.2,95800,20,171.9,null],[34,"Zhonggu Logistics Corp.",55725,60,19957,12,35768,48,64.2,95800,20,171.9,null],[35,"FESCO",54568,38,36292,23,18276,15,33.5,null,null,null,null],[35,"FESCO",54568,38,36292,23,18276,15,33.5,0,0,null,null],[36,"Arkas Line / EMES",52632,32,50524,30,2108,2,4.0,44892,12,85.3,null],[36,"Arkas Line / EMES",52632,32,50524,30,2108,2,4.0,44892,12,85.3,null],[37,"Seaboard Marine",47640,24,34347,14,13293,10,27.9,3666,1,7.7,null],[37,"Seaboard Marine",47640,24,34347,14,13293,10,27.9,3666,1,7.7,null],[38,"Samudera",44850,32,13175,14,31675,18,70.6,null,null,null,null],[38,"Samudera",44850,32,13175,14,31675,18,70.6,0,0,null,null],[39,"Meratus",44718,67,44718,67,null,null,null,5466,8,12.2,null],[39,"Meratus",44718,67,44718,67,0,0,0.0,5466,8,12.2,null],[40,"Akkon Lines",44496,31,1776,2,42720,29,96.0,3630,1,8.2,null],[40,"Akkon Lines",44496,31,1776,2,42720,29,96.0,3630,1,8.2,null],[41,"Tailwind Shipping Lines",43406,12,6330,2,37076,10,85.4,42000,5,96.8,null],[41,"Tailwind Shipping Lines",43406,12,6330,2,37076,10,85.4,42000,5,96.8,null],[42,"Namsung Shipping",43084,31,37339,27,5745,4,13.3,12624,4,29.3,null],[42,"Namsung Shipping",43084,31,37339,27,5745,4,13.3,12624,4,29.3,null],[43,"Tanto Intim Line",38554,57,38554,57,null,null,null,1854,2,4.8,null],[43,"Tanto Intim Line",38554,57,38554,57,0,0,0.0,1854,2,4.8,null],[44,"Shandong Marine Corporation",31246,45,11598,17,19648,28,62.9,6320,4,20.2,null],[44,"Shandong Marine Corporation",31246,45,11598,17,19648,28,62.9,6320,4,20.2,null],[45,"Salam Pacific Indonesia Lines",31010,44,31010,44,null,null,null,680,1,2.2,null],[45,"Salam Pacific Indonesia Lines",31010,44,31010,44,0,0,0.0,680,1,2.2,null],[46,"Great White Fleet",29973,14,17481,7,12492,7,41.7,15500,5,51.7,null],[46,"Great White Fleet",29973,14,17481,7,12492,7,41.7,15500,5,51.7,null],[47,"Linea Messina",27682,12,22358,5,5324,7,19.2,null,null,null,null],[47,"Linea Messina",27682,12,22358,5,5324,7,19.2,0,0,null,null],[48,"Sea Legend Shipping",21556,9,4890,1,16666,8,77.3,null,null,null,null],[48,"Sea Legend Shipping",21556,9,4890,1,16666,8,77.3,0,0,null,null],[49,"Dole Ocean Liner",21150,16,20610,14,540,2,2.6,null,null,null,null],[49,"Dole Ocean Liner",21150,16,20610,14,540,2,2.6,0,0,null,null],[50,"Chun Kyung (CK Line)",20211,18,13236,9,6975,9,34.5,15012,4,74.3,null],[50,"Chun Kyung (CK Line)",20211,18,13236,9,6975,9,34.5,15012,4,74.3,null],[51,"Hainan Yangpu Newnew Shipping",19470,7,18250,6,1220,1,6.3,9620,2,49.4,null],[51,"Hainan Yangpu Newnew Shipping",19470,7,18250,6,1220,1,6.3,9620,2,49.4,null],[52,"Crowley Liner Services",19142,16,11094,9,8048,7,42.0,null,null,null,null],[52,"Crowley Liner Services",19142,16,11094,9,8048,7,42.0,0,0,null,null],[53,"Kawa Shipping",18644,10,null,null,18644,10,100.0,24206,5,129.8,null],[53,"Kawa Shipping",18644,10,0,0,18644,10,100.0,24206,5,129.8,null],[54,"Asean Seas Line",18508,14,1781,1,16727,13,90.4,10600,2,57.3,null],[54,"Asean Seas Line",18508,14,1781,1,16727,13,90.4,10600,2,57.3,null],[55,"Tropical Shg / TOTE Maritime",18203,24,16535,21,1668,3,9.2,null,null,null,null],[55,"Tropical Shg / TOTE Maritime",18203,24,16535,21,1668,3,9.2,0,0,null,null],[56,"Shipping Corp. of India",17834,3,8800,2,9034,1,50.7,null,null,null,null],[56,"Shipping Corp. of India",17834,3,8800,2,9034,1,50.7,0,0,null,null],[57,"Temas Line",17743,35,17743,35,null,null,null,3430,7,19.3,null],[57,"Temas Line",17743,35,17743,35,0,0,0.0,3430,7,19.3,null],[58,"Bengal Tiger Line",17635,10,null,null,17635,10,100.0,null,null,null,null],[58,"Bengal Tiger Line",17635,10,0,0,17635,10,100.0,0,0,null,null],[59,"Taicang Container Lines",17202,14,4369,4,12833,10,74.6,12024,4,69.9,null],[59,"Taicang Container Lines",17202,14,4369,4,12833,10,74.6,12024,4,69.9,null],[60,"MTT Shipping",16717,18,14293,16,2424,2,14.5,12332,6,73.8,null],[60,"MTT Shipping",16717,18,14293,16,2424,2,14.5,12332,6,73.8,null],[61,"Transworld Group Singapore",14922,12,14922,12,null,null,null,null,null,null,null],[61,"Transworld Group Singapore",14922,12,14922,12,0,0,0.0,0,0,null,null],[62,"Boluda Lines",14629,18,9326,12,5303,6,36.2,null,null,null,null],[62,"Boluda Lines",14629,18,9326,12,5303,6,36.2,0,0,null,null],[63,"Cool Carriers",14217,40,4022,13,10195,27,71.7,null,null,null,null],[63,"Cool Carriers",14217,40,4022,13,10195,27,71.7,0,0,null,null],[64,"Turkon Line",13857,6,11512,5,2345,1,16.9,4000,1,28.9,null],[64,"Turkon Line",13857,6,11512,5,2345,1,16.9,4000,1,28.9,null],[65,"Eimskip",13069,15,5174,7,7895,8,60.4,4560,2,34.9,null],[65,"Eimskip",13069,15,5174,7,7895,8,60.4,4560,2,34.9,null],[66,"Pasha Hawaii Transport Lines",12903,6,12903,6,null,null,null,null,null,null,null],[66,"Pasha Hawaii Transport Lines",12903,6,12903,6,0,0,0.0,0,0,null,null],[67,"Independent Container Line",12398,4,6182,2,6216,2,50.1,null,null,null,null],[67,"Independent Container Line",12398,4,6182,2,6216,2,50.1,0,0,null,null],[68,"Caribbean Feeder Services",12090,10,null,null,12090,10,100.0,null,null,null,null],[68,"Caribbean Feeder Services",12090,10,0,0,12090,10,100.0,0,0,null,null],[69,"Peel Ports (BG Freight)",12061,12,null,null,12061,12,100.0,null,null,null,null],[69,"Peel Ports (BG Freight)",12061,12,0,0,12061,12,100.0,0,0,null,null],[70,"HR Lines",11932,8,11932,8,null,null,null,null,null,null,null],[70,"HR Lines",11932,8,11932,8,0,0,0.0,0,0,null,null],[71,"Pan Ocean (Container)",11399,10,9186,7,2213,3,19.4,null,null,null,null],[71,"Pan Ocean (Container)",11399,10,9186,7,2213,3,19.4,0,0,null,null],[72,"MODUL",11191,4,null,null,11191,4,100.0,null,null,null,null],[72,"MODUL",11191,4,0,0,11191,4,100.0,0,0,null,null],[73,"Hai An Transport",11057,8,11057,8,null,null,null,46484,10,420.4,null],[73,"Hai An Transport",11057,8,11057,8,0,0,0.0,46484,10,420.4,null],[74,"Qatar Navigation (Milaha)",10939,7,8615,5,2324,2,21.2,null,null,null,null],[74,"Qatar Navigation (Milaha)",10939,7,8615,5,2324,2,21.2,0,0,null,null],[75,"King Ocean",10853,15,null,null,10853,15,100.0,null,null,null,null],[75,"King Ocean",10853,15,0,0,10853,15,100.0,0,0,null,null],[76,"Greta Shipping",10516,6,1118,1,9398,5,89.4,null,null,null,null],[76,"Greta Shipping",10516,6,1118,1,9398,5,89.4,0,0,null,null],[77,"Philippine Span Asia Carrier Corp.",10143,17,8926,15,1217,2,12.0,400,1,3.9,null],[77,"Philippine Span Asia Carrier Corp.",10143,17,8926,15,1217,2,12.0,400,1,3.9,null],[78,"Neptune Pacific Direct Line",9783,9,9783,9,null,null,null,null,null,null,null],[78,"Neptune Pacific Direct Line",9783,9,9783,9,0,0,0.0,0,0,null,null],[79,"Imoto Lines",9295,31,7423,24,1872,7,20.1,1141,3,12.3,null],[79,"Imoto Lines",9295,31,7423,24,1872,7,20.1,1141,3,12.3,null],[80,"Pan Continental Shg",9288,8,8660,7,628,1,6.8,2200,2,23.7,null],[80,"Pan Continental Shg",9288,8,8660,7,628,1,6.8,2200,2,23.7,null],[81,"Borchard Lines",9284,10,null,null,9284,10,100.0,null,null,null,null],[81,"Borchard Lines",9284,10,0,0,9284,10,100.0,0,0,null,null],[82,"Dalian Trawind Marine Co",9272,2,9272,2,null,null,null,null,null,null,null],[82,"Dalian Trawind Marine Co",9272,2,9272,2,0,0,0.0,0,0,null,null],[83,"Dalian Jifa Bohai Rim Container L.",9082,13,3140,4,5942,9,65.4,null,null,null,null],[83,"Dalian Jifa Bohai Rim Container L.",9082,13,3140,4,5942,9,65.4,0,0,null,null],[84,"Sea Express Shipping Lines",8865,6,1550,1,7315,5,82.5,8763,4,98.8,null],[84,"Sea Express Shipping Lines",8865,6,1550,1,7315,5,82.5,8763,4,98.8,null],[85,"Vistar Shipping LLC",8611,5,8611,5,null,null,null,null,null,null,null],[85,"Vistar Shipping LLC",8611,5,8611,5,0,0,0.0,0,0,null,null],[86,"Q Express Line Sdn Bhd",8458,2,null,null,8458,2,100.0,null,null,null,null],[86,"Q Express Line Sdn Bhd",8458,2,0,0,8458,2,100.0,0,0,null,null],[87,"GS Lines",8154,9,6718,7,1436,2,17.6,null,null,null,null],[87,"GS Lines",8154,9,6718,7,1436,2,17.6,0,0,null,null],[88,"Irish Continental Group",8041,9,4699,5,3342,4,41.6,null,null,null,null],[88,"Irish Continental Group",8041,9,4699,5,3342,4,41.6,0,0,null,null],[89,"GT Lines",8034,8,null,null,8034,8,100.0,null,null,null,null],[89,"GT Lines",8034,8,0,0,8034,8,100.0,0,0,null,null],[90,"EAS Datong",8017,6,7415,5,602,1,7.5,null,null,null,null],[90,"EAS Datong",8017,6,7415,5,602,1,7.5,0,0,null,null],[91,"Oceanic Cargo Lines",7970,17,7970,17,null,null,null,null,null,null,null],[91,"Oceanic Cargo Lines",7970,17,7970,17,0,0,0.0,0,0,null,null],[92,"OVP Shipping",7774,6,null,null,7774,6,100.0,8792,2,113.1,null],[92,"OVP Shipping",7774,6,0,0,7774,6,100.0,8792,2,113.1,null],[93,"Safetrans Shipping",7772,3,null,null,7772,3,100.0,null,null,null,null],[93,"Safetrans Shipping",7772,3,0,0,7772,3,100.0,0,0,null,null],[94,"Harbour-Link Group Bhd",7687,10,7687,10,null,null,null,null,null,null,null],[94,"Harbour-Link Group Bhd",7687,10,7687,10,0,0,0.0,0,0,null,null],[95,"Del Monte Fresh Produce Co",7656,6,7656,6,null,null,null,null,null,null,null],[95,"Del Monte Fresh Produce Co",7656,6,7656,6,0,0,0.0,0,0,null,null],[96,"Panda Express Line",7628,5,null,null,7628,5,100.0,1510,1,19.8,null],[96,"Panda Express Line",7628,5,0,0,7628,5,100.0,1510,1,19.8,null],[97,"Kambara Kisen",7566,7,7566,7,null,null,null,null,null,null,null],[97,"Kambara Kisen",7566,7,7566,7,0,0,0.0,0,0,null,null],[98,"Transit LLC",7420,6,5910,5,1510,1,20.4,null,null,null,null],[98,"Transit LLC",7420,6,5910,5,1510,1,20.4,0,0,null,null],[99,"Tarros",7323,5,null,null,7323,5,100.0,null,null,null,null],[99,"Tarros",7323,5,0,0,7323,5,100.0,0,0,null,null],[100,"Folk Maritime",7184,5,6449,4,735,1,10.2,null,null,null,null],[100,"Folk Maritime",7184,5,6449,4,735,1,10.2,0,0,null,null]],"2026-11-05":[[1,"Mediterranean Shg Co",7481560,1022,4810875,771,2670685,251,35.7,3377390,182,45.1,"CH"],[2,"Maersk",4695758,742,2943996,359,1751762,383,37.3,1811602,138,38.6,"DK"],[3,"CMA CGM Group",4486882,730,2998823,386,1488059,344,33.2,1685992,165,37.6,"FR"],[4,"COSCO Group",3683714,567,2226498,211,1457216,356,39.6,1887518,156,51.2,"CN"],[5,"Hapag-Lloyd",2412966,291,1448595,133,964371,158,40.0,489224,62,20.3,"DE"],[6,"ONE (Ocean Network Express)",2219135,274,1073952,114,1145183,160,51.6,569000,49,25.6,"SG"],[7,"Evergreen Line",2057263,244,1512639,171,544624,73,26.5,835348,74,40.6,"TW"],[8,"HMM Co Ltd",1034348,97,847404,72,186944,25,18.1,327986,44,31.7,"KR"],[9,"Yang Ming Marine Transport Corp.",771280,99,397896,64,373384,35,48.4,256660,20,33.3,"TW"],[10,"Zim",698193,113,92934,15,605259,98,86.7,245216,32,35.1,"IL"],[11,"Wan Hai Lines",633064,125,633064,125,0,0,0.0,495800,48,78.3,"TW"],[12,"PIL (Pacific Int. Line)",470419,101,351001,85,119418,16,25.4,305798,29,65.0,"SG"],[13,"X-Press Feeders Group",190950,103,116716,57,74234,46,38.9,94800,23,49.6,"SG"],[14,"SITC",188393,122,162644,98,25749,24,13.7,66232,37,35.2,"HK"],[15,"KMTC",172576,67,103421,31,69155,36,40.1,83256,16,48.2,"KR"],[16,"DP World",149725,87,35593,11,114132,76,76.2,84841,17,56.7,"AE"],[17,"Global Feeder Shipping LLC",147560,57,61553,25,86007,32,58.3,11152,3,7.6,"AE"],[18,"IRISL Group",140184,27,140184,27,0,0,0.0,0,0,null,"IR"],[19,"Sinokor Merchant Marine",132526,69,130741,68,1785,1,1.3,52000,4,39.2,"KR"],[20,"TS Lines",129100,46,103105,37,25995,9,20.1,90484,18,70.1,"HK"],[21,"Emirates Shipping Line",125984,27,0,0,125984,27,100.0,57310,7,45.5,"AE"],[22,"China United Lines (CULines)",109433,47,18120,10,91313,37,83.4,91693,18,83.8,"CN"],[23,"RCL (Regional Container L.)",100409,34,89787,28,10622,6,10.6,148866,30,148.3,"TH"],[24,"Ningbo Ocean Shg Co",89431,88,61418,49,28013,39,31.3,60400,20,67.5,"CN"],[25,"Interasia Lines",85077,28,64553,22,20524,6,24.1,65070,13,76.5,"SG"],[26,"Grimaldi (Napoli)",75158,48,75158,48,0,0,0.0,0,0,null,"IT"],[27,"Tangshan Port Hede Shipping",74193,51,1874,3,72319,48,97.5,2693,1,3.6,"CN"],[28,"Antong Holdings (QASC)",72564,71,53994,37,18570,34,25.6,0,0,null,"CN"],[29,"Sinolines",68743,42,30566,19,38177,23,55.5,53075,13,77.2,"CN"],[30,"Matson",68420,28,40355,19,28065,9,41.0,10860,3,15.9,"US"],[31,"Shanghai Jin Jiang Shipping",67125,56,32449,27,34676,29,51.7,27200,16,40.5,"CN"],[32,"SM Line Corp.",66801,15,64188,13,2613,2,3.9,0,0,null,"KR"],[33,"Swire Shipping",59502,30,47917,23,11585,7,19.5,0,0,null,"SG"],[34,"Zhonggu Logistics Corp.",55725,60,19957,12,35768,48,64.2,95800,20,171.9,"CN"],[35,"FESCO",53903,37,35627,22,18276,15,33.9,0,0,null,"RU"],[36,"Arkas Line / EMES",52632,32,50524,30,2108,2,4.0,44892,12,85.3,"TR"],[37,"Seaboard Marine",47293,23,34347,14,12946,9,27.4,3666,1,7.8,"US"],[38,"Namsung Shipping",45548,32,37339,27,8209,5,18.0,26824,6,58.9,"KR"],[39,"Samudera",44850,32,13175,14,31675,18,70.6,6000,2,13.4,"ID"],[40,"Akkon Lines",44840,32,2894,3,41946,29,93.5,3630,1,8.1,"TR"],[41,"Meratus",44718,67,44718,67,0,0,0.0,5466,8,12.2,"ID"],[42,"Tailwind Shipping Lines",43406,12,6330,2,37076,10,85.4,42000,5,96.8,"DE"],[43,"Tanto Intim Line",39481,58,39481,58,0,0,0.0,927,1,2.3,"ID"],[44,"Shandong Marine Corporation",31246,45,11598,17,19648,28,62.9,6320,4,20.2,"CN"],[45,"Salam Pacific Indonesia Lines",31010,44,31010,44,0,0,0.0,1360,2,4.4,"ID"],[46,"Great White Fleet",29973,14,17481,7,12492,7,41.7,15500,5,51.7,"US"],[47,"Linea Messina",27682,12,22358,5,5324,7,19.2,0,0,null,"IT"],[48,"Sea Legend Shipping",21556,9,4890,1,16666,8,77.3,0,0,null,"SG"],[49,"Dole Ocean Liner",21150,16,20610,14,540,2,2.6,0,0,null,"US"],[50,"Chun Kyung (CK Line)",20549,19,13236,9,7313,10,35.6,15012,4,73.1,"KR"],[51,"Hainan Yangpu Newnew Shipping",19470,7,18250,6,1220,1,6.3,9620,2,49.4,"CN"],[52,"Crowley Liner Services",19142,16,11094,9,8048,7,42.0,0,0,null,"US"],[53,"Kawa Shipping",18644,10,0,0,18644,10,100.0,24206,5,129.8,"CN"],[54,"Asean Seas Line",18508,14,1781,1,16727,13,90.4,10600,2,57.3,"HK"],[55,"Tropical Shg / TOTE Maritime",18203,24,16535,21,1668,3,9.2,0,0,null,"US"],[56,"Shipping Corp. of India",17834,3,8800,2,9034,1,50.7,0,0,null,"IN"],[57,"Temas Line",17743,35,17743,35,0,0,0.0,3430,7,19.3,"ID"],[58,"Bengal Tiger Line",17635,10,0,0,17635,10,100.0,0,0,null,"SG"],[59,"Taicang Container Lines",17202,14,4369,4,12833,10,74.6,12024,4,69.9,"CN"],[60,"MTT Shipping",16717,18,14293,16,2424,2,14.5,12332,6,73.8,"MY"],[61,"Transworld Group Singapore",14922,12,14922,12,0,0,0.0,0,0,null,"SG"],[62,"Boluda Lines",14629,18,9326,12,5303,6,36.2,0,0,null,"ES"],[63,"Cool Carriers",14217,40,4022,13,10195,27,71.7,0,0,null,"SE"],[64,"Turkon Line",13857,6,11512,5,2345,1,16.9,4000,1,28.9,"TR"],[65,"Eimskip",13069,15,5174,7,7895,8,60.4,4560,2,34.9,"IS"],[66,"Pasha Hawaii Transport Lines",12903,6,12903,6,0,0,0.0,0,0,null,"US"],[67,"Independent Container Line",12398,4,6182,2,6216,2,50.1,0,0,null,"US"],[68,"Caribbean Feeder Services",12090,10,0,0,12090,10,100.0,0,0,null,"BM"],[69,"Peel Ports (BG Freight)",12061,12,0,0,12061,12,100.0,0,0,null,"NL"],[70,"HR Lines",11932,8,11932,8,0,0,0.0,0,0,null,"BD"],[71,"Pan Ocean (Container)",11399,10,9186,7,2213,3,19.4,0,0,null,"KR"],[72,"Silmar Shipping FZCO",11315,5,0,0,11315,5,100.0,0,0,null,"AE"],[73,"MODUL",11191,4,0,0,11191,4,100.0,0,0,null,"RU"],[74,"Hai An Transport",11057,8,11057,8,0,0,0.0,50340,12,455.3,"VN"],[75,"King Ocean",10945,17,0,0,10945,17,100.0,0,0,null,"US"],[76,"Greta Shipping",10516,6,1118,1,9398,5,89.4,0,0,null,"SG"],[77,"Philippine Span Asia Carrier Corp.",10143,17,8926,15,1217,2,12.0,400,1,3.9,"PH"],[78,"Neptune Pacific Direct Line",9783,9,9783,9,0,0,0.0,0,0,null,"SG"],[79,"Imoto Lines",9295,31,7423,24,1872,7,20.1,1259,4,13.5,"JP"],[80,"Pan Continental Shg",9288,8,8660,7,628,1,6.8,2200,2,23.7,"KR"],[81,"Borchard Lines",9284,10,0,0,9284,10,100.0,0,0,null,"GB"],[82,"Dalian Trawind Marine Co",9272,2,9272,2,0,0,0.0,0,0,null,"CN"],[83,"Panda Express Line",9138,6,0,0,9138,6,100.0,0,0,null,"RU"],[84,"Dalian Jifa Bohai Rim Container L.",9082,13,3140,4,5942,9,65.4,0,0,null,"CN"],[85,"Sea Express Shipping Lines",8865,6,1550,1,7315,5,82.5,8763,4,98.8,"AE"],[86,"Q Express Line Sdn Bhd",8458,2,0,0,8458,2,100.0,0,0,null,"MY"],[87,"GS Lines",8154,9,6718,7,1436,2,17.6,0,0,null,"PT"],[88,"Irish Continental Group",8041,9,4699,5,3342,4,41.6,0,0,null,"IE"],[89,"EAS Datong",8017,6,7415,5,602,1,7.5,0,0,null,"CN"],[90,"Oceanic Cargo Lines",7970,17,7970,17,0,0,0.0,0,0,null,"PH"],[91,"GT Lines",7833,8,0,0,7833,8,100.0,0,0,null,"AE"],[92,"Safetrans Shipping",7772,3,0,0,7772,3,100.0,0,0,null,"VG"],[93,"Harbour-Link Group Bhd",7687,10,7687,10,0,0,0.0,0,0,null,"MY"],[94,"Del Monte Fresh Produce Co",7656,6,7656,6,0,0,0.0,0,0,null,"US"],[95,"Kambara Kisen",7566,7,7566,7,0,0,0.0,0,0,null,"JP"],[96,"Transit LLC",7420,6,5910,5,1510,1,20.4,0,0,null,"RU"],[97,"Tarros",7323,5,0,0,7323,5,100.0,0,0,null,"IT"],[98,"Folk Maritime",7184,5,6449,4,735,1,10.2,0,0,null,"SA"],[99,"Qatar Navigation (Milaha)",7171,6,4847,4,2324,2,32.4,0,0,null,"QA"],[100,"Sea Lead Shipping",7157,3,7157,3,0,0,0.0,0,0,null,"SG"]]}}};
-let WIN = null, SYNC = false;
+const CFG = {"id":"alphaliner","updated":"2026-11-05","series":{"ships":[["2026-10-18",0],["2026-10-19",7669],["2026-11-05",7672]],"teu":[["2026-10-18",32688538],["2026-10-19",34113905],["2026-11-05",34193156]]},"snap":{"dates":["2026-11-05","2026-10-19","2026-10-18"],"meta":{"2026-11-05":{"active":7672,"teu":34193156,"atl":null,"pac":null,"feast":null}},"rows":{"2026-10-18":[[1,"Mediterranean Shg Co",7453718,null,null,null,null,null,null,null,null,null,null,null],[2,"Maersk",4728084,null,null,null,null,null,null,null,null,null,null,null],[3,"CMA CGM Group",4487464,null,null,null,null,null,null,null,null,null,null,null],[4,"COSCO Group",3682244,null,null,null,null,null,null,null,null,null,null,null],[5,"Hapag-Lloyd",2410123,null,null,null,null,null,null,null,null,null,null,null],[6,"ONE (Ocean Network Express)",2191058,null,null,null,null,null,null,null,null,null,null,null],[7,"Evergreen Line",2040707,null,null,null,null,null,null,null,null,null,null,null],[8,"HMM Co Ltd",1034348,null,null,null,null,null,null,null,null,null,null,null],[9,"Yang Ming Marine Transport Corp.",771280,null,null,null,null,null,null,null,null,null,null,null],[10,"Zim",699460,null,null,null,null,null,null,null,null,null,null,null],[11,"Wan Hai Lines",633064,null,null,null,null,null,null,null,null,null,null,null],[12,"PIL (Pacific Int. Line)",470419,null,null,null,null,null,null,null,null,null,null,null],[13,"X-Press Feeders Group",190388,null,null,null,null,null,null,null,null,null,null,null],[14,"SITC",187297,null,null,null,null,null,null,null,null,null,null,null],[15,"KMTC",163876,null,null,null,null,null,null,null,null,null,null,null],[16,"DP World",146613,null,null,null,null,null,null,null,null,null,null,null],[17,"Global Feeder Shipping LLC",146063,null,null,null,null,null,null,null,null,null,null,null],[18,"IRISL Group",140184,null,null,null,null,null,null,null,null,null,null,null],[19,"Sinokor Merchant Marine",132526,null,null,null,null,null,null,null,null,null,null,null],[20,"TS Lines",125784,null,null,null,null,null,null,null,null,null,null,null],[21,"Emirates Shipping Line",114852,null,null,null,null,null,null,null,null,null,null,null],[22,"China United Lines (CULines)",109433,null,null,null,null,null,null,null,null,null,null,null],[23,"RCL (Regional Container L.)",95921,null,null,null,null,null,null,null,null,null,null,null],[24,"Ningbo Ocean Shg Co",87650,null,null,null,null,null,null,null,null,null,null,null],[25,"Interasia Lines",85077,null,null,null,null,null,null,null,null,null,null,null],[26,"Tangshan Port Hede Shipping",76020,null,null,null,null,null,null,null,null,null,null,null],[27,"Grimaldi (Napoli)",75158,null,null,null,null,null,null,null,null,null,null,null],[28,"Antong Holdings (QASC)",72564,null,null,null,null,null,null,null,null,null,null,null],[29,"Sinolines",68743,null,null,null,null,null,null,null,null,null,null,null],[30,"Matson",68420,null,null,null,null,null,null,null,null,null,null,null]],"2026-10-19":[[1,"Mediterranean Shg Co",7453718,null,null,null,null,null,null,null,null,null,null,null],[1,"Mediterranean Shg Co",7453718,1017,21.5,4784229,766,2669489,251,null,2909318,164,39.0,null],[1,"Mediterranean Shg Co",7453718,1017,21.5,4784229,766,2669489,251,null,2909318,164,39.0,null],[2,"Maersk",4728084,null,null,null,null,null,null,null,null,null,null,null],[2,"Maersk",4728084,750,13.6,2943996,359,1784088,391,null,1811602,138,38.3,null],[2,"Maersk",4728084,750,13.6,2943996,359,1784088,391,null,1811602,138,38.3,null],[3,"CMA CGM Group",4487464,null,null,null,null,null,null,null,null,null,null,null],[3,"CMA CGM Group",4487464,730,12.9,2998823,386,1488641,344,null,1653855,157,36.9,null],[3,"CMA CGM Group",4487464,730,12.9,2998823,386,1488641,344,null,1653855,157,36.9,null],[4,"COSCO Group",3682244,null,null,null,null,null,null,null,null,null,null,null],[4,"COSCO Group",3682244,567,10.6,2226498,211,1455746,356,null,1884798,155,51.2,null],[4,"COSCO Group",3682244,567,10.6,2226498,211,1455746,356,null,1884798,155,51.2,null],[5,"Hapag-Lloyd",2410123,null,null,null,null,null,null,null,null,null,null,null],[5,"Hapag-Lloyd",2410123,289,7.0,1455918,134,954205,155,null,489224,62,20.3,null],[5,"Hapag-Lloyd",2410123,289,7.0,1455918,134,954205,155,null,489224,62,20.3,null],[6,"ONE (Ocean Network Express)",2191058,null,null,null,null,null,null,null,null,null,null,null],[6,"ONE (Ocean Network Express)",2191058,271,6.3,1051480,112,1139578,159,null,582736,50,26.6,null],[6,"ONE (Ocean Network Express)",2191058,271,6.3,1051480,112,1139578,159,null,582736,50,26.6,null],[7,"Evergreen Line",2040707,null,null,null,null,null,null,null,null,null,null,null],[7,"Evergreen Line",2040707,243,5.9,1496083,170,544624,73,null,851904,75,41.7,null],[7,"Evergreen Line",2040707,243,5.9,1496083,170,544624,73,null,851904,75,41.7,null],[8,"HMM Co Ltd",1034348,null,null,null,null,null,null,null,null,null,null,null],[8,"HMM Co Ltd",1034348,97,3.0,847404,72,186944,25,null,220642,36,21.3,null],[8,"HMM Co Ltd",1034348,97,3.0,847404,72,186944,25,null,220642,36,21.3,null],[9,"Yang Ming Marine Transport Corp.",771280,null,null,null,null,null,null,null,null,null,null,null],[9,"Yang Ming Marine Transport Corp.",771280,99,2.2,397896,64,373384,35,null,256660,20,33.3,null],[9,"Yang Ming Marine Transport Corp.",771280,99,2.2,397896,64,373384,35,null,256660,20,33.3,null],[10,"Zim",699460,null,null,null,null,null,null,null,null,null,null,null],[10,"Zim",699460,114,2.0,92934,15,606526,99,null,226736,30,32.4,null],[10,"Zim",699460,114,2.0,92934,15,606526,99,null,226736,30,32.4,null],[11,"Wan Hai Lines",633064,null,null,null,null,null,null,null,null,null,null,null],[11,"Wan Hai Lines",633064,125,1.8,633064,125,null,null,null,495800,48,78.3,null],[11,"Wan Hai Lines",633064,125,1.8,633064,125,0,0,null,495800,48,78.3,null],[12,"PIL (Pacific Int. Line)",470419,null,null,null,null,null,null,null,null,null,null,null],[12,"PIL (Pacific Int. Line)",470419,101,1.4,346748,84,123671,17,null,305798,29,65.0,null],[12,"PIL (Pacific Int. Line)",470419,101,1.4,346748,84,123671,17,null,305798,29,65.0,null],[13,"X-Press Feeders Group",190388,null,null,null,null,null,null,null,null,null,null,null],[13,"X-Press Feeders Group",190388,104,0.5,116716,57,73672,47,null,79200,17,41.6,null],[13,"X-Press Feeders Group",190388,104,0.5,116716,57,73672,47,null,79200,17,41.6,null],[14,"SITC",187297,null,null,null,null,null,null,null,null,null,null,null],[14,"SITC",187297,121,0.5,163687,99,23610,22,null,66232,37,35.4,null],[14,"SITC",187297,121,0.5,163687,99,23610,22,null,66232,37,35.4,null],[15,"KMTC",163876,null,null,null,null,null,null,null,null,null,null,null],[15,"KMTC",163876,66,0.5,94721,30,69155,36,null,73356,11,44.8,null],[15,"KMTC",163876,66,0.5,94721,30,69155,36,null,73356,11,44.8,null],[16,"DP World",146613,null,null,null,null,null,null,null,null,null,null,null],[16,"DP World",146613,84,0.4,31341,10,115272,74,null,84841,17,57.9,null],[16,"DP World",146613,84,0.4,31341,10,115272,74,null,84841,17,57.9,null],[17,"Global Feeder Shipping LLC",146063,null,null,null,null,null,null,null,null,null,null,null],[17,"Global Feeder Shipping LLC",146063,56,0.4,61553,25,84510,31,null,11152,3,7.6,null],[17,"Global Feeder Shipping LLC",146063,56,0.4,61553,25,84510,31,null,11152,3,7.6,null],[18,"IRISL Group",140184,null,null,null,null,null,null,null,null,null,null,null],[18,"IRISL Group",140184,27,0.4,140184,27,null,null,null,null,null,null,null],[18,"IRISL Group",140184,27,0.4,140184,27,0,0,null,0,0,0.0,null],[19,"Sinokor Merchant Marine",132526,null,null,null,null,null,null,null,null,null,null,null],[19,"Sinokor Merchant Marine",132526,69,0.4,130741,68,1785,1,null,52000,4,39.2,null],[19,"Sinokor Merchant Marine",132526,69,0.4,130741,68,1785,1,null,52000,4,39.2,null],[20,"TS Lines",125784,null,null,null,null,null,null,null,null,null,null,null],[20,"TS Lines",125784,45,0.4,106059,38,19725,7,null,69432,15,55.2,null],[20,"TS Lines",125784,45,0.4,106059,38,19725,7,null,69432,15,55.2,null],[21,"Emirates Shipping Line",114852,null,null,null,null,null,null,null,null,null,null,null],[21,"Emirates Shipping Line",114852,25,0.3,null,null,114852,25,null,42510,3,37.0,null],[21,"Emirates Shipping Line",114852,25,0.3,0,0,114852,25,null,42510,3,37.0,null],[22,"China United Lines (CULines)",109433,null,null,null,null,null,null,null,null,null,null,null],[22,"China United Lines (CULines)",109433,47,0.3,18120,10,91313,37,null,91693,18,83.8,null],[22,"China United Lines (CULines)",109433,47,0.3,18120,10,91313,37,null,91693,18,83.8,null],[23,"RCL (Regional Container L.)",95921,null,null,null,null,null,null,null,null,null,null,null],[23,"RCL (Regional Container L.)",95921,33,0.3,85299,27,10622,6,null,153354,31,159.9,null],[23,"RCL (Regional Container L.)",95921,33,0.3,85299,27,10622,6,null,153354,31,159.9,null],[24,"Ningbo Ocean Shg Co",87650,null,null,null,null,null,null,null,null,null,null,null],[24,"Ningbo Ocean Shg Co",87650,87,0.3,61418,49,26232,38,null,60400,20,68.9,null],[24,"Ningbo Ocean Shg Co",87650,87,0.3,61418,49,26232,38,null,60400,20,68.9,null],[25,"Interasia Lines",85077,null,null,null,null,null,null,null,null,null,null,null],[25,"Interasia Lines",85077,28,0.2,64553,22,20524,6,null,65070,13,76.5,null],[25,"Interasia Lines",85077,28,0.2,64553,22,20524,6,null,65070,13,76.5,null],[26,"Tangshan Port Hede Shipping",76020,null,null,null,null,null,null,null,null,null,null,null],[26,"Tangshan Port Hede Shipping",76020,52,0.2,1874,3,74146,49,null,2693,1,3.5,null],[26,"Tangshan Port Hede Shipping",76020,52,0.2,1874,3,74146,49,null,2693,1,3.5,null],[27,"Grimaldi (Napoli)",75158,null,null,null,null,null,null,null,null,null,null,null],[27,"Grimaldi (Napoli)",75158,48,0.2,75158,48,null,null,null,null,null,null,null],[27,"Grimaldi (Napoli)",75158,48,0.2,75158,48,0,0,null,0,0,0.0,null],[28,"Antong Holdings (QASC)",72564,null,null,null,null,null,null,null,null,null,null,null],[28,"Antong Holdings (QASC)",72564,71,0.2,53994,37,18570,34,null,null,null,null,null],[28,"Antong Holdings (QASC)",72564,71,0.2,53994,37,18570,34,null,0,0,0.0,null],[29,"Sinolines",68743,null,null,null,null,null,null,null,null,null,null,null],[29,"Sinolines",68743,42,0.2,30566,19,38177,23,null,53075,13,77.2,null],[29,"Sinolines",68743,42,0.2,30566,19,38177,23,null,53075,13,77.2,null],[30,"Matson",68420,null,null,null,null,null,null,null,null,null,null,null],[30,"Matson",68420,28,0.2,40355,19,28065,9,null,10860,3,15.9,null],[30,"Matson",68420,28,0.2,40355,19,28065,9,null,10860,3,15.9,null],[31,"Shanghai Jin Jiang Shipping",67125,56,0.2,32449,27,34676,29,null,27200,16,40.5,null],[31,"Shanghai Jin Jiang Shipping",67125,56,0.2,32449,27,34676,29,null,27200,16,40.5,null],[32,"SM Line Corp.",66801,15,0.2,64188,13,2613,2,null,null,null,null,null],[32,"SM Line Corp.",66801,15,0.2,64188,13,2613,2,null,0,0,0.0,null],[33,"Swire Shipping",59502,30,0.2,47917,23,11585,7,null,null,null,null,null],[33,"Swire Shipping",59502,30,0.2,47917,23,11585,7,null,0,0,0.0,null],[34,"Zhonggu Logistics Corp.",55725,60,0.2,19957,12,35768,48,null,95800,20,171.9,null],[34,"Zhonggu Logistics Corp.",55725,60,0.2,19957,12,35768,48,null,95800,20,171.9,null],[35,"FESCO",54568,38,0.2,36292,23,18276,15,null,null,null,null,null],[35,"FESCO",54568,38,0.2,36292,23,18276,15,null,0,0,0.0,null],[36,"Arkas Line / EMES",52632,32,0.2,50524,30,2108,2,null,44892,12,85.3,null],[36,"Arkas Line / EMES",52632,32,0.2,50524,30,2108,2,null,44892,12,85.3,null],[37,"Seaboard Marine",47640,24,0.1,34347,14,13293,10,null,3666,1,7.7,null],[37,"Seaboard Marine",47640,24,0.1,34347,14,13293,10,null,3666,1,7.7,null],[38,"Samudera",44850,32,0.1,13175,14,31675,18,null,null,null,null,null],[38,"Samudera",44850,32,0.1,13175,14,31675,18,null,0,0,0.0,null],[39,"Meratus",44718,67,0.1,44718,67,null,null,null,5466,8,12.2,null],[39,"Meratus",44718,67,0.1,44718,67,0,0,null,5466,8,12.2,null],[40,"Akkon Lines",44496,31,0.1,1776,2,42720,29,null,3630,1,8.2,null],[40,"Akkon Lines",44496,31,0.1,1776,2,42720,29,null,3630,1,8.2,null],[41,"Tailwind Shipping Lines",43406,12,0.1,6330,2,37076,10,null,42000,5,96.8,null],[41,"Tailwind Shipping Lines",43406,12,0.1,6330,2,37076,10,null,42000,5,96.8,null],[42,"Namsung Shipping",43084,31,0.1,37339,27,5745,4,null,12624,4,29.3,null],[42,"Namsung Shipping",43084,31,0.1,37339,27,5745,4,null,12624,4,29.3,null],[43,"Tanto Intim Line",38554,57,0.1,38554,57,null,null,null,1854,2,4.8,null],[43,"Tanto Intim Line",38554,57,0.1,38554,57,0,0,null,1854,2,4.8,null],[44,"Shandong Marine Corporation",31246,45,0.1,11598,17,19648,28,null,6320,4,20.2,null],[44,"Shandong Marine Corporation",31246,45,0.1,11598,17,19648,28,null,6320,4,20.2,null],[45,"Salam Pacific Indonesia Lines",31010,44,0.1,31010,44,null,null,null,680,1,2.2,null],[45,"Salam Pacific Indonesia Lines",31010,44,0.1,31010,44,0,0,null,680,1,2.2,null],[46,"Great White Fleet",29973,14,0.1,17481,7,12492,7,null,15500,5,51.7,null],[46,"Great White Fleet",29973,14,0.1,17481,7,12492,7,null,15500,5,51.7,null],[47,"Linea Messina",27682,12,0.1,22358,5,5324,7,null,null,null,null,null],[47,"Linea Messina",27682,12,0.1,22358,5,5324,7,null,0,0,0.0,null],[48,"Sea Legend Shipping",21556,9,0.1,4890,1,16666,8,null,null,null,null,null],[48,"Sea Legend Shipping",21556,9,0.1,4890,1,16666,8,null,0,0,0.0,null],[49,"Dole Ocean Liner",21150,16,0.1,20610,14,540,2,null,null,null,null,null],[49,"Dole Ocean Liner",21150,16,0.1,20610,14,540,2,null,0,0,0.0,null],[50,"Chun Kyung (CK Line)",20211,18,0.1,13236,9,6975,9,null,15012,4,74.3,null],[50,"Chun Kyung (CK Line)",20211,18,0.1,13236,9,6975,9,null,15012,4,74.3,null],[51,"Hainan Yangpu Newnew Shipping",19470,7,0.1,18250,6,1220,1,null,9620,2,49.4,null],[51,"Hainan Yangpu Newnew Shipping",19470,7,0.1,18250,6,1220,1,null,9620,2,49.4,null],[52,"Crowley Liner Services",19142,16,0.1,11094,9,8048,7,null,null,null,null,null],[52,"Crowley Liner Services",19142,16,0.1,11094,9,8048,7,null,0,0,0.0,null],[53,"Kawa Shipping",18644,10,0.1,null,null,18644,10,null,24206,5,129.8,null],[53,"Kawa Shipping",18644,10,0.1,0,0,18644,10,null,24206,5,129.8,null],[54,"Asean Seas Line",18508,14,0.1,1781,1,16727,13,null,10600,2,57.3,null],[54,"Asean Seas Line",18508,14,0.1,1781,1,16727,13,null,10600,2,57.3,null],[55,"Tropical Shg / TOTE Maritime",18203,24,0.1,16535,21,1668,3,null,null,null,null,null],[55,"Tropical Shg / TOTE Maritime",18203,24,0.1,16535,21,1668,3,null,0,0,0.0,null],[56,"Shipping Corp. of India",17834,3,0.1,8800,2,9034,1,null,null,null,null,null],[56,"Shipping Corp. of India",17834,3,0.1,8800,2,9034,1,null,0,0,0.0,null],[57,"Temas Line",17743,35,0.1,17743,35,null,null,null,3430,7,19.3,null],[57,"Temas Line",17743,35,0.1,17743,35,0,0,null,3430,7,19.3,null],[58,"Bengal Tiger Line",17635,10,0.1,null,null,17635,10,null,null,null,null,null],[58,"Bengal Tiger Line",17635,10,0.1,0,0,17635,10,null,0,0,0.0,null],[59,"Taicang Container Lines",17202,14,null,4369,4,12833,10,null,12024,4,69.9,null],[59,"Taicang Container Lines",17202,14,0.0,4369,4,12833,10,null,12024,4,69.9,null],[60,"MTT Shipping",16717,18,null,14293,16,2424,2,null,12332,6,73.8,null],[60,"MTT Shipping",16717,18,0.0,14293,16,2424,2,null,12332,6,73.8,null],[61,"Transworld Group Singapore",14922,12,null,14922,12,null,null,null,null,null,null,null],[61,"Transworld Group Singapore",14922,12,0.0,14922,12,0,0,null,0,0,0.0,null],[62,"Boluda Lines",14629,18,null,9326,12,5303,6,null,null,null,null,null],[62,"Boluda Lines",14629,18,0.0,9326,12,5303,6,null,0,0,0.0,null],[63,"Cool Carriers",14217,40,null,4022,13,10195,27,null,null,null,null,null],[63,"Cool Carriers",14217,40,0.0,4022,13,10195,27,null,0,0,0.0,null],[64,"Turkon Line",13857,6,null,11512,5,2345,1,null,4000,1,28.9,null],[64,"Turkon Line",13857,6,0.0,11512,5,2345,1,null,4000,1,28.9,null],[65,"Eimskip",13069,15,null,5174,7,7895,8,null,4560,2,34.9,null],[65,"Eimskip",13069,15,0.0,5174,7,7895,8,null,4560,2,34.9,null],[66,"Pasha Hawaii Transport Lines",12903,6,null,12903,6,null,null,null,null,null,null,null],[66,"Pasha Hawaii Transport Lines",12903,6,0.0,12903,6,0,0,null,0,0,0.0,null],[67,"Independent Container Line",12398,4,null,6182,2,6216,2,null,null,null,null,null],[67,"Independent Container Line",12398,4,0.0,6182,2,6216,2,null,0,0,0.0,null],[68,"Caribbean Feeder Services",12090,10,null,null,null,12090,10,null,null,null,null,null],[68,"Caribbean Feeder Services",12090,10,0.0,0,0,12090,10,null,0,0,0.0,null],[69,"Peel Ports (BG Freight)",12061,12,null,null,null,12061,12,null,null,null,null,null],[69,"Peel Ports (BG Freight)",12061,12,0.0,0,0,12061,12,null,0,0,0.0,null],[70,"HR Lines",11932,8,null,11932,8,null,null,null,null,null,null,null],[70,"HR Lines",11932,8,0.0,11932,8,0,0,null,0,0,0.0,null],[71,"Pan Ocean (Container)",11399,10,null,9186,7,2213,3,null,null,null,null,null],[71,"Pan Ocean (Container)",11399,10,0.0,9186,7,2213,3,null,0,0,0.0,null],[72,"MODUL",11191,4,null,null,null,11191,4,null,null,null,null,null],[72,"MODUL",11191,4,0.0,0,0,11191,4,null,0,0,0.0,null],[73,"Hai An Transport",11057,8,null,11057,8,null,null,null,46484,10,420.4,null],[73,"Hai An Transport",11057,8,0.0,11057,8,0,0,null,46484,10,420.4,null],[74,"Qatar Navigation (Milaha)",10939,7,null,8615,5,2324,2,null,null,null,null,null],[74,"Qatar Navigation (Milaha)",10939,7,0.0,8615,5,2324,2,null,0,0,0.0,null],[75,"King Ocean",10853,15,null,null,null,10853,15,null,null,null,null,null],[75,"King Ocean",10853,15,0.0,0,0,10853,15,null,0,0,0.0,null],[76,"Greta Shipping",10516,6,null,1118,1,9398,5,null,null,null,null,null],[76,"Greta Shipping",10516,6,0.0,1118,1,9398,5,null,0,0,0.0,null],[77,"Philippine Span Asia Carrier Corp.",10143,17,null,8926,15,1217,2,null,400,1,3.9,null],[77,"Philippine Span Asia Carrier Corp.",10143,17,0.0,8926,15,1217,2,null,400,1,3.9,null],[78,"Neptune Pacific Direct Line",9783,9,null,9783,9,null,null,null,null,null,null,null],[78,"Neptune Pacific Direct Line",9783,9,0.0,9783,9,0,0,null,0,0,0.0,null],[79,"Imoto Lines",9295,31,null,7423,24,1872,7,null,1141,3,12.3,null],[79,"Imoto Lines",9295,31,0.0,7423,24,1872,7,null,1141,3,12.3,null],[80,"Pan Continental Shg",9288,8,null,8660,7,628,1,null,2200,2,23.7,null],[80,"Pan Continental Shg",9288,8,0.0,8660,7,628,1,null,2200,2,23.7,null],[81,"Borchard Lines",9284,10,null,null,null,9284,10,null,null,null,null,null],[81,"Borchard Lines",9284,10,0.0,0,0,9284,10,null,0,0,0.0,null],[82,"Dalian Trawind Marine Co",9272,2,null,9272,2,null,null,null,null,null,null,null],[82,"Dalian Trawind Marine Co",9272,2,0.0,9272,2,0,0,null,0,0,0.0,null],[83,"Dalian Jifa Bohai Rim Container L.",9082,13,null,3140,4,5942,9,null,null,null,null,null],[83,"Dalian Jifa Bohai Rim Container L.",9082,13,0.0,3140,4,5942,9,null,0,0,0.0,null],[84,"Sea Express Shipping Lines",8865,6,null,1550,1,7315,5,null,8763,4,98.8,null],[84,"Sea Express Shipping Lines",8865,6,0.0,1550,1,7315,5,null,8763,4,98.8,null],[85,"Vistar Shipping LLC",8611,5,null,8611,5,null,null,null,null,null,null,null],[85,"Vistar Shipping LLC",8611,5,0.0,8611,5,0,0,null,0,0,0.0,null],[86,"Q Express Line Sdn Bhd",8458,2,null,null,null,8458,2,null,null,null,null,null],[86,"Q Express Line Sdn Bhd",8458,2,0.0,0,0,8458,2,null,0,0,0.0,null],[87,"GS Lines",8154,9,null,6718,7,1436,2,null,null,null,null,null],[87,"GS Lines",8154,9,0.0,6718,7,1436,2,null,0,0,0.0,null],[88,"Irish Continental Group",8041,9,null,4699,5,3342,4,null,null,null,null,null],[88,"Irish Continental Group",8041,9,0.0,4699,5,3342,4,null,0,0,0.0,null],[89,"GT Lines",8034,8,null,null,null,8034,8,null,null,null,null,null],[89,"GT Lines",8034,8,0.0,0,0,8034,8,null,0,0,0.0,null],[90,"EAS Datong",8017,6,null,7415,5,602,1,null,null,null,null,null],[90,"EAS Datong",8017,6,0.0,7415,5,602,1,null,0,0,0.0,null],[91,"Oceanic Cargo Lines",7970,17,null,7970,17,null,null,null,null,null,null,null],[91,"Oceanic Cargo Lines",7970,17,0.0,7970,17,0,0,null,0,0,0.0,null],[92,"OVP Shipping",7774,6,null,null,null,7774,6,null,8792,2,113.1,null],[92,"OVP Shipping",7774,6,0.0,0,0,7774,6,null,8792,2,113.1,null],[93,"Safetrans Shipping",7772,3,null,null,null,7772,3,null,null,null,null,null],[93,"Safetrans Shipping",7772,3,0.0,0,0,7772,3,null,0,0,0.0,null],[94,"Harbour-Link Group Bhd",7687,10,null,7687,10,null,null,null,null,null,null,null],[94,"Harbour-Link Group Bhd",7687,10,0.0,7687,10,0,0,null,0,0,0.0,null],[95,"Del Monte Fresh Produce Co",7656,6,null,7656,6,null,null,null,null,null,null,null],[95,"Del Monte Fresh Produce Co",7656,6,0.0,7656,6,0,0,null,0,0,0.0,null],[96,"Panda Express Line",7628,5,null,null,null,7628,5,null,1510,1,19.8,null],[96,"Panda Express Line",7628,5,0.0,0,0,7628,5,null,1510,1,19.8,null],[97,"Kambara Kisen",7566,7,null,7566,7,null,null,null,null,null,null,null],[97,"Kambara Kisen",7566,7,0.0,7566,7,0,0,null,0,0,0.0,null],[98,"Transit LLC",7420,6,null,5910,5,1510,1,null,null,null,null,null],[98,"Transit LLC",7420,6,0.0,5910,5,1510,1,null,0,0,0.0,null],[99,"Tarros",7323,5,null,null,null,7323,5,null,null,null,null,null],[99,"Tarros",7323,5,0.0,0,0,7323,5,null,0,0,0.0,null],[100,"Folk Maritime",7184,5,null,6449,4,735,1,null,null,null,null,null],[100,"Folk Maritime",7184,5,0.0,6449,4,735,1,null,0,0,0.0,null]],"2026-11-05":[[1,"Mediterranean Shg Co",7481560,1022,21.5,4810875,771,2670685,251,35.7,3377390,182,45.1,"CH"],[2,"Maersk",4695758,742,13.5,2943996,359,1751762,383,37.3,1811602,138,38.6,"DK"],[3,"CMA CGM Group",4486882,730,12.9,2998823,386,1488059,344,33.2,1685992,165,37.6,"FR"],[4,"COSCO Group",3683714,567,10.6,2226498,211,1457216,356,39.6,1887518,156,51.2,"CN"],[5,"Hapag-Lloyd",2412966,291,6.9,1448595,133,964371,158,40.0,489224,62,20.3,"DE"],[6,"ONE (Ocean Network Express)",2219135,274,6.4,1073952,114,1145183,160,51.6,569000,49,25.6,"SG"],[7,"Evergreen Line",2057263,244,5.9,1512639,171,544624,73,26.5,835348,74,40.6,"TW"],[8,"HMM Co Ltd",1034348,97,3.0,847404,72,186944,25,18.1,327986,44,31.7,"KR"],[9,"Yang Ming Marine Transport Corp.",771280,99,2.2,397896,64,373384,35,48.4,256660,20,33.3,"TW"],[10,"Zim",698193,113,2.0,92934,15,605259,98,86.7,245216,32,35.1,"IL"],[11,"Wan Hai Lines",633064,125,1.8,633064,125,0,0,0.0,495800,48,78.3,"TW"],[12,"PIL (Pacific Int. Line)",470419,101,1.4,351001,85,119418,16,25.4,305798,29,65.0,"SG"],[13,"X-Press Feeders Group",190950,103,0.5,116716,57,74234,46,38.9,94800,23,49.6,"SG"],[14,"SITC",188393,122,0.5,162644,98,25749,24,13.7,66232,37,35.2,"HK"],[15,"KMTC",172576,67,0.5,103421,31,69155,36,40.1,83256,16,48.2,"KR"],[16,"DP World",149725,87,0.4,35593,11,114132,76,76.2,84841,17,56.7,"AE"],[17,"Global Feeder Shipping LLC",147560,57,0.4,61553,25,86007,32,58.3,11152,3,7.6,"AE"],[18,"IRISL Group",140184,27,0.4,140184,27,0,0,0.0,0,0,0.0,"IR"],[19,"Sinokor Merchant Marine",132526,69,0.4,130741,68,1785,1,1.3,52000,4,39.2,"KR"],[20,"TS Lines",129100,46,0.4,103105,37,25995,9,20.1,90484,18,70.1,"HK"],[21,"Emirates Shipping Line",125984,27,0.4,0,0,125984,27,100.0,57310,7,45.5,"AE"],[22,"China United Lines (CULines)",109433,47,0.3,18120,10,91313,37,83.4,91693,18,83.8,"CN"],[23,"RCL (Regional Container L.)",100409,34,0.3,89787,28,10622,6,10.6,148866,30,148.3,"TH"],[24,"Ningbo Ocean Shg Co",89431,88,0.3,61418,49,28013,39,31.3,60400,20,67.5,"CN"],[25,"Interasia Lines",85077,28,0.2,64553,22,20524,6,24.1,65070,13,76.5,"SG"],[26,"Grimaldi (Napoli)",75158,48,0.2,75158,48,0,0,0.0,0,0,0.0,"IT"],[27,"Tangshan Port Hede Shipping",74193,51,0.2,1874,3,72319,48,97.5,2693,1,3.6,"CN"],[28,"Antong Holdings (QASC)",72564,71,0.2,53994,37,18570,34,25.6,0,0,0.0,"CN"],[29,"Sinolines",68743,42,0.2,30566,19,38177,23,55.5,53075,13,77.2,"CN"],[30,"Matson",68420,28,0.2,40355,19,28065,9,41.0,10860,3,15.9,"US"],[31,"Shanghai Jin Jiang Shipping",67125,56,0.2,32449,27,34676,29,51.7,27200,16,40.5,"CN"],[32,"SM Line Corp.",66801,15,0.2,64188,13,2613,2,3.9,0,0,0.0,"KR"],[33,"Swire Shipping",59502,30,0.2,47917,23,11585,7,19.5,0,0,0.0,"SG"],[34,"Zhonggu Logistics Corp.",55725,60,0.2,19957,12,35768,48,64.2,95800,20,171.9,"CN"],[35,"FESCO",53903,37,0.2,35627,22,18276,15,33.9,0,0,0.0,"RU"],[36,"Arkas Line / EMES",52632,32,0.2,50524,30,2108,2,4.0,44892,12,85.3,"TR"],[37,"Seaboard Marine",47293,23,0.1,34347,14,12946,9,27.4,3666,1,7.8,"US"],[38,"Namsung Shipping",45548,32,0.1,37339,27,8209,5,18.0,26824,6,58.9,"KR"],[39,"Samudera",44850,32,0.1,13175,14,31675,18,70.6,6000,2,13.4,"ID"],[40,"Akkon Lines",44840,32,0.1,2894,3,41946,29,93.5,3630,1,8.1,"TR"],[41,"Meratus",44718,67,0.1,44718,67,0,0,0.0,5466,8,12.2,"ID"],[42,"Tailwind Shipping Lines",43406,12,0.1,6330,2,37076,10,85.4,42000,5,96.8,"DE"],[43,"Tanto Intim Line",39481,58,0.1,39481,58,0,0,0.0,927,1,2.3,"ID"],[44,"Shandong Marine Corporation",31246,45,0.1,11598,17,19648,28,62.9,6320,4,20.2,"CN"],[45,"Salam Pacific Indonesia Lines",31010,44,0.1,31010,44,0,0,0.0,1360,2,4.4,"ID"],[46,"Great White Fleet",29973,14,0.1,17481,7,12492,7,41.7,15500,5,51.7,"US"],[47,"Linea Messina",27682,12,0.1,22358,5,5324,7,19.2,0,0,0.0,"IT"],[48,"Sea Legend Shipping",21556,9,0.1,4890,1,16666,8,77.3,0,0,0.0,"SG"],[49,"Dole Ocean Liner",21150,16,0.1,20610,14,540,2,2.6,0,0,0.0,"US"],[50,"Chun Kyung (CK Line)",20549,19,0.1,13236,9,7313,10,35.6,15012,4,73.1,"KR"],[51,"Hainan Yangpu Newnew Shipping",19470,7,0.1,18250,6,1220,1,6.3,9620,2,49.4,"CN"],[52,"Crowley Liner Services",19142,16,0.1,11094,9,8048,7,42.0,0,0,0.0,"US"],[53,"Kawa Shipping",18644,10,0.1,0,0,18644,10,100.0,24206,5,129.8,"CN"],[54,"Asean Seas Line",18508,14,0.1,1781,1,16727,13,90.4,10600,2,57.3,"HK"],[55,"Tropical Shg / TOTE Maritime",18203,24,0.1,16535,21,1668,3,9.2,0,0,0.0,"US"],[56,"Shipping Corp. of India",17834,3,0.1,8800,2,9034,1,50.7,0,0,0.0,"IN"],[57,"Temas Line",17743,35,0.1,17743,35,0,0,0.0,3430,7,19.3,"ID"],[58,"Bengal Tiger Line",17635,10,0.1,0,0,17635,10,100.0,0,0,0.0,"SG"],[59,"Taicang Container Lines",17202,14,0.0,4369,4,12833,10,74.6,12024,4,69.9,"CN"],[60,"MTT Shipping",16717,18,0.0,14293,16,2424,2,14.5,12332,6,73.8,"MY"],[61,"Transworld Group Singapore",14922,12,0.0,14922,12,0,0,0.0,0,0,0.0,"SG"],[62,"Boluda Lines",14629,18,0.0,9326,12,5303,6,36.2,0,0,0.0,"ES"],[63,"Cool Carriers",14217,40,0.0,4022,13,10195,27,71.7,0,0,0.0,"SE"],[64,"Turkon Line",13857,6,0.0,11512,5,2345,1,16.9,4000,1,28.9,"TR"],[65,"Eimskip",13069,15,0.0,5174,7,7895,8,60.4,4560,2,34.9,"IS"],[66,"Pasha Hawaii Transport Lines",12903,6,0.0,12903,6,0,0,0.0,0,0,0.0,"US"],[67,"Independent Container Line",12398,4,0.0,6182,2,6216,2,50.1,0,0,0.0,"US"],[68,"Caribbean Feeder Services",12090,10,0.0,0,0,12090,10,100.0,0,0,0.0,"BM"],[69,"Peel Ports (BG Freight)",12061,12,0.0,0,0,12061,12,100.0,0,0,0.0,"NL"],[70,"HR Lines",11932,8,0.0,11932,8,0,0,0.0,0,0,0.0,"BD"],[71,"Pan Ocean (Container)",11399,10,0.0,9186,7,2213,3,19.4,0,0,0.0,"KR"],[72,"Silmar Shipping FZCO",11315,5,0.0,0,0,11315,5,100.0,0,0,0.0,"AE"],[73,"MODUL",11191,4,0.0,0,0,11191,4,100.0,0,0,0.0,"RU"],[74,"Hai An Transport",11057,8,0.0,11057,8,0,0,0.0,50340,12,455.3,"VN"],[75,"King Ocean",10945,17,0.0,0,0,10945,17,100.0,0,0,0.0,"US"],[76,"Greta Shipping",10516,6,0.0,1118,1,9398,5,89.4,0,0,0.0,"SG"],[77,"Philippine Span Asia Carrier Corp.",10143,17,0.0,8926,15,1217,2,12.0,400,1,3.9,"PH"],[78,"Neptune Pacific Direct Line",9783,9,0.0,9783,9,0,0,0.0,0,0,0.0,"SG"],[79,"Imoto Lines",9295,31,0.0,7423,24,1872,7,20.1,1259,4,13.5,"JP"],[80,"Pan Continental Shg",9288,8,0.0,8660,7,628,1,6.8,2200,2,23.7,"KR"],[81,"Borchard Lines",9284,10,0.0,0,0,9284,10,100.0,0,0,0.0,"GB"],[82,"Dalian Trawind Marine Co",9272,2,0.0,9272,2,0,0,0.0,0,0,0.0,"CN"],[83,"Panda Express Line",9138,6,0.0,0,0,9138,6,100.0,0,0,0.0,"RU"],[84,"Dalian Jifa Bohai Rim Container L.",9082,13,0.0,3140,4,5942,9,65.4,0,0,0.0,"CN"],[85,"Sea Express Shipping Lines",8865,6,0.0,1550,1,7315,5,82.5,8763,4,98.8,"AE"],[86,"Q Express Line Sdn Bhd",8458,2,0.0,0,0,8458,2,100.0,0,0,0.0,"MY"],[87,"GS Lines",8154,9,0.0,6718,7,1436,2,17.6,0,0,0.0,"PT"],[88,"Irish Continental Group",8041,9,0.0,4699,5,3342,4,41.6,0,0,0.0,"IE"],[89,"EAS Datong",8017,6,0.0,7415,5,602,1,7.5,0,0,0.0,"CN"],[90,"Oceanic Cargo Lines",7970,17,0.0,7970,17,0,0,0.0,0,0,0.0,"PH"],[91,"GT Lines",7833,8,0.0,0,0,7833,8,100.0,0,0,0.0,"AE"],[92,"Safetrans Shipping",7772,3,0.0,0,0,7772,3,100.0,0,0,0.0,"VG"],[93,"Harbour-Link Group Bhd",7687,10,0.0,7687,10,0,0,0.0,0,0,0.0,"MY"],[94,"Del Monte Fresh Produce Co",7656,6,0.0,7656,6,0,0,0.0,0,0,0.0,"US"],[95,"Kambara Kisen",7566,7,0.0,7566,7,0,0,0.0,0,0,0.0,"JP"],[96,"Transit LLC",7420,6,0.0,5910,5,1510,1,20.4,0,0,0.0,"RU"],[97,"Tarros",7323,5,0.0,0,0,7323,5,100.0,0,0,0.0,"IT"],[98,"Folk Maritime",7184,5,0.0,6449,4,735,1,10.2,0,0,0.0,"SA"],[99,"Qatar Navigation (Milaha)",7171,6,0.0,4847,4,2324,2,32.4,0,0,0.0,"QA"],[100,"Sea Lead Shipping",7157,3,0.0,7157,3,0,0,0.0,0,0,0.0,"SG"]]}}};
+let WIN = null, SYNC = false, BASIS = null;
 const CHARTS = [];
 
 function fmt(v){ return v === null || v === undefined ? "-" :
@@ -138,87 +200,248 @@ function flagImg(cc){
     border:1px solid #333;background:#111">`;
 }
 function pts(series){ return series.map(p => [ms(p[0]), p[1]]); }
+const LATEST = CFG.snap.dates[0];
+const curRows = () => CFG.snap.rows[LATEST] || [];
 
-/* ---------- Global figures 밴드 ---------- */
-function bandCard(label, series, unit){
-  const p = pts(series);
-  const last = p[p.length - 1], prev = p[p.length - 2];
-  const ch = prev ? last[1] - prev[1] : null;
-  const pc = prev && prev[1] ? ch / Math.abs(prev[1]) * 100 : null;
-  const arrow = ch === null ? "" : ch > 0 ? "↗" : ch < 0 ? "↘" : "─";
-  return `<div class="bcard"><span class="blabel">${label}</span>
-    <span class="bval">${fmt(last[1])}<em>${unit} · ${dstr(last[0])}</em></span>
-    <span class="chg ${cls(ch)}">${arrow} (${sign(ch)}, ${
-      pc === null ? "-" : (pc > 0 ? "+" : "") + pc.toFixed(1)}%) vs ${
-      prev ? dstr(prev[0]) : "-"}</span></div>`;
+/* ---------- 비교 기준 ---------- */
+function basisDate(){
+  const dates = CFG.snap.dates;
+  const mode = document.getElementById("mode").value;
+  if (mode === "previous") return dates[1] || null;
+  if (mode === "custom"){
+    const v = document.getElementById("cdate").value;
+    if (!v) return dates[1] || null;
+    const t = ms(v);
+    const cand = dates.filter(d => ms(d) <= t + 43200000);
+    return cand[0] || dates[dates.length - 1];
+  }
+  const off = mode === "1m" ? 30 : 90;
+  const t = ms(LATEST) - off * 86400000;
+  const cand = dates.filter(d => ms(d) <= t + 43200000);
+  return cand[0] || dates[dates.length - 1];
 }
-document.getElementById("band").innerHTML =
-  bandCard("ACTIVE SHIPS (GLOBAL)", CFG.series.ships, "척") +
-  bandCard("TOP100 FLEET", CFG.series.teu, "TEU") +
-  bandCard("ORDERBOOK", CFG.series.ob, "TEU") +
-  bandCard("TOP10 SHARE", CFG.series.share, "%");
-document.getElementById("ref").textContent = "REF " + (CFG.updated || "-");
-document.getElementById("gen").innerHTML =
-  "<b>GENERATED</b> " + (CFG.generated || "-");
-if (window.ChartZoom) Chart.register(window.ChartZoom);
+function deltaRows(){
+  const prev = BASIS ? (CFG.snap.rows[BASIS] || []) : [];
+  const pmap = {};
+  prev.forEach(r => { pmap[r[1]] = r; });
+  return curRows().map(r => {
+    const q = pmap[r[1]];
+    const dteu = q ? r[2] - q[2] : null;
+    const dsh = q ? (r[4] || 0) - (q[4] || 0) : null;
+    const move = q ? q[0] - r[0] : null;
+    return [r[0], r[1], r[2], q ? q[2] : null, dteu, r[4], q ? q[4] : null,
+            dsh, move];
+  });
+}
 
-/* ---------- 차트 + 기간 브러시 (윈도우 공유) ---------- */
+/* ---------- 상단 메타 / 밴드 / 델타 카드 ---------- */
+function renderMeta(){
+  document.getElementById("metabar").innerHTML =
+    `<b>SOURCE</b> Alphaliner Public Top 100 &nbsp;|&nbsp; <b>FETCHED</b> ${LATEST}` +
+    (BASIS ? ` &nbsp;|&nbsp; <b>COMPARED WITH</b> ${BASIS}` : "");
+  document.getElementById("basisnote").textContent = BASIS ?
+    `current basis: ${BASIS}` : "no previous snapshot yet";
+}
+function renderBand(){
+  const m = CFG.snap.meta[LATEST] || {};
+  const card = (label, value, unit, desc) =>
+    `<div class="bcard"><span class="blabel">${label}</span>
+     <span class="bval">${value}<em>${unit}</em></span>
+     <span class="bdesc">${desc}</span></div>`;
+  document.getElementById("band").innerHTML =
+    card("ACTIVE SHIPS", fmt(m.active), "척",
+      "현재 공개 스냅샷의 글로벌 활성 선박수") +
+    card("TOTAL TEU", fmt(m.teu), "TEU", "소스 스냅샷 집계 선복량") +
+    card("TRANS-ATLANTIC", fmt(m.atl), "TEU", "주간 권역 선복량 (공개 소스)") +
+    card("TRANS-PACIFIC", fmt(m.pac), "TEU", "주간 권역 선복량 (공개 소스)") +
+    card("FEAST-EUROPE", fmt(m.feast), "TEU", "주간 권역 선복량 (공개 소스)");
+}
+function renderDeltas(){
+  const el = document.getElementById("deltas");
+  if (!BASIS){ el.innerHTML =
+    `<div class="bcard"><span class="blabel">SNAPSHOT CHANGE SUMMARY</span>
+     <span class="bdesc">비교할 이전 스냅샷이 아직 없습니다.</span></div>`; return; }
+  const dr = deltaRows();
+  const curT = curRows().reduce((a, r) => a + (r[2] || 0), 0);
+  const prevT = (CFG.snap.rows[BASIS] || []).reduce((a, r) => a + (r[2] || 0), 0);
+  const dT = curT - prevT;
+  const mc = CFG.snap.meta[LATEST] || {}, mp = CFG.snap.meta[BASIS] || {};
+  const dA = (mc.active != null && mp.active != null) ? mc.active - mp.active : null;
+  const withD = dr.filter(r => r[4] !== null);
+  const gain = withD.slice().sort((a, b) => b[4] - a[4])[0];
+  const loss = withD.slice().sort((a, b) => a[4] - b[4])[0];
+  const card = (label, main, clsx, desc) =>
+    `<div class="bcard"><span class="blabel">${label}</span>
+     <span class="bval ${clsx}">${main}</span><span class="bdesc">${desc}</span></div>`;
+  el.innerHTML =
+    card("TOTAL TEU CHANGE", `${dT > 0 ? "+" : ""}${fmt(dT)}`, cls(dT),
+      `현재 합계 vs ${BASIS}`) +
+    card("ACTIVE SHIPS CHANGE", dA === null ? "-" : `${dA > 0 ? "+" : ""}${fmt(dA)}`,
+      cls(dA), `현재 선박수 vs ${BASIS}`) +
+    card("BIGGEST TEU INCREASE", gain ? gain[1] : "-", "up",
+      gain ? `${sign(gain[4])} TEU vs ${BASIS}` : "-") +
+    card("BIGGEST TEU DECREASE", loss ? loss[1] : "-", "down",
+      loss ? `${sign(loss[4])} TEU vs ${BASIS}` : "-");
+}
+
+/* ---------- Top10 바 차트 + quick facts ---------- */
+const top10 = curRows().slice().sort((a, b) => a[0] - b[0]).slice(0, 10);
+new Chart(document.getElementById("barchart"), {
+  type: "bar",
+  data: {labels: top10.map(r => r[1]),
+    datasets: [{data: top10.map(r => r[2]), backgroundColor: "#ffa500",
+      borderColor: "#ff8c00", borderWidth: 1}]},
+  options: {responsive: true, maintainAspectRatio: false, animation: false,
+    plugins: {legend: {display: false},
+      tooltip: {displayColors: false, backgroundColor: "#111",
+        borderColor: "#3a3a3a", borderWidth: 1, titleColor: "#ffa500",
+        bodyColor: "#e6e6e6",
+        callbacks: {label: i => ` ${fmt(i.parsed.y)} TEU`}}},
+    scales: {x: {ticks: {color: "#8f8f8f", maxRotation: 30, minRotation: 30,
+        font: {size: 9, family: "Consolas"}}, grid: {color: "#161616"}},
+      y: {ticks: {color: "#777", font: {size: 9, family: "Consolas"}},
+          grid: {color: "#161616"}}}},
+});
+(function facts(){
+  const shares = top10.map(r => r[4] || 0);
+  const all = curRows().slice().sort((a, b) => a[0] - b[0])
+    .map(r => ({n: r[1], s: r[4] || 0}));
+  let cum = 0, cut = all.length;
+  for (let i = 0; i < all.length; i++){ cum += all[i].s;
+    if (cum >= 50){ cut = i + 1; break; } }
+  const in50 = all.slice(0, cut);
+  document.getElementById("facts").innerHTML =
+    `Top 3 share: <b>${shares.slice(0, 3).reduce((a, b) => a + b, 0).toFixed(1)}%</b>` +
+    ` &nbsp;|&nbsp; Top 5 share: <b>${shares.slice(0, 5).reduce((a, b) => a + b, 0).toFixed(1)}%</b><br>` +
+    `Operators to reach 50% cumulative share: <b>${cut}</b> / <b>${
+      in50.reduce((a, r) => a + r.s, 0).toFixed(1)}%</b><br>` +
+    `Operators inside the 50% cumulative threshold: ${
+      in50.map(r => r.n).join(", ")}`;
+})();
+
+/* ---------- Summary / Detail / Delta 테이블 ---------- */
+document.querySelector("#sumtable tbody").innerHTML = top10.map(r =>
+  `<tr><td class="txt">${r[0]}</td><td class="txt">${flagImg(r[13])}${r[1]}</td>
+   <td>${r[4] === null ? "-" : r[4].toFixed(1) + "%"}</td></tr>`).join("");
+document.getElementById("sumtotal").textContent =
+  top10.reduce((a, r) => a + (r[4] || 0), 0).toFixed(1) + "%";
+
+let dSort = {i: 0, dir: 1}, dFilter = "";
+function renderDetail(){
+  let rows = curRows().slice();
+  if (dFilter) rows = rows.filter(r =>
+    String(r[1] || "").toLowerCase().includes(dFilter));
+  rows.sort((a, b) => (a[dSort.i] < b[dSort.i] ? -1 : a[dSort.i] > b[dSort.i] ? 1 : 0)
+    * dSort.dir);
+  const idx = [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12];
+  document.querySelector("#dtable tbody").innerHTML = rows.map(r =>
+    `<tr>${idx.map((ci, k) => k === 0 ? `<td>${r[0]}</td>` :
+      k === 1 ? `<td class="txt">${flagImg(r[13])}${r[1]}</td>` :
+      `<td>${r[ci] === null || r[ci] === undefined ? "-" :
+        (ci === 9 || ci === 12 ? fmt(r[ci]) + "%" : fmt(r[ci]))}</td>`).join("")}</tr>`).join("");
+  document.getElementById("dnote").textContent =
+    `${rows.length} rows · ${LATEST}`;
+  document.querySelectorAll("#dtable th[data-i]").forEach(th => {
+    th.classList.toggle("sorted", Number(th.dataset.i) === dSort.i);
+    th.textContent = th.textContent.replace(/ [▲▼]$/, "") +
+      (Number(th.dataset.i) === dSort.i ? (dSort.dir > 0 ? " ▲" : " ▼") : ""); });
+}
+document.getElementById("dfilter").oninput = e => {
+  dFilter = e.target.value.toLowerCase(); renderDetail(); };
+document.querySelectorAll("#dtable th[data-i]").forEach(th => th.onclick = () => {
+  const i = Number(th.dataset.i);
+  if (dSort.i === i) dSort.dir = -dSort.dir; else dSort = {i, dir: i <= 1 ? 1 : -1};
+  renderDetail(); });
+
+let delSort = {i: 4, dir: -1};
+function renderDelta(){
+  const rows = deltaRows().slice();
+  rows.sort((a, b) => {
+    const va = a[delSort.i], vb = b[delSort.i];
+    return ((va === null ? -Infinity : va) < (vb === null ? -Infinity : vb) ? -1 :
+      (va === null ? -Infinity : va) > (vb === null ? -Infinity : vb) ? 1 : 0)
+      * delSort.dir; });
+  document.querySelector("#deltable tbody").innerHTML = rows.map(r => {
+    const mv = r[8] === null ? "-" :
+      r[8] > 0 ? `<span class="up">▲${r[8]}</span>` :
+      r[8] < 0 ? `<span class="down">▼${-r[8]}</span>` : "─";
+    return `<tr><td class="txt">${r[0]}</td><td class="txt">${flagImg(
+      (curRows().find(x => x[1] === r[1]) || [])[13])}${r[1]}</td>
+      <td>${fmt(r[2])}</td><td>${fmt(r[3])}</td>
+      <td class="${cls(r[4])}">${sign(r[4])}</td>
+      <td>${r[5] === null ? "-" : r[5].toFixed(1) + "%"}</td>
+      <td>${r[6] === null ? "-" : r[6].toFixed(1) + "%"}</td>
+      <td class="${cls(r[7])}">${r[7] === null ? "-" :
+        (r[7] > 0 ? "+" : "") + r[7].toFixed(1) + "%"}</td>
+      <td>${mv}</td></tr>`; }).join("");
+  document.getElementById("delnote").textContent = BASIS ?
+    `${rows.length} rows · ${LATEST} vs ${BASIS}` : "no previous snapshot";
+  document.querySelectorAll("#deltable th[data-i]").forEach(th => {
+    th.classList.toggle("sorted", Number(th.dataset.i) === delSort.i);
+    th.textContent = th.textContent.replace(/ [▲▼]$/, "") +
+      (Number(th.dataset.i) === delSort.i ? (delSort.dir > 0 ? " ▲" : " ▼") : ""); });
+}
+document.querySelectorAll("#deltable th[data-i]").forEach(th => th.onclick = () => {
+  const i = Number(th.dataset.i);
+  if (delSort.i === i) delSort.dir = -delSort.dir; else delSort = {i, dir: -1};
+  renderDelta(); });
+
+/* ---------- 다운로드 ---------- */
+const DETAIL_HEAD = ["Rank", "Operator", "Total TEU", "Total Ships", "Market Share",
+  "Owned TEU", "Owned Ships", "Chartered TEU", "Chartered Ships", "Chartered %",
+  "Orderbook TEU", "Orderbook Ships", "Orderbook %"];
+const DELTA_HEAD = ["Rank", "Operator", "Current TEU", "Previous TEU", "Delta TEU",
+  "Current Share", "Previous Share", "Delta Share", "Rank Move"];
+function csvDownload(aoa, name){
+  const csv = "\uFEFF" + aoa.map(l => l.map(v =>
+    v === null || v === undefined ? "" : String(v)).join(",")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
+  a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+function xlsxDownload(sheets, name){
+  const wb = XLSX.utils.book_new();
+  sheets.forEach(([t, aoa]) =>
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), t));
+  XLSX.writeFile(wb, name);
+}
+document.getElementById("d-csv").onclick = () =>
+  csvDownload([DETAIL_HEAD, ...curRows().map(r => r.slice(0, 13))],
+    `Alphaliner_Top100_${LATEST}.csv`);
+document.getElementById("d-xlsx").onclick = () =>
+  xlsxDownload([["Current", [DETAIL_HEAD,
+    ...curRows().map(r => r.slice(0, 13))]]], `Alphaliner_Top100_${LATEST}.xlsx`);
+document.getElementById("dc-csv").onclick = () =>
+  csvDownload([DELTA_HEAD, ...deltaRows()],
+    `Alphaliner_Top100_Compare_${LATEST}.csv`);
+document.getElementById("dc-xlsx").onclick = () =>
+  xlsxDownload([
+    ["Current", [DETAIL_HEAD, ...curRows().map(r => r.slice(0, 13))]],
+    ["Previous", [DETAIL_HEAD, ...(BASIS ? CFG.snap.rows[BASIS] : [])
+      .map(r => r.slice(0, 13))]],
+    ["Delta", [DELTA_HEAD, ...deltaRows()]]],
+    `Alphaliner_Top100_Compare_${LATEST}.xlsx`);
+
+/* ---------- 시계열 4차트 + 공유 브러시 ---------- */
+if (window.ChartZoom) Chart.register(window.ChartZoom);
 function makeChart(cfg){
-  const wrap = document.createElement("div");
-  wrap.className = "panel" + (cfg.wide ? " wide" : "");
-  wrap.innerHTML = `
-    <div class="phead"><span class="ptitle">${cfg.title}</span>
-      <span class="chips"></span><span class="spacer"></span>
-      <button class="btn">FULL</button></div>
-    <div class="chartbox"><canvas></canvas></div>
-    <div class="navbox"><canvas></canvas></div>
-    <div class="hint">하단 스트립 드래그=기간 선택(전 차트 동기화) · WHEEL=ZOOM · ALT+DRAG=PAN · 더블클릭=전체</div>`;
-  document.getElementById("charts").appendChild(wrap);
-  const api = {cfg, sel: (cfg.initial || cfg.keys || []).slice(), wrap,
-    chipsEl: wrap.querySelector(".chips"),
-    canvas: wrap.querySelectorAll("canvas")[0],
-    nav: wrap.querySelectorAll("canvas")[1], navDrag: null, full: null};
-  if (cfg.keys){
-    const build = () => {
-      api.chipsEl.innerHTML = cfg.keys.map((k, i) =>
-        `<span class="chip ${api.sel.includes(k) ? "on" : ""}" data-k="${k}"
-          style="${api.sel.includes(k) ? "" :
-            `border-color:${PALETTE[i % PALETTE.length]};color:${PALETTE[i % PALETTE.length]}`}">
-          ${k}</span>`).join("");
-      api.chipsEl.querySelectorAll(".chip").forEach(ch => ch.onclick = () => {
-        const k = ch.dataset.k;
-        if (api.sel.includes(k)){
-          if (api.sel.length > 1) api.sel = api.sel.filter(x => x !== k);
-        } else api.sel.push(k);
-        build(); api.chart.data.datasets = datasetsOf(api);
-        api.chart.update("none"); });
-    };
-    build();
+  const api = {cfg, sel: (cfg.initial || []).slice(),
+    canvas: document.getElementById(cfg.canvas),
+    nav: document.getElementById(cfg.nav), navDrag: null, full: null,
+  };
+  function dsOf(a){
+    return a.cfg.fixed.map(f => ({
+      label: f.label, yAxisID: f.axis || "y",
+      data: pts(CFG.series[f.key]).map(p => ({x: p[0], y: p[1]})),
+      borderColor: f.color, backgroundColor: "transparent", borderWidth: 1.5,
+      pointRadius: 0, pointHoverRadius: 3, tension: .15 }));
   }
-  function datasetsOf(a){
-    if (a.cfg.fixed){
-      return a.cfg.fixed.map(f => ({
-        label: f.label, yAxisID: f.axis || "y",
-        data: pts(CFG.series[f.key]).map(p => ({x: p[0], y: p[1]})),
-        borderColor: f.color, backgroundColor: "transparent", borderWidth: 1.5,
-        pointRadius: 0, pointHoverRadius: 3, tension: .15 }));
-    }
-    const src = a.cfg.source;
-    return a.sel.map((k, i) => ({
-      label: k, data: pts(CFG.operators[src][k] || []).map(p => ({x: p[0], y: p[1]})),
-      borderColor: PALETTE[CFG.operators.names.indexOf(k) % PALETTE.length],
-      backgroundColor: "transparent", borderWidth: 1.4, pointRadius: 0,
-      pointHoverRadius: 3, tension: .15 }));
-  }
-  api.datasetsOf = datasetsOf;
   api.chart = new Chart(api.canvas, {
-    type: "line", data: {datasets: datasetsOf(api)},
-    options: {
-      responsive: true, maintainAspectRatio: false, animation: false,
+    type: "line", data: {datasets: dsOf(api)},
+    options: {responsive: true, maintainAspectRatio: false, animation: false,
       interaction: {mode: "nearest", intersect: false},
-      plugins: {
-        legend: {display: !!cfg.keys, position: "top",
-                 labels: {color: "#8f8f8f", boxWidth: 8, font: {size: 9}}},
+      plugins: {legend: {display: !!api.chipsEl, position: "top",
+          labels: {color: "#8f8f8f", boxWidth: 8, font: {size: 9}}},
         tooltip: {displayColors: false, backgroundColor: "#111",
           borderColor: "#3a3a3a", borderWidth: 1, titleColor: "#ffa500",
           bodyColor: "#e6e6e6",
@@ -230,22 +453,17 @@ function makeChart(cfg){
             onZoomComplete: c => onWin(c.chart)},
           pan: {enabled: true, mode: "x", modifierKey: "Alt",
                 onPanComplete: c => onWin(c.chart)},
-          limits: {x: {min: "original", max: "original"}}},
-      },
-      scales: {
-        x: {type: "linear", ticks: {color: "#777", maxTicksLimit: 7,
-            callback: v => dstr(v), font: {size: 9, family: "Consolas"}},
-            grid: {color: "#161616"}},
+          limits: {x: {min: "original", max: "original"}}}},
+      scales: {x: {type: "linear", ticks: {color: "#777", maxTicksLimit: 7,
+          callback: v => dstr(v), font: {size: 9, family: "Consolas"}},
+          grid: {color: "#161616"}},
         y: {position: "left", ticks: {color: "#777",
             font: {size: 9, family: "Consolas"}}, grid: {color: "#161616"}},
         y1: {position: "right", display: !!cfg.dual,
              ticks: {color: "#79c0ff", font: {size: 9, family: "Consolas"}},
-             grid: {drawOnChartArea: false}},
-      },
-    },
+             grid: {drawOnChartArea: false}}}},
   });
   api.full = [api.chart.scales.x.min, api.chart.scales.x.max];
-  wrap.querySelector("button").onclick = () => resetWin();
   api.canvas.ondblclick = () => resetWin();
   api.nav.addEventListener("pointerdown", e => {
     api.nav.setPointerCapture(e.pointerId);
@@ -265,9 +483,7 @@ function makeChart(cfg){
   return api;
 }
 function navSeries(api){
-  if (api.cfg.navFixed) return pts(CFG.series[api.cfg.navFixed]);
-  const k = api.sel[0];
-  return pts(CFG.operators[api.cfg.source][k] || []);
+  return pts(CFG.series[api.cfg.navFixed || "teu"]);
 }
 function drawNav(api){
   const cv = api.nav, ctx = cv.getContext("2d");
@@ -308,107 +524,42 @@ function drawNav(api){
 }
 function onWin(chart){
   if (SYNC) return;
-  const x = chart.scales.x, DAY = 86400000;
-  const base = CHARTS[0].full;
+  const x = chart.scales.x, DAY = 86400000, base = CHARTS[0].full;
   WIN = (x.min <= base[0] + DAY && x.max >= base[1] - DAY) ? null : [x.min, x.max];
   SYNC = true;
   CHARTS.forEach(a => {
-    if (a.chart !== chart && WIN)
-      a.chart.zoomScale("x", {min: WIN[0], max: WIN[1]}, "none");
-    if (a.chart !== chart && !WIN) a.chart.resetZoom();
+    if (a.chart === chart) return;
+    if (WIN) a.chart.zoomScale("x", {min: WIN[0], max: WIN[1]}, "none");
+    else a.chart.resetZoom();
     drawNav(a); });
   SYNC = false;
 }
 function applyWin(t0, t1){
-  WIN = [t0, t1];
-  SYNC = true;
+  WIN = [t0, t1]; SYNC = true;
   CHARTS.forEach(a => { a.chart.zoomScale("x", {min: t0, max: t1}, "none");
     drawNav(a); });
   SYNC = false;
 }
 function resetWin(){
-  WIN = null;
-  SYNC = true;
+  WIN = null; SYNC = true;
   CHARTS.forEach(a => { a.chart.resetZoom(); drawNav(a); });
   SYNC = false;
 }
-
-makeChart({title: "GLOBAL FLEET — Active Ships & Top100 TEU", dual: true,
-  navFixed: "teu",
+makeChart({canvas: "c1", nav: "n1", dual: true, navFixed: "teu",
   fixed: [{key: "ships", label: "Active Ships (global)", color: "#ffa500"},
           {key: "teu", label: "Top100 Fleet (TEU)", color: "#79c0ff", axis: "y1"}]});
-makeChart({title: "ORDERBOOK & TOP10 SHARE", dual: true, navFixed: "ob",
-  fixed: [{key: "ob", label: "Orderbook (TEU)", color: "#d2a8ff"},
-          {key: "share", label: "Top10 Share (%)", color: "#7ee787", axis: "y1"}]});
-makeChart({title: "선사별 선대 (TEU) 추이 — 선대 확보 누적", wide: true,
-  source: "teu", keys: CFG.operators.names,
-  initial: CFG.operators.names.slice(0, 4)});
-makeChart({title: "선사별 Orderbook (TEU) 추이 — 발주 누적", wide: true,
-  source: "ob", keys: CFG.operators.names,
-  initial: CFG.operators.names.slice(0, 4)});
 CHARTS.forEach(drawNav);
 
-/* ---------- 공식 스타일 순위표 ---------- */
-const SNAP = CFG.snap;
-const sel = document.getElementById("snapdate");
-sel.innerHTML = SNAP.dates.map(d => `<option>${d}</option>`).join("");
-const head = document.getElementById("rkhead");
-head.innerHTML = SNAP.cols.map((c, i) =>
-  `<th class="${c.txt ? "txt" : ""}" data-i="${i}">${c.t}</th>`).join("");
-let sortI = 0, sortDir = 1, rkFilter = "";
-function barHtml(r){
-  const ex = (r[SNAP.bar.owned] || 0) + (r[SNAP.bar.chartered] || 0);
-  const ob = r[SNAP.bar.orderbook] || 0;
-  const max = SNAP.barMax || 1;
-  return `<div class="barwrap" title="Existing ${fmt(ex)} + Orderbook ${fmt(ob)}">
-    <span class="bar-ex" style="width:${(ex / max * 100).toFixed(1)}%"></span>
-    <span class="bar-ob" style="width:${(ob / max * 100).toFixed(1)}%"></span></div>`;
-}
-function renderRank(){
-  let rows = (SNAP.rows[sel.value] || []).slice();
-  if (rkFilter) rows = rows.filter(r =>
-    String(r[1] || "").toLowerCase().includes(rkFilter));
-  const ci = SNAP.cols[sortI].i;
-  rows.sort((a, b) => {
-    const va = ci < 0 ? 0 : a[ci], vb = ci < 0 ? 0 : b[ci];
-    return (va < vb ? -1 : va > vb ? 1 : 0) * sortDir; });
-  document.getElementById("rkbody").innerHTML = rows.map(r =>
-    `<tr>${SNAP.cols.map(c => c.i < 0 ? `<td class="barcell">${barHtml(r)}</td>` :
-      `<td class="${c.txt ? "txt" : ""}">${c.flag ? flagImg(r[c.flag]) : ""}${
-        r[c.i] === null || r[c.i] === undefined ? "-" :
-        (c.pct ? fmt(r[c.i]) + "%" : fmt(r[c.i]))}</td>`).join("")}</tr>`).join("");
-  document.getElementById("rknote").textContent =
-    `${rows.length} rows · ${sel.value}`;
-  head.querySelectorAll("th").forEach((th, i) => {
-    th.classList.toggle("sorted", i === sortI);
-    th.textContent = th.textContent.replace(/ [▲▼]$/, "") +
-      (i === sortI ? (sortDir > 0 ? " ▲" : " ▼") : ""); });
-}
-sel.onchange = renderRank;
-document.getElementById("rkfilter").oninput = e => {
-  rkFilter = e.target.value.toLowerCase(); renderRank(); };
-head.querySelectorAll("th").forEach((th, i) => th.onclick = () => {
-  if (sortI === i) sortDir = -sortDir; else { sortI = i; sortDir = i <= 1 ? 1 : -1; }
-  renderRank(); });
-function rankAoa(){
-  const rows = SNAP.rows[sel.value] || [];
-  return [SNAP.cols.filter(c => c.i >= 0).map(c => c.t),
-    ...rows.map(r => SNAP.cols.filter(c => c.i >= 0).map(c => r[c.i]))];
-}
-document.getElementById("dlcsv").onclick = () => {
-  const aoa = rankAoa();
-  const csv = "\uFEFF" + aoa.map(l => l.map(v =>
-    v === null || v === undefined ? "" : String(v)).join(",")).join("\r\n");
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
-  a.download = `alphaliner_top100_${sel.value}.csv`; a.click();
-  URL.revokeObjectURL(a.href); };
-document.getElementById("dlxlsx").onclick = () => {
-  const ws = XLSX.utils.aoa_to_sheet(rankAoa());
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "TOP100");
-  XLSX.writeFile(wb, `alphaliner_top100_${sel.value}.xlsx`); };
-renderRank();
+/* ---------- 초기 렌더 ---------- */
+document.getElementById("ref").textContent = "REF " + (CFG.updated || "-");
+document.getElementById("gen").innerHTML =
+  "<b>GENERATED</b> " + (CFG.generated || "-");
+function applyBasis(){ BASIS = basisDate();
+  renderMeta(); renderDeltas(); renderDelta(); }
+document.getElementById("apply").onclick = applyBasis;
+applyBasis();
+renderBand();
+renderDetail();
 window.addEventListener("resize", () => CHARTS.forEach(drawNav));
 </script>
 </body>
