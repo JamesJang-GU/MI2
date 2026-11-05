@@ -65,8 +65,9 @@ MODULES = [
     {
         "id": "oil",
         "title": "유가 / 벙커링",
-        "cmd": ["oil/oil.py"],
-        "timeout": 900,
+        # --refresh: DB 캐시 대신 Selenium 실 크롤링(VLSFO+Opinet) 매일 수행
+        "cmd": ["oil/oil.py", "--refresh"],
+        "timeout": 1200,
         "page": "oil/index.html",
     },
     {
