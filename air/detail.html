@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AIR DETAIL</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root{--bg:#000;--panel:#0b0b0b;--panel2:#101010;--line:#2b2b2b;--amber:#ffa500;
+        --txt:#e6e6e6;--dim:#8f8f8f;--up:#ff4d4d;--down:#58a6ff;--flat:#9a9a9a;
+        --mono:Consolas,"Liberation Mono",Menlo,"Malgun Gothic",monospace}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--mono)}
+  .topbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;
+          border-bottom:2px solid var(--amber);
+          background:linear-gradient(180deg,#151000,#000)}
+  .code{color:#000;background:var(--amber);font-weight:700;font-size:11px;
+        padding:1px 6px;letter-spacing:.08em}
+  .ttl{color:var(--amber);font-size:13px;letter-spacing:.08em}
+  .ref{color:var(--dim);font-size:10px}
+  .btn{color:var(--amber);border:1px solid var(--amber);background:none;
+       font-family:var(--mono);font-size:10px;padding:2px 9px;cursor:pointer;
+       letter-spacing:.06em}
+  .btn:hover{background:var(--amber);color:#000}
+  .back{margin-left:auto;color:var(--amber);border:1px solid var(--amber);
+        font-size:10px;padding:2px 8px;text-decoration:none;letter-spacing:.06em}
+  .back:hover{background:var(--amber);color:#000}
+  .wrap{padding:8px;display:flex;flex-direction:column;gap:8px}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .panel{background:var(--panel);border:1px solid var(--line);padding:8px;
+         display:flex;flex-direction:column;gap:6px;min-width:0}
+  .panel.wide{grid-column:1/-1}
+  @media(max-width:980px){.charts{grid-template-columns:1fr}.panel.wide{grid-column:auto}}
+  .phead{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .ptitle{color:var(--amber);font-size:12px;letter-spacing:.08em}
+  .chips{display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
+  .chip{border:1px solid var(--line);color:var(--dim);font-size:10px;
+        padding:1px 7px;cursor:pointer;user-select:none}
+  .chip.on{color:#000;background:var(--amber);border-color:var(--amber);font-weight:700}
+  .fixedlbl{color:var(--dim);font-size:10px;border:1px dashed var(--line);
+            padding:1px 7px}
+  .spacer{margin-left:auto}
+  .chartbox{height:300px;position:relative}
+  .navbox{height:46px;position:relative;border:1px solid var(--line);
+          background:#0d0d0d;cursor:crosshair}
+  .navbox canvas{width:100%;height:100%;display:block}
+  .hint{color:#555;font-size:9px;letter-spacing:.05em}
+  .tbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .tbar input,.tbar select{background:var(--panel2);border:1px solid var(--line);
+      color:var(--txt);font-family:var(--mono);font-size:10px;padding:2px 6px}
+  .tbar input{width:150px}
+  .note{color:var(--dim);font-size:10px}
+  .tblbox{height:300px;overflow:auto;border:1px solid var(--line);background:var(--panel2)}
+  .tblbox.auto{height:auto;max-height:420px}
+  table{width:100%;border-collapse:collapse;font-size:11px;
+        font-variant-numeric:tabular-nums}
+  th{color:var(--dim);text-align:right;font-weight:400;border-bottom:1px solid var(--line);
+     padding:3px 6px;position:sticky;top:0;background:var(--panel2);cursor:pointer;
+     white-space:nowrap}
+  th.txt,td.txt{text-align:left}
+  th:hover{color:var(--amber)}
+  th.sorted{color:var(--amber)}
+  td{border-bottom:1px dotted #1c1c1c;padding:3px 6px;text-align:right;white-space:nowrap}
+  td:first-child{color:var(--dim)}
+  .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+  .section{background:var(--panel);border:1px solid var(--line);padding:8px;
+           display:flex;flex-direction:column;gap:6px}
+  footer{color:var(--dim);font-size:10px;letter-spacing:.06em;padding:8px 12px 20px;
+         display:flex;flex-wrap:wrap;gap:12px}
+  footer b{color:var(--amber);font-weight:400}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="code" id="code"></span>
+  <span class="ttl" id="title"></span>
+  <span class="ref" id="ref"></span>
+  <a class="back" href="../index.html">← TERMINAL</a>
+</div>
+<div class="wrap">
+  <div class="charts" id="panels"></div>
+  <div id="sections"></div>
+</div>
+<footer>
+  <span><b>AUTO-CRAWL</b> DAILY 00:00 KST · GITHUB ACTIONS</span>
+  <span id="gen"></span>
+</footer>
+<script>
+const PALETTE = ["#ffa500", "#79c0ff", "#d2a8ff", "#7ee787", "#ff7b72", "#ffa657",
+                 "#a5d6ff", "#f778ba", "#d4a72c", "#8ddb8c", "#ff9bce", "#9ecbff"];
+const CONFIG = {"id":"air","title":"항공운임 — TAC Index (항로별 중첩)","updated":"2026-10-01","datasets":{"overall":{"label":"TAC 종합","points":[["2015-01-01",3.21],["2015-02-01",3.1],["2015-03-01",3.16],["2015-04-01",3.02],["2015-05-01",2.88],["2015-06-01",2.81],["2016-09-01",2.42],["2016-10-01",2.72],["2016-11-01",3.2],["2016-12-01",3.12],["2017-01-01",2.75],["2017-02-01",2.44],["2017-03-01",2.7],["2017-04-01",2.64],["2017-05-01",2.56],["2017-06-01",2.58],["2017-07-01",2.55],["2017-08-01",2.58],["2017-09-01",2.88],["2017-10-01",3.01],["2017-11-01",3.51],["2017-12-01",3.66],["2018-01-01",3.08],["2018-02-01",3.07],["2018-03-01",3.03],["2018-04-01",3.02],["2018-05-01",3.02],["2018-06-01",3.0],["2018-07-01",3.07],["2018-08-01",3.07],["2018-09-01",3.22],["2018-10-01",3.46],["2018-11-01",3.73],["2018-12-01",3.58],["2019-01-01",2.92],["2019-02-01",2.84],["2019-03-01",2.85],["2019-04-01",2.81],["2019-05-01",2.86],["2019-06-01",2.75],["2019-07-01",2.74],["2019-08-01",2.67],["2019-09-01",2.64],["2019-10-01",2.71],["2019-11-01",2.95],["2019-12-01",2.84],["2020-01-01",2.63],["2020-02-01",2.52],["2020-03-01",3.22],["2020-04-01",4.82],["2020-05-01",5.77],["2020-06-01",4.75],["2020-07-01",3.95],["2020-08-01",4.24],["2020-09-01",4.01],["2020-10-01",4.11],["2020-11-01",5.6],["2020-12-01",6.03],["2021-01-01",5.05],["2021-02-01",5.08],["2021-03-01",4.66],["2021-04-01",5.74],["2021-05-01",5.95],["2021-06-01",5.43],["2021-07-01",5.53],["2021-08-01",5.74],["2021-09-01",6.51],["2021-10-01",6.86],["2021-11-01",7.97],["2021-12-01",8.64],["2022-01-01",7.38],["2022-02-01",6.89],["2022-03-01",6.05],["2022-04-01",6.99],["2022-05-01",6.76],["2022-06-01",6.35],["2022-07-01",6.22],["2022-08-01",6.21],["2022-09-01",5.97],["2022-10-01",5.41],["2022-11-01",5.45],["2022-12-01",5.46],["2023-01-01",4.85],["2023-02-01",4.29],["2023-03-01",4.3],["2023-04-01",4.09],["2023-05-01",3.84],["2023-06-01",3.67],["2023-07-01",3.48],["2023-08-01",3.56],["2023-09-01",3.59],["2023-10-01",3.98],["2023-11-01",4.26],["2023-12-01",4.94],["2024-01-01",3.76],["2024-02-01",3.68],["2024-03-01",3.68],["2024-04-01",3.96],["2024-05-01",3.97],["2024-06-01",4.08],["2024-07-01",4.05],["2024-08-01",4.15],["2024-09-01",4.21],["2024-10-01",4.13],["2024-11-01",4.53],["2024-12-01",5.1],["2025-01-01",4.38],["2025-02-01",4.22],["2025-03-01",4.17],["2025-04-01",4.14],["2025-05-01",3.87],["2025-06-01",3.79],["2025-07-01",3.88],["2025-08-01",3.89],["2025-09-01",3.92],["2025-10-01",4.06],["2025-11-01",4.45],["2025-12-01",4.87],["2026-01-01",4.31],["2026-02-01",4.18],["2026-03-01",4.3],["2026-04-01",5.18],["2026-05-01",5.23],["2026-06-01",5.29],["2026-07-01",4.75],["2026-08-01",4.65],["2026-09-01",4.74],["2026-10-01",5.21]]},"Frankfurt-North America":{"label":"Frankfurt-North America","points":[["2016-09-01",2.34],["2016-10-01",2.46],["2016-11-01",2.84],["2016-12-01",3.08],["2017-01-01",2.55],["2017-02-01",2.64],["2017-03-01",3.1],["2017-04-01",2.56],["2017-05-01",2.3],["2017-06-01",2.22],["2017-07-01",2.07],["2017-08-01",2.31],["2017-09-01",2.42],["2017-10-01",2.42],["2017-11-01",2.71],["2017-12-01",2.94],["2018-01-01",2.89],["2018-02-01",3.06],["2018-03-01",3.01],["2018-04-01",2.9],["2018-05-01",2.63],["2018-06-01",2.54],["2018-07-01",2.57],["2018-08-01",2.43],["2018-09-01",2.45],["2018-10-01",2.5],["2018-11-01",2.46],["2018-12-01",2.57],["2019-01-01",2.27],["2019-02-01",2.36],["2019-03-01",2.55],["2019-04-01",2.19],["2019-05-01",2.21],["2019-06-01",2.12],["2019-07-01",2.11],["2019-08-01",2.16],["2019-09-01",1.93],["2019-10-01",1.82],["2019-11-01",1.75],["2019-12-01",1.76],["2020-01-01",1.91],["2020-02-01",1.84],["2020-03-01",2.56],["2020-04-01",3.83],["2020-05-01",3.71],["2020-06-01",3.87],["2020-07-01",3.73],["2020-08-01",4.02],["2020-09-01",3.39],["2020-10-01",2.92],["2020-11-01",4.05],["2020-12-01",5.0],["2021-01-01",4.45],["2021-02-01",4.52],["2021-03-01",4.45],["2021-04-01",4.13],["2021-05-01",4.41],["2021-06-01",4.07],["2021-07-01",4.1],["2021-08-01",3.94],["2021-09-01",4.21],["2021-10-01",3.95],["2021-11-01",4.45],["2021-12-01",5.21],["2022-01-01",4.62],["2022-02-01",5.18],["2022-03-01",4.89],["2022-04-01",5.4],["2022-05-01",4.23],["2022-06-01",4.08],["2022-07-01",3.82],["2022-08-01",3.95],["2022-09-01",3.87],["2022-10-01",3.7],["2022-11-01",4.25],["2022-12-01",4.36],["2023-01-01",3.45],["2023-02-01",3.55],["2023-03-01",3.37],["2023-04-01",3.08],["2023-05-01",2.67],["2023-06-01",2.35],["2023-07-01",2.13],["2023-08-01",2.19],["2023-09-01",2.15],["2023-10-01",2.18],["2023-11-01",1.98],["2023-12-01",2.35],["2024-01-01",1.95],["2024-02-01",2.19],["2024-03-01",2.24],["2024-04-01",1.86],["2024-05-01",1.98],["2024-06-01",1.93],["2024-07-01",1.92],["2024-08-01",2.05],["2024-09-01",2.0],["2024-10-01",1.78],["2024-11-01",2.09],["2024-12-01",3.09],["2025-01-01",2.86],["2025-02-01",2.91],["2025-03-01",2.82],["2025-04-01",2.49],["2025-05-01",2.13],["2025-06-01",2.02],["2025-07-01",2.15],["2025-08-01",2.12],["2025-09-01",1.99],["2025-10-01",1.89],["2025-11-01",2.16],["2025-12-01",2.58],["2026-01-01",2.8],["2026-02-01",2.7],["2026-03-01",2.83],["2026-04-01",2.81],["2026-05-01",2.61],["2026-06-01",2.7],["2026-07-01",2.53],["2026-08-01",2.38],["2026-09-01",2.4],["2026-10-01",2.67]]},"Hong Kong-Europe":{"label":"Hong Kong-Europe","points":[["2015-01-01",2.81],["2015-02-01",2.77],["2015-03-01",2.57],["2015-04-01",2.57],["2015-05-01",2.5],["2015-06-01",2.55],["2016-09-01",1.99],["2016-10-01",2.27],["2016-11-01",2.69],["2016-12-01",2.78],["2017-01-01",2.46],["2017-02-01",2.13],["2017-03-01",2.11],["2017-04-01",2.19],["2017-05-01",2.21],["2017-06-01",2.26],["2017-07-01",2.24],["2017-08-01",2.21],["2017-09-01",2.43],["2017-10-01",2.57],["2017-11-01",2.99],["2017-12-01",3.11],["2018-01-01",2.67],["2018-02-01",2.54],["2018-03-01",2.44],["2018-04-01",2.5],["2018-05-01",2.55],["2018-06-01",2.66],["2018-07-01",2.76],["2018-08-01",2.83],["2018-09-01",2.91],["2018-10-01",3.09],["2018-11-01",3.37],["2018-12-01",3.5],["2019-01-01",2.83],["2019-02-01",2.61],["2019-03-01",2.61],["2019-04-01",2.65],["2019-05-01",2.65],["2019-06-01",2.66],["2019-07-01",2.67],["2019-08-01",2.56],["2019-09-01",2.56],["2019-10-01",2.82],["2019-11-01",3.26],["2019-12-01",3.15],["2020-01-01",2.83],["2020-02-01",2.52],["2020-03-01",3.08],["2020-04-01",4.93],["2020-05-01",5.88],["2020-06-01",4.53],["2020-07-01",3.17],["2020-08-01",3.21],["2020-09-01",3.37],["2020-10-01",3.76],["2020-11-01",5.38],["2020-12-01",5.59],["2021-01-01",4.28],["2021-02-01",4.3],["2021-03-01",4.05],["2021-04-01",4.61],["2021-05-01",4.73],["2021-06-01",4.34],["2021-07-01",4.58],["2021-08-01",4.63],["2021-09-01",5.57],["2021-10-01",6.68],["2021-11-01",7.91],["2021-12-01",8.0],["2022-01-01",6.61],["2022-02-01",5.8],["2022-03-01",5.09],["2022-04-01",6.01],["2022-05-01",6.35],["2022-06-01",6.26],["2022-07-01",6.34],["2022-08-01",6.34],["2022-09-01",6.09],["2022-10-01",5.78],["2022-11-01",5.62],["2022-12-01",5.52],["2023-01-01",4.96],["2023-02-01",4.4],["2023-03-01",4.15],["2023-04-01",3.99],["2023-05-01",3.77],["2023-06-01",3.73],["2023-07-01",3.62],["2023-08-01",3.65],["2023-09-01",3.72],["2023-10-01",4.26],["2023-11-01",4.64],["2023-12-01",5.36],["2024-01-01",4.12],["2024-02-01",4.18],["2024-03-01",3.92],["2024-04-01",4.47],["2024-05-01",4.41],["2024-06-01",4.56],["2024-07-01",4.5],["2024-08-01",4.43],["2024-09-01",4.66],["2024-10-01",4.88],["2024-11-01",5.29],["2024-12-01",5.49],["2025-01-01",4.68],["2025-02-01",4.37],["2025-03-01",4.39],["2025-04-01",4.57],["2025-05-01",4.39],["2025-06-01",4.36],["2025-07-01",4.39],["2025-08-01",4.26],["2025-09-01",4.41],["2025-10-01",4.59],["2025-11-01",5.0],["2025-12-01",5.44],["2026-01-01",4.44],["2026-02-01",4.44],["2026-03-01",4.97],["2026-04-01",5.79],["2026-05-01",5.71],["2026-06-01",5.45],["2026-07-01",4.76],["2026-08-01",4.58],["2026-09-01",4.8],["2026-10-01",5.31]]},"Hong Kong-North America":{"label":"Hong Kong-North America","points":[["2015-01-01",3.61],["2015-02-01",3.43],["2015-03-01",3.74],["2015-04-01",3.47],["2015-05-01",3.27],["2015-06-01",3.07],["2016-09-01",2.92],["2016-10-01",3.44],["2016-11-01",4.07],["2016-12-01",3.51],["2017-01-01",3.24],["2017-02-01",2.54],["2017-03-01",2.89],["2017-04-01",3.18],["2017-05-01",3.16],["2017-06-01",3.27],["2017-07-01",3.34],["2017-08-01",3.21],["2017-09-01",3.78],["2017-10-01",4.05],["2017-11-01",4.83],["2017-12-01",4.93],["2018-01-01",3.69],["2018-02-01",3.62],["2018-03-01",3.65],["2018-04-01",3.65],["2018-05-01",3.88],["2018-06-01",3.8],["2018-07-01",3.88],["2018-08-01",3.96],["2018-09-01",4.31],["2018-10-01",4.8],["2018-11-01",5.37],["2018-12-01",4.68],["2019-01-01",3.66],["2019-02-01",3.54],["2019-03-01",3.38],["2019-04-01",3.6],["2019-05-01",3.71],["2019-06-01",3.46],["2019-07-01",3.44],["2019-08-01",3.29],["2019-09-01",3.44],["2019-10-01",3.49],["2019-11-01",3.84],["2019-12-01",3.62],["2020-01-01",3.14],["2020-02-01",3.19],["2020-03-01",4.03],["2020-04-01",5.69],["2020-05-01",7.73],["2020-06-01",5.86],["2020-07-01",4.96],["2020-08-01",5.5],["2020-09-01",5.26],["2020-10-01",5.66],["2020-11-01",7.37],["2020-12-01",7.5],["2021-01-01",6.43],["2021-02-01",6.42],["2021-03-01",5.48],["2021-04-01",8.48],["2021-05-01",8.7],["2021-06-01",7.89],["2021-07-01",7.9],["2021-08-01",8.64],["2021-09-01",9.74],["2021-10-01",9.94],["2021-11-01",11.54],["2021-12-01",12.72],["2022-01-01",10.9],["2022-02-01",9.68],["2022-03-01",8.18],["2022-04-01",9.57],["2022-05-01",9.69],["2022-06-01",8.72],["2022-07-01",8.49],["2022-08-01",8.33],["2022-09-01",7.94],["2022-10-01",6.74],["2022-11-01",6.49],["2022-12-01",6.5],["2023-01-01",6.14],["2023-02-01",4.93],["2023-03-01",5.38],["2023-04-01",5.2],["2023-05-01",5.07],["2023-06-01",4.92],["2023-07-01",4.69],["2023-08-01",4.85],["2023-09-01",4.9],["2023-10-01",5.49],["2023-11-01",6.15],["2023-12-01",7.1],["2024-01-01",5.22],["2024-02-01",4.66],["2024-03-01",4.88],["2024-04-01",5.54],["2024-05-01",5.53],["2024-06-01",5.75],["2024-07-01",5.72],["2024-08-01",5.96],["2024-09-01",5.98],["2024-10-01",5.73],["2024-11-01",6.2],["2024-12-01",6.73],["2025-01-01",5.6],["2025-02-01",5.37],["2025-03-01",5.29],["2025-04-01",5.36],["2025-05-01",5.08],["2025-06-01",4.99],["2025-07-01",5.11],["2025-08-01",5.29],["2025-09-01",5.36],["2025-10-01",5.7],["2025-11-01",6.18],["2025-12-01",6.6],["2026-01-01",5.68],["2026-02-01",5.41],["2026-03-01",5.11],["2026-04-01",6.94],["2026-05-01",7.37],["2026-06-01",7.71],["2026-07-01",6.96],["2026-08-01",6.98],["2026-09-01",7.02],["2026-10-01",7.64]]}},"panels":[{"id":"routes","title":"TAC 항로 지수 — 중첩 비교","span":2,"keys":["Frankfurt-North America","Hong Kong-Europe","Hong Kong-North America","overall"],"initial":["Frankfurt-North America","Hong Kong-Europe","Hong Kong-North America"],"navKey":"Frankfurt-North America"}],"generated":"2026-11-05 07:17:02"};
+const PANELS = {};
+
+function fmt(v){ return v === null || v === undefined ? "-" :
+  Number(v).toLocaleString("ko-KR", {maximumFractionDigits: 2}); }
+function sign(v){ if (v === null || v === undefined) return "-";
+  return (v > 0 ? "+" : "") + fmt(v); }
+function cls(v){ return v === null || v === undefined ? "flat" :
+  v > 0 ? "up" : v < 0 ? "down" : "flat"; }
+function ms(d){ return Date.parse(d + "T00:00:00Z"); }
+function dstr(t){ return new Date(t).toISOString().slice(0, 10); }
+function ds(key){
+  const d = CONFIG.datasets[key];
+  if (!d._ms) d._ms = d.points.map(p => ms(p[0]));
+  return d;
+}
+function pointsOf(key){
+  const d = ds(key);
+  return d._ms.map((t, i) => [t, d.points[i][1]]);
+}
+function colorOf(panel, key){
+  return PALETTE[panel.keys.indexOf(key) % PALETTE.length];
+}
+
+class Panel {
+  constructor(cfg){
+    this.cfg = cfg; this.keys = cfg.keys;
+    this.sel = (cfg.initial || cfg.keys.slice(0, 1)).slice();
+    this.navKey = cfg.navKey || this.sel[0];
+    this.win = null; this.sort = {key: "date", dir: -1}; this.filter = "";
+    this.full = null; this.navDrag = null;
+
+    const root = document.createElement("div");
+    root.className = "panel" + (cfg.span === 2 ? " wide" : "");
+    root.innerHTML = `
+      <div class="phead"><span class="ptitle">${cfg.title}</span>
+        <span class="spacer"></span>
+        <button class="btn" data-a="reset">FULL</button>
+        <button class="btn" data-a="csv">CSV ↓</button>
+        <button class="btn" data-a="xlsx">XLSX ↓</button></div>
+      <div class="chips"></div>
+      <div class="chartbox"><canvas></canvas></div>
+      <div class="navbox"><canvas></canvas></div>
+      <div class="hint">하단 스트립 드래그=기간 선택 · 차트 WHEEL=ZOOM · ALT+DRAG=PAN · 더블클릭=전체</div>
+      <div class="tbar"><input placeholder="filter: date / series">
+        <span class="note"></span></div>
+      <div class="tblbox"><table>
+        <thead><tr>
+          <th class="txt" data-key="date">DATE</th>
+          <th class="txt" data-key="series">SERIES</th>
+          <th data-key="value">VALUE</th>
+          <th data-key="change">CHANGE</th>
+          <th data-key="pct">CHANGE RATE (%)</th>
+        </tr></thead><tbody></tbody>
+      </table></div>`;
+    document.getElementById("panels").appendChild(root);
+    this.root = root;
+    this.chipsEl = root.querySelector(".chips");
+    this.table = root.querySelector("table");
+    this.note = root.querySelector(".note");
+    this.nav = root.querySelectorAll("canvas")[1];
+    root.querySelector("[data-a=reset]").onclick = () => this.reset();
+    root.querySelector("[data-a=csv]").onclick = () => this.download("csv");
+    root.querySelector("[data-a=xlsx]").onclick = () => this.download("xlsx");
+    root.querySelector("input").oninput = e => {
+      this.filter = e.target.value; this.renderTable(); };
+    this.table.querySelectorAll("th").forEach(th => th.onclick = () => {
+      const k = th.dataset.key;
+      this.sort = {key: k, dir: this.sort.key === k ? -this.sort.dir : -1};
+      this.renderTable(); });
+
+    if (cfg.fixed){
+      this.chipsEl.innerHTML =
+        `<span class="fixedlbl">${CONFIG.datasets[this.sel[0]].label}</span>`;
+    } else this.buildChips();
+
+    this.chart = new Chart(root.querySelectorAll("canvas")[0], {
+      type: "line",
+      data: {datasets: this.datasets()},
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        interaction: {mode: "nearest", intersect: false},
+        plugins: {
+          legend: {display: !cfg.fixed, position: "top",
+                   labels: {color: "#8f8f8f", boxWidth: 8, font: {size: 9}}},
+          tooltip: {displayColors: false, backgroundColor: "#111",
+            borderColor: "#3a3a3a", borderWidth: 1, titleColor: "#ffa500",
+            bodyColor: "#e6e6e6",
+            callbacks: {title: it => dstr(it[0].parsed.x),
+                        label: it => ` ${it.dataset.label} ${fmt(it.parsed.y)}`}},
+          zoom: {
+            zoom: {wheel: {enabled: true}, pinch: {enabled: true},
+              drag: {enabled: true, backgroundColor: "rgba(255,165,0,.12)",
+                     borderColor: "#ffa500", borderWidth: 1},
+              mode: "x", onZoomComplete: c => this.onWindow(c.chart)},
+            pan: {enabled: true, mode: "x", modifierKey: "Alt",
+                  onPanComplete: c => this.onWindow(c.chart)},
+            limits: {x: {min: "original", max: "original"}},
+          },
+        },
+        scales: {
+          x: {type: "linear", ticks: {color: "#777", maxTicksLimit: 8,
+              callback: v => dstr(v), font: {size: 9, family: "Consolas"}},
+              grid: {color: "#161616"}},
+          y: {ticks: {color: "#777", font: {size: 9, family: "Consolas"}},
+              grid: {color: "#161616"}},
+        },
+      },
+    });
+    this.full = [this.chart.scales.x.min, this.chart.scales.x.max];
+    this.bindNav();
+    this.drawNav();
+    this.renderTable();
+    root.querySelectorAll("canvas")[0].ondblclick = () => this.reset();
+  }
+  datasets(){
+    return this.sel.map(k => ({
+      label: CONFIG.datasets[k].label,
+      data: pointsOf(k).map(p => ({x: p[0], y: p[1]})),
+      borderColor: colorOf(this, k), backgroundColor: "transparent",
+      borderWidth: 1.4, pointRadius: 0, pointHoverRadius: 3, tension: .15,
+    }));
+  }
+  buildChips(){
+    this.chipsEl.innerHTML = this.keys.map(k =>
+      `<span class="chip ${this.sel.includes(k) ? "on" : ""}" data-k="${k}"
+        style="${this.sel.includes(k) ? "" :
+          `border-color:${colorOf(this, k)};color:${colorOf(this, k)}`}">
+        ${CONFIG.datasets[k].label}</span>`).join("");
+    this.chipsEl.querySelectorAll(".chip").forEach(chip => chip.onclick = () => {
+      const k = chip.dataset.k;
+      if (this.sel.includes(k)){
+        if (this.sel.length > 1) this.sel = this.sel.filter(x => x !== k);
+      } else this.sel.push(k);
+      this.buildChips(); this.refresh(); });
+  }
+  onWindow(chart){
+    const x = chart.scales.x, DAY = 86400000;
+    if (this.full && x.min <= this.full[0] + DAY && x.max >= this.full[1] - DAY)
+      this.win = null;
+    else this.win = [x.min, x.max];
+    this.drawNav(); this.renderTable();
+  }
+  applyWindow(t0, t1){
+    this.chart.zoomScale("x", {min: t0, max: t1}, "none");
+    this.win = [t0, t1]; this.drawNav(); this.renderTable();
+  }
+  reset(){ this.chart.resetZoom(); this.win = null;
+    this.drawNav(); this.renderTable(); }
+  refresh(){ this.chart.data.datasets = this.datasets();
+    this.chart.update("none"); this.renderTable(); }
+  bindNav(){
+    const cv = this.nav;
+    cv.addEventListener("pointerdown", e => {
+      cv.setPointerCapture(e.pointerId);
+      this.navDrag = {x0: e.offsetX, x1: e.offsetX}; });
+    cv.addEventListener("pointermove", e => {
+      if (this.navDrag){ this.navDrag.x1 = e.offsetX; this.drawNav(); } });
+    cv.addEventListener("pointerup", e => {
+      if (!this.navDrag) return;
+      const {x0, x1} = this.navDrag; this.navDrag = null;
+      if (Math.abs(x1 - x0) < 5){ this.drawNav(); return; }
+      this.applyWindow(this.navX2T(Math.min(x0, x1)), this.navX2T(Math.max(x0, x1)));
+    });
+  }
+  navX2T(x){ const w = this.nav.clientWidth || 1;
+    return this.full[0] + (x / w) * (this.full[1] - this.full[0]); }
+  navT2X(t){ const w = this.nav.clientWidth || 1;
+    return ((t - this.full[0]) / (this.full[1] - this.full[0])) * w; }
+  drawNav(){
+    const cv = this.nav, ctx = cv.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (!w || !h) return;
+    cv.width = w * dpr; cv.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#0d0d0d"; ctx.fillRect(0, 0, w, h);
+    const pts = pointsOf(this.navKey);
+    if (pts.length){
+      let vmin = Infinity, vmax = -Infinity;
+      for (const p of pts){ if (p[1] < vmin) vmin = p[1]; if (p[1] > vmax) vmax = p[1]; }
+      const span = (vmax - vmin) || 1;
+      ctx.strokeStyle = "rgba(255,165,0,.75)"; ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let i = 0; i < pts.length; i++){
+        const x = this.navT2X(pts[i][0]);
+        const y = h - 4 - ((pts[i][1] - vmin) / span) * (h - 8);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    const sel = this.navDrag
+      ? [Math.min(this.navDrag.x0, this.navDrag.x1),
+         Math.max(this.navDrag.x0, this.navDrag.x1)]
+      : (this.win ? [this.navT2X(this.win[0]), this.navT2X(this.win[1])] : null);
+    if (sel){
+      ctx.fillStyle = "rgba(0,0,0,.62)";
+      ctx.fillRect(0, 0, sel[0], h); ctx.fillRect(sel[1], 0, w - sel[1], h);
+      ctx.strokeStyle = "#ffa500"; ctx.lineWidth = 1;
+      ctx.strokeRect(sel[0] + .5, .5, Math.max(sel[1] - sel[0] - 1, 1), h - 1);
+    }
+    ctx.fillStyle = "#555"; ctx.font = "9px Consolas,monospace";
+    ctx.fillText(dstr(this.full[0]), 3, h - 3);
+    const right = dstr(this.full[1]);
+    ctx.fillText(right, w - ctx.measureText(right).width - 3, h - 3);
+  }
+  windowRows(){
+    const rows = [];
+    for (const k of this.sel){
+      const d = CONFIG.datasets[k];
+      const pts = pointsOf(k);
+      for (let i = 0; i < pts.length; i++){
+        const t = pts[i][0];
+        if (this.win && (t < this.win[0] || t > this.win[1])) continue;
+        const prev = i > 0 ? pts[i - 1][1] : null;
+        const cur = pts[i][1];
+        rows.push({date: dstr(t), t, series: d.label, value: cur,
+          change: prev === null ? null : +((cur - prev).toFixed(2)),
+          pct: (prev === null || prev === 0) ? null
+               : +(((cur - prev) / Math.abs(prev)) * 100).toFixed(2)});
+      }
+    }
+    return rows;
+  }
+  filtered(){
+    let rows = this.windowRows();
+    const f = this.filter.trim().toLowerCase();
+    if (f) rows = rows.filter(r =>
+      r.series.toLowerCase().includes(f) || r.date.includes(f));
+    const {key, dir} = this.sort;
+    rows.sort((a, b) => (a[key] < b[key] ? -1 : a[key] > b[key] ? 1 : 0) * dir);
+    return rows;
+  }
+  renderTable(){
+    const rows = this.filtered();
+    this.lastRows = rows;
+    const show = rows.slice(0, 500);
+    this.table.querySelector("tbody").innerHTML = show.map(r => `
+      <tr><td>${r.date}</td><td class="txt">${r.series}</td><td>${fmt(r.value)}</td>
+      <td class="${cls(r.change)}">${sign(r.change)}</td>
+      <td class="${cls(r.pct)}">${sign(r.pct)}</td></tr>`).join("");
+    this.note.textContent =
+      `${rows.length.toLocaleString()} rows` +
+      (rows.length > 500 ? " · 최신 500행 표시" : "") +
+      (this.win ? ` · ${dstr(this.win[0])} ~ ${dstr(this.win[1])}` : " · 전체 기간");
+    this.table.querySelectorAll("th").forEach(th => {
+      th.classList.toggle("sorted", th.dataset.key === this.sort.key);
+      th.textContent = th.textContent.replace(/ [▲▼]$/, "") +
+        (th.dataset.key === this.sort.key ? (this.sort.dir > 0 ? " ▲" : " ▼") : "");
+    });
+  }
+  download(kind){
+    const rows = this.filtered();
+    const head = ["Date", "Series", "Value", "Change", "Change Rate(%)"];
+    const aoa = [head, ...rows.map(r =>
+      [r.date, r.series, r.value, r.change, r.pct])];
+    const tag = `${CONFIG.id}_${this.sel.join("+")}`.replace(/[^A-Za-z0-9가-힣+_]/g, "_");
+    exportRows(kind, aoa, tag, "DETAIL");
+  }
+}
+
+function exportRows(kind, aoa, tag, sheet){
+  if (kind === "csv"){
+    const csv = "\uFEFF" + aoa.map(line => line.map(v =>
+      v === null || v === undefined ? "" : String(v)).join(",")).join("\r\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
+    a.download = `${tag}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  } else {
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheet);
+    XLSX.writeFile(wb, `${tag}.xlsx`);
+  }
+}
+
+function buildSection(sec){
+  const box = document.createElement("div");
+  box.className = "section";
+  if (sec.type === "static"){
+    box.innerHTML = `
+      <div class="tbar"><span class="ptitle">${sec.title}</span>
+        <span class="note">${sec.rows.length} rows</span>
+        <span class="spacer"></span>
+        <button class="btn" data-a="csv">CSV ↓</button>
+        <button class="btn" data-a="xlsx">XLSX ↓</button></div>
+      <div class="tblbox auto"><table><thead><tr>${sec.cols.map((c, i) =>
+        `<th class="${i === 0 ? "txt" : ""}">${c}</th>`).join("")}</tr></thead>
+        <tbody>${sec.rows.map(r => `<tr>${r.map((v, i) =>
+          `<td class="${i === 0 ? "txt" : ""}">${v === null ? "-" : fmt(v)}</td>`).join("")}</tr>`).join("")}
+        </tbody></table></div>`;
+    box.querySelector("[data-a=csv]").onclick = () =>
+      exportRows("csv", [sec.cols, ...sec.rows], sec.tag, "DATA");
+    box.querySelector("[data-a=xlsx]").onclick = () =>
+      exportRows("xlsx", [sec.cols, ...sec.rows], sec.tag, "DATA");
+  }
+  if (sec.type === "rank"){
+    const dates = sec.dates;
+    box.innerHTML = `
+      <div class="tbar"><span class="ptitle">${sec.title}</span>
+        <select>${dates.map(d => `<option>${d}</option>`).join("")}</select>
+        <input placeholder="filter: operator">
+        <span class="note"></span>
+        <span class="spacer"></span>
+        <button class="btn" data-a="csv">CSV ↓</button>
+        <button class="btn" data-a="xlsx">XLSX ↓</button></div>
+      <div class="tblbox"><table><thead><tr>${sec.cols.map((c, i) =>
+        `<th class="${i <= 1 ? "txt" : ""}" data-i="${i}">${c}</th>`).join("")}</tr></thead>
+        <tbody></tbody></table></div>`;
+    const sel = box.querySelector("select");
+    const inp = box.querySelector("input");
+    const note = box.querySelector(".note");
+    const tbody = box.querySelector("tbody");
+    let sortI = 0, sortDir = 1, filter = "";
+    const render = () => {
+      let rows = (sec.rows[sel.value] || []).slice();
+      if (filter) rows = rows.filter(r =>
+        String(r[1]).toLowerCase().includes(filter));
+      rows.sort((a, b) => (a[sortI] < b[sortI] ? -1 : a[sortI] > b[sortI] ? 1 : 0) * sortDir);
+      tbody.innerHTML = rows.map(r => `<tr>${r.map((v, i) =>
+        `<td class="${i <= 1 ? "txt" : ""}">${v === null ? "-" : fmt(v)}</td>`).join("")}</tr>`).join("");
+      note.textContent = `${rows.length} rows · ${sel.value}`;
+    };
+    sel.onchange = render;
+    inp.oninput = e => { filter = e.target.value.toLowerCase(); render(); };
+    box.querySelectorAll("th").forEach(th => th.onclick = () => {
+      const i = Number(th.dataset.i);
+      if (sortI === i) sortDir = -sortDir; else { sortI = i; sortDir = i <= 1 ? 1 : -1; }
+      render(); });
+    const aoa = () => [sec.cols, ...(sec.rows[sel.value] || [])];
+    box.querySelector("[data-a=csv]").onclick = () =>
+      exportRows("csv", aoa(), sec.tag + "_" + sel.value, "RANK");
+    box.querySelector("[data-a=xlsx]").onclick = () =>
+      exportRows("xlsx", aoa(), sec.tag + "_" + sel.value, "RANK");
+    render();
+  }
+  document.getElementById("sections").appendChild(box);
+}
+
+document.getElementById("code").textContent = CONFIG.id.toUpperCase();
+document.getElementById("title").textContent = CONFIG.title;
+document.getElementById("ref").textContent = "REF " + (CONFIG.updated || "-");
+document.getElementById("gen").innerHTML =
+  "<b>GENERATED</b> " + (CONFIG.generated || "-");
+if (window.ChartZoom) Chart.register(window.ChartZoom);
+CONFIG.panels.forEach(cfg => { PANELS[cfg.id] = new Panel(cfg); });
+(CONFIG.sections || []).forEach(buildSection);
+window.addEventListener("resize", () =>
+  Object.values(PANELS).forEach(p => p.drawNav()));
+</script>
+</body>
+</html>
