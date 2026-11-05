@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-05 07:06:12",
+ "generated_at": "2026-11-05 07:17:02",
  "modules": [
   {
    "id": "sea",
@@ -1245,7 +1245,7 @@
   {
    "id": "linerlytica",
    "title": "컨테이너 선대",
-   "page": "linerlytica/index.html",
+   "page": "linerlytica/detail.html",
    "metrics": [
     {
      "label": "운항 선박 수",
@@ -1382,7 +1382,7 @@
   {
    "id": "alphaliner",
    "title": "Top100 선사",
-   "page": "alphaliner/index.html",
+   "page": "alphaliner/detail.html",
    "metrics": [
     {
      "label": "Active Ships",
@@ -1447,7 +1447,7 @@
   {
    "id": "forwarders",
    "title": "포워더 순위",
-   "page": "forwarders/index.html",
+   "page": "forwarders/detail.html",
    "metrics": [
     {
      "label": "REV",
@@ -1491,7 +1491,7 @@
   {
    "id": "air",
    "title": "TAC Index (항공)",
-   "page": "air/index.html",
+   "page": "air/detail.html",
    "metrics": [
     {
      "label": "Frankfurt-North America",
@@ -1701,7 +1701,7 @@
   {
    "id": "oil",
    "title": "유가 / 벙커링",
-   "page": "oil/index.html",
+   "page": "oil/detail.html",
    "metrics": [],
    "series": [],
    "updated": "2026-11-04",
@@ -8092,7 +8092,7 @@
   {
    "id": "macro",
    "title": "거시경제",
-   "page": "macro/index.html",
+   "page": "macro/detail.html",
    "metrics": [],
    "series": [],
    "updated": "2026-09",

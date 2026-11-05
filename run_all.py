@@ -39,28 +39,28 @@ MODULES = [
         "title": "컨테이너 선대",
         "cmd": ["linerlytica/linerytica.py"],
         "timeout": 1800,
-        "page": "linerlytica/index.html",
+        "page": "linerlytica/detail.html",
     },
     {
         "id": "alphaliner",
         "title": "Top100 선사",
         "cmd": ["alphaliner/alphaliner.py", "--cron"],
         "timeout": 900,
-        "page": "alphaliner/index.html",
+        "page": "alphaliner/detail.html",
     },
     {
         "id": "forwarders",
         "title": "포워더 순위",
         "cmd": ["forwarders/forwarders.py", "--refresh"],
         "timeout": 600,
-        "page": "forwarders/index.html",
+        "page": "forwarders/detail.html",
     },
     {
         "id": "air",
         "title": "TAC Index (항공)",
         "cmd": ["air/air.py", "--cron"],
         "timeout": 600,
-        "page": "air/index.html",
+        "page": "air/detail.html",
     },
     {
         "id": "oil",
@@ -68,14 +68,14 @@ MODULES = [
         # --refresh: DB 캐시 대신 Selenium 실 크롤링(VLSFO+Opinet) 매일 수행
         "cmd": ["oil/oil.py", "--refresh"],
         "timeout": 1200,
-        "page": "oil/index.html",
+        "page": "oil/detail.html",
     },
     {
         "id": "macro",
         "title": "거시경제",
         "cmd": ["macro/macro.py", "--cron"],
         "timeout": 600,
-        "page": "macro/index.html",
+        "page": "macro/detail.html",
     },
 ]
 
@@ -926,6 +926,732 @@ def build_sea_page(conn) -> None:
     log(f"sea/index.html 작성 완료 ({page_path.stat().st_size:,} bytes)")
 
 
+DETAIL_SHELL = """<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__PAGE_TITLE__</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root{--bg:#000;--panel:#0b0b0b;--panel2:#101010;--line:#2b2b2b;--amber:#ffa500;
+        --txt:#e6e6e6;--dim:#8f8f8f;--up:#ff4d4d;--down:#58a6ff;--flat:#9a9a9a;
+        --mono:Consolas,"Liberation Mono",Menlo,"Malgun Gothic",monospace}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--mono)}
+  .topbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;
+          border-bottom:2px solid var(--amber);
+          background:linear-gradient(180deg,#151000,#000)}
+  .code{color:#000;background:var(--amber);font-weight:700;font-size:11px;
+        padding:1px 6px;letter-spacing:.08em}
+  .ttl{color:var(--amber);font-size:13px;letter-spacing:.08em}
+  .ref{color:var(--dim);font-size:10px}
+  .btn{color:var(--amber);border:1px solid var(--amber);background:none;
+       font-family:var(--mono);font-size:10px;padding:2px 9px;cursor:pointer;
+       letter-spacing:.06em}
+  .btn:hover{background:var(--amber);color:#000}
+  .back{margin-left:auto;color:var(--amber);border:1px solid var(--amber);
+        font-size:10px;padding:2px 8px;text-decoration:none;letter-spacing:.06em}
+  .back:hover{background:var(--amber);color:#000}
+  .wrap{padding:8px;display:flex;flex-direction:column;gap:8px}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .panel{background:var(--panel);border:1px solid var(--line);padding:8px;
+         display:flex;flex-direction:column;gap:6px;min-width:0}
+  .panel.wide{grid-column:1/-1}
+  @media(max-width:980px){.charts{grid-template-columns:1fr}.panel.wide{grid-column:auto}}
+  .phead{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .ptitle{color:var(--amber);font-size:12px;letter-spacing:.08em}
+  .chips{display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
+  .chip{border:1px solid var(--line);color:var(--dim);font-size:10px;
+        padding:1px 7px;cursor:pointer;user-select:none}
+  .chip.on{color:#000;background:var(--amber);border-color:var(--amber);font-weight:700}
+  .fixedlbl{color:var(--dim);font-size:10px;border:1px dashed var(--line);
+            padding:1px 7px}
+  .spacer{margin-left:auto}
+  .chartbox{height:300px;position:relative}
+  .navbox{height:46px;position:relative;border:1px solid var(--line);
+          background:#0d0d0d;cursor:crosshair}
+  .navbox canvas{width:100%;height:100%;display:block}
+  .hint{color:#555;font-size:9px;letter-spacing:.05em}
+  .tbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .tbar input,.tbar select{background:var(--panel2);border:1px solid var(--line);
+      color:var(--txt);font-family:var(--mono);font-size:10px;padding:2px 6px}
+  .tbar input{width:150px}
+  .note{color:var(--dim);font-size:10px}
+  .tblbox{height:300px;overflow:auto;border:1px solid var(--line);background:var(--panel2)}
+  .tblbox.auto{height:auto;max-height:420px}
+  table{width:100%;border-collapse:collapse;font-size:11px;
+        font-variant-numeric:tabular-nums}
+  th{color:var(--dim);text-align:right;font-weight:400;border-bottom:1px solid var(--line);
+     padding:3px 6px;position:sticky;top:0;background:var(--panel2);cursor:pointer;
+     white-space:nowrap}
+  th.txt,td.txt{text-align:left}
+  th:hover{color:var(--amber)}
+  th.sorted{color:var(--amber)}
+  td{border-bottom:1px dotted #1c1c1c;padding:3px 6px;text-align:right;white-space:nowrap}
+  td:first-child{color:var(--dim)}
+  .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+  .section{background:var(--panel);border:1px solid var(--line);padding:8px;
+           display:flex;flex-direction:column;gap:6px}
+  footer{color:var(--dim);font-size:10px;letter-spacing:.06em;padding:8px 12px 20px;
+         display:flex;flex-wrap:wrap;gap:12px}
+  footer b{color:var(--amber);font-weight:400}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="code" id="code"></span>
+  <span class="ttl" id="title"></span>
+  <span class="ref" id="ref"></span>
+  <a class="back" href="../index.html">← TERMINAL</a>
+</div>
+<div class="wrap">
+  <div class="charts" id="panels"></div>
+  <div id="sections"></div>
+</div>
+<footer>
+  <span><b>AUTO-CRAWL</b> DAILY 00:00 KST · GITHUB ACTIONS</span>
+  <span id="gen"></span>
+</footer>
+<script>
+const PALETTE = ["#ffa500", "#79c0ff", "#d2a8ff", "#7ee787", "#ff7b72", "#ffa657",
+                 "#a5d6ff", "#f778ba", "#d4a72c", "#8ddb8c", "#ff9bce", "#9ecbff"];
+const CONFIG = __CONFIG__;
+const PANELS = {};
+
+function fmt(v){ return v === null || v === undefined ? "-" :
+  Number(v).toLocaleString("ko-KR", {maximumFractionDigits: 2}); }
+function sign(v){ if (v === null || v === undefined) return "-";
+  return (v > 0 ? "+" : "") + fmt(v); }
+function cls(v){ return v === null || v === undefined ? "flat" :
+  v > 0 ? "up" : v < 0 ? "down" : "flat"; }
+function ms(d){ return Date.parse(d + "T00:00:00Z"); }
+function dstr(t){ return new Date(t).toISOString().slice(0, 10); }
+function ds(key){
+  const d = CONFIG.datasets[key];
+  if (!d._ms) d._ms = d.points.map(p => ms(p[0]));
+  return d;
+}
+function pointsOf(key){
+  const d = ds(key);
+  return d._ms.map((t, i) => [t, d.points[i][1]]);
+}
+function colorOf(panel, key){
+  return PALETTE[panel.keys.indexOf(key) % PALETTE.length];
+}
+
+class Panel {
+  constructor(cfg){
+    this.cfg = cfg; this.keys = cfg.keys;
+    this.sel = (cfg.initial || cfg.keys.slice(0, 1)).slice();
+    this.navKey = cfg.navKey || this.sel[0];
+    this.win = null; this.sort = {key: "date", dir: -1}; this.filter = "";
+    this.full = null; this.navDrag = null;
+
+    const root = document.createElement("div");
+    root.className = "panel" + (cfg.span === 2 ? " wide" : "");
+    root.innerHTML = `
+      <div class="phead"><span class="ptitle">${cfg.title}</span>
+        <span class="spacer"></span>
+        <button class="btn" data-a="reset">FULL</button>
+        <button class="btn" data-a="csv">CSV ↓</button>
+        <button class="btn" data-a="xlsx">XLSX ↓</button></div>
+      <div class="chips"></div>
+      <div class="chartbox"><canvas></canvas></div>
+      <div class="navbox"><canvas></canvas></div>
+      <div class="hint">하단 스트립 드래그=기간 선택 · 차트 WHEEL=ZOOM · ALT+DRAG=PAN · 더블클릭=전체</div>
+      <div class="tbar"><input placeholder="filter: date / series">
+        <span class="note"></span></div>
+      <div class="tblbox"><table>
+        <thead><tr>
+          <th class="txt" data-key="date">DATE</th>
+          <th class="txt" data-key="series">SERIES</th>
+          <th data-key="value">VALUE</th>
+          <th data-key="change">CHANGE</th>
+          <th data-key="pct">CHANGE RATE (%)</th>
+        </tr></thead><tbody></tbody>
+      </table></div>`;
+    document.getElementById("panels").appendChild(root);
+    this.root = root;
+    this.chipsEl = root.querySelector(".chips");
+    this.table = root.querySelector("table");
+    this.note = root.querySelector(".note");
+    this.nav = root.querySelectorAll("canvas")[1];
+    root.querySelector("[data-a=reset]").onclick = () => this.reset();
+    root.querySelector("[data-a=csv]").onclick = () => this.download("csv");
+    root.querySelector("[data-a=xlsx]").onclick = () => this.download("xlsx");
+    root.querySelector("input").oninput = e => {
+      this.filter = e.target.value; this.renderTable(); };
+    this.table.querySelectorAll("th").forEach(th => th.onclick = () => {
+      const k = th.dataset.key;
+      this.sort = {key: k, dir: this.sort.key === k ? -this.sort.dir : -1};
+      this.renderTable(); });
+
+    if (cfg.fixed){
+      this.chipsEl.innerHTML =
+        `<span class="fixedlbl">${CONFIG.datasets[this.sel[0]].label}</span>`;
+    } else this.buildChips();
+
+    this.chart = new Chart(root.querySelectorAll("canvas")[0], {
+      type: "line",
+      data: {datasets: this.datasets()},
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        interaction: {mode: "nearest", intersect: false},
+        plugins: {
+          legend: {display: !cfg.fixed, position: "top",
+                   labels: {color: "#8f8f8f", boxWidth: 8, font: {size: 9}}},
+          tooltip: {displayColors: false, backgroundColor: "#111",
+            borderColor: "#3a3a3a", borderWidth: 1, titleColor: "#ffa500",
+            bodyColor: "#e6e6e6",
+            callbacks: {title: it => dstr(it[0].parsed.x),
+                        label: it => ` ${it.dataset.label} ${fmt(it.parsed.y)}`}},
+          zoom: {
+            zoom: {wheel: {enabled: true}, pinch: {enabled: true},
+              drag: {enabled: true, backgroundColor: "rgba(255,165,0,.12)",
+                     borderColor: "#ffa500", borderWidth: 1},
+              mode: "x", onZoomComplete: c => this.onWindow(c.chart)},
+            pan: {enabled: true, mode: "x", modifierKey: "Alt",
+                  onPanComplete: c => this.onWindow(c.chart)},
+            limits: {x: {min: "original", max: "original"}},
+          },
+        },
+        scales: {
+          x: {type: "linear", ticks: {color: "#777", maxTicksLimit: 8,
+              callback: v => dstr(v), font: {size: 9, family: "Consolas"}},
+              grid: {color: "#161616"}},
+          y: {ticks: {color: "#777", font: {size: 9, family: "Consolas"}},
+              grid: {color: "#161616"}},
+        },
+      },
+    });
+    this.full = [this.chart.scales.x.min, this.chart.scales.x.max];
+    this.bindNav();
+    this.drawNav();
+    this.renderTable();
+    root.querySelectorAll("canvas")[0].ondblclick = () => this.reset();
+  }
+  datasets(){
+    return this.sel.map(k => ({
+      label: CONFIG.datasets[k].label,
+      data: pointsOf(k).map(p => ({x: p[0], y: p[1]})),
+      borderColor: colorOf(this, k), backgroundColor: "transparent",
+      borderWidth: 1.4, pointRadius: 0, pointHoverRadius: 3, tension: .15,
+    }));
+  }
+  buildChips(){
+    this.chipsEl.innerHTML = this.keys.map(k =>
+      `<span class="chip ${this.sel.includes(k) ? "on" : ""}" data-k="${k}"
+        style="${this.sel.includes(k) ? "" :
+          `border-color:${colorOf(this, k)};color:${colorOf(this, k)}`}">
+        ${CONFIG.datasets[k].label}</span>`).join("");
+    this.chipsEl.querySelectorAll(".chip").forEach(chip => chip.onclick = () => {
+      const k = chip.dataset.k;
+      if (this.sel.includes(k)){
+        if (this.sel.length > 1) this.sel = this.sel.filter(x => x !== k);
+      } else this.sel.push(k);
+      this.buildChips(); this.refresh(); });
+  }
+  onWindow(chart){
+    const x = chart.scales.x, DAY = 86400000;
+    if (this.full && x.min <= this.full[0] + DAY && x.max >= this.full[1] - DAY)
+      this.win = null;
+    else this.win = [x.min, x.max];
+    this.drawNav(); this.renderTable();
+  }
+  applyWindow(t0, t1){
+    this.chart.zoomScale("x", {min: t0, max: t1}, "none");
+    this.win = [t0, t1]; this.drawNav(); this.renderTable();
+  }
+  reset(){ this.chart.resetZoom(); this.win = null;
+    this.drawNav(); this.renderTable(); }
+  refresh(){ this.chart.data.datasets = this.datasets();
+    this.chart.update("none"); this.renderTable(); }
+  bindNav(){
+    const cv = this.nav;
+    cv.addEventListener("pointerdown", e => {
+      cv.setPointerCapture(e.pointerId);
+      this.navDrag = {x0: e.offsetX, x1: e.offsetX}; });
+    cv.addEventListener("pointermove", e => {
+      if (this.navDrag){ this.navDrag.x1 = e.offsetX; this.drawNav(); } });
+    cv.addEventListener("pointerup", e => {
+      if (!this.navDrag) return;
+      const {x0, x1} = this.navDrag; this.navDrag = null;
+      if (Math.abs(x1 - x0) < 5){ this.drawNav(); return; }
+      this.applyWindow(this.navX2T(Math.min(x0, x1)), this.navX2T(Math.max(x0, x1)));
+    });
+  }
+  navX2T(x){ const w = this.nav.clientWidth || 1;
+    return this.full[0] + (x / w) * (this.full[1] - this.full[0]); }
+  navT2X(t){ const w = this.nav.clientWidth || 1;
+    return ((t - this.full[0]) / (this.full[1] - this.full[0])) * w; }
+  drawNav(){
+    const cv = this.nav, ctx = cv.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (!w || !h) return;
+    cv.width = w * dpr; cv.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#0d0d0d"; ctx.fillRect(0, 0, w, h);
+    const pts = pointsOf(this.navKey);
+    if (pts.length){
+      let vmin = Infinity, vmax = -Infinity;
+      for (const p of pts){ if (p[1] < vmin) vmin = p[1]; if (p[1] > vmax) vmax = p[1]; }
+      const span = (vmax - vmin) || 1;
+      ctx.strokeStyle = "rgba(255,165,0,.75)"; ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let i = 0; i < pts.length; i++){
+        const x = this.navT2X(pts[i][0]);
+        const y = h - 4 - ((pts[i][1] - vmin) / span) * (h - 8);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    const sel = this.navDrag
+      ? [Math.min(this.navDrag.x0, this.navDrag.x1),
+         Math.max(this.navDrag.x0, this.navDrag.x1)]
+      : (this.win ? [this.navT2X(this.win[0]), this.navT2X(this.win[1])] : null);
+    if (sel){
+      ctx.fillStyle = "rgba(0,0,0,.62)";
+      ctx.fillRect(0, 0, sel[0], h); ctx.fillRect(sel[1], 0, w - sel[1], h);
+      ctx.strokeStyle = "#ffa500"; ctx.lineWidth = 1;
+      ctx.strokeRect(sel[0] + .5, .5, Math.max(sel[1] - sel[0] - 1, 1), h - 1);
+    }
+    ctx.fillStyle = "#555"; ctx.font = "9px Consolas,monospace";
+    ctx.fillText(dstr(this.full[0]), 3, h - 3);
+    const right = dstr(this.full[1]);
+    ctx.fillText(right, w - ctx.measureText(right).width - 3, h - 3);
+  }
+  windowRows(){
+    const rows = [];
+    for (const k of this.sel){
+      const d = CONFIG.datasets[k];
+      const pts = pointsOf(k);
+      for (let i = 0; i < pts.length; i++){
+        const t = pts[i][0];
+        if (this.win && (t < this.win[0] || t > this.win[1])) continue;
+        const prev = i > 0 ? pts[i - 1][1] : null;
+        const cur = pts[i][1];
+        rows.push({date: dstr(t), t, series: d.label, value: cur,
+          change: prev === null ? null : +((cur - prev).toFixed(2)),
+          pct: (prev === null || prev === 0) ? null
+               : +(((cur - prev) / Math.abs(prev)) * 100).toFixed(2)});
+      }
+    }
+    return rows;
+  }
+  filtered(){
+    let rows = this.windowRows();
+    const f = this.filter.trim().toLowerCase();
+    if (f) rows = rows.filter(r =>
+      r.series.toLowerCase().includes(f) || r.date.includes(f));
+    const {key, dir} = this.sort;
+    rows.sort((a, b) => (a[key] < b[key] ? -1 : a[key] > b[key] ? 1 : 0) * dir);
+    return rows;
+  }
+  renderTable(){
+    const rows = this.filtered();
+    this.lastRows = rows;
+    const show = rows.slice(0, 500);
+    this.table.querySelector("tbody").innerHTML = show.map(r => `
+      <tr><td>${r.date}</td><td class="txt">${r.series}</td><td>${fmt(r.value)}</td>
+      <td class="${cls(r.change)}">${sign(r.change)}</td>
+      <td class="${cls(r.pct)}">${sign(r.pct)}</td></tr>`).join("");
+    this.note.textContent =
+      `${rows.length.toLocaleString()} rows` +
+      (rows.length > 500 ? " · 최신 500행 표시" : "") +
+      (this.win ? ` · ${dstr(this.win[0])} ~ ${dstr(this.win[1])}` : " · 전체 기간");
+    this.table.querySelectorAll("th").forEach(th => {
+      th.classList.toggle("sorted", th.dataset.key === this.sort.key);
+      th.textContent = th.textContent.replace(/ [▲▼]$/, "") +
+        (th.dataset.key === this.sort.key ? (this.sort.dir > 0 ? " ▲" : " ▼") : "");
+    });
+  }
+  download(kind){
+    const rows = this.filtered();
+    const head = ["Date", "Series", "Value", "Change", "Change Rate(%)"];
+    const aoa = [head, ...rows.map(r =>
+      [r.date, r.series, r.value, r.change, r.pct])];
+    const tag = `${CONFIG.id}_${this.sel.join("+")}`.replace(/[^A-Za-z0-9가-힣+_]/g, "_");
+    exportRows(kind, aoa, tag, "DETAIL");
+  }
+}
+
+function exportRows(kind, aoa, tag, sheet){
+  if (kind === "csv"){
+    const csv = "\\uFEFF" + aoa.map(line => line.map(v =>
+      v === null || v === undefined ? "" : String(v)).join(",")).join("\\r\\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
+    a.download = `${tag}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  } else {
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheet);
+    XLSX.writeFile(wb, `${tag}.xlsx`);
+  }
+}
+
+function buildSection(sec){
+  const box = document.createElement("div");
+  box.className = "section";
+  if (sec.type === "static"){
+    box.innerHTML = `
+      <div class="tbar"><span class="ptitle">${sec.title}</span>
+        <span class="note">${sec.rows.length} rows</span>
+        <span class="spacer"></span>
+        <button class="btn" data-a="csv">CSV ↓</button>
+        <button class="btn" data-a="xlsx">XLSX ↓</button></div>
+      <div class="tblbox auto"><table><thead><tr>${sec.cols.map((c, i) =>
+        `<th class="${i === 0 ? "txt" : ""}">${c}</th>`).join("")}</tr></thead>
+        <tbody>${sec.rows.map(r => `<tr>${r.map((v, i) =>
+          `<td class="${i === 0 ? "txt" : ""}">${v === null ? "-" : fmt(v)}</td>`).join("")}</tr>`).join("")}
+        </tbody></table></div>`;
+    box.querySelector("[data-a=csv]").onclick = () =>
+      exportRows("csv", [sec.cols, ...sec.rows], sec.tag, "DATA");
+    box.querySelector("[data-a=xlsx]").onclick = () =>
+      exportRows("xlsx", [sec.cols, ...sec.rows], sec.tag, "DATA");
+  }
+  if (sec.type === "rank"){
+    const dates = sec.dates;
+    box.innerHTML = `
+      <div class="tbar"><span class="ptitle">${sec.title}</span>
+        <select>${dates.map(d => `<option>${d}</option>`).join("")}</select>
+        <input placeholder="filter: operator">
+        <span class="note"></span>
+        <span class="spacer"></span>
+        <button class="btn" data-a="csv">CSV ↓</button>
+        <button class="btn" data-a="xlsx">XLSX ↓</button></div>
+      <div class="tblbox"><table><thead><tr>${sec.cols.map((c, i) =>
+        `<th class="${i <= 1 ? "txt" : ""}" data-i="${i}">${c}</th>`).join("")}</tr></thead>
+        <tbody></tbody></table></div>`;
+    const sel = box.querySelector("select");
+    const inp = box.querySelector("input");
+    const note = box.querySelector(".note");
+    const tbody = box.querySelector("tbody");
+    let sortI = 0, sortDir = 1, filter = "";
+    const render = () => {
+      let rows = (sec.rows[sel.value] || []).slice();
+      if (filter) rows = rows.filter(r =>
+        String(r[1]).toLowerCase().includes(filter));
+      rows.sort((a, b) => (a[sortI] < b[sortI] ? -1 : a[sortI] > b[sortI] ? 1 : 0) * sortDir);
+      tbody.innerHTML = rows.map(r => `<tr>${r.map((v, i) =>
+        `<td class="${i <= 1 ? "txt" : ""}">${v === null ? "-" : fmt(v)}</td>`).join("")}</tr>`).join("");
+      note.textContent = `${rows.length} rows · ${sel.value}`;
+    };
+    sel.onchange = render;
+    inp.oninput = e => { filter = e.target.value.toLowerCase(); render(); };
+    box.querySelectorAll("th").forEach(th => th.onclick = () => {
+      const i = Number(th.dataset.i);
+      if (sortI === i) sortDir = -sortDir; else { sortI = i; sortDir = i <= 1 ? 1 : -1; }
+      render(); });
+    const aoa = () => [sec.cols, ...(sec.rows[sel.value] || [])];
+    box.querySelector("[data-a=csv]").onclick = () =>
+      exportRows("csv", aoa(), sec.tag + "_" + sel.value, "RANK");
+    box.querySelector("[data-a=xlsx]").onclick = () =>
+      exportRows("xlsx", aoa(), sec.tag + "_" + sel.value, "RANK");
+    render();
+  }
+  document.getElementById("sections").appendChild(box);
+}
+
+document.getElementById("code").textContent = CONFIG.id.toUpperCase();
+document.getElementById("title").textContent = CONFIG.title;
+document.getElementById("ref").textContent = "REF " + (CONFIG.updated || "-");
+document.getElementById("gen").innerHTML =
+  "<b>GENERATED</b> " + (CONFIG.generated || "-");
+if (window.ChartZoom) Chart.register(window.ChartZoom);
+CONFIG.panels.forEach(cfg => { PANELS[cfg.id] = new Panel(cfg); });
+(CONFIG.sections || []).forEach(buildSection);
+window.addEventListener("resize", () =>
+  Object.values(PANELS).forEach(p => p.drawNav()));
+</script>
+</body>
+</html>
+"""
+
+
+def _detail_write(module_id: str, config: dict) -> None:
+    config["generated"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    shell = (DETAIL_SHELL
+             .replace("__CONFIG__", json.dumps(config, ensure_ascii=False,
+                                               separators=(",", ":")))
+             .replace("__PAGE_TITLE__", f"{module_id.upper()} DETAIL"))
+    page_path = ROOT / module_id / "detail.html"
+    temp = page_path.with_suffix(".html.tmp")
+    temp.write_text(shell, encoding="utf-8")
+    temp.replace(page_path)
+    log(f"{module_id}/detail.html 작성 완료 ({page_path.stat().st_size:,} bytes)")
+
+
+def _pairs(rows, date_key, val_key, dates=None):
+    out = []
+    for i, r in enumerate(rows):
+        v = r[val_key]
+        if v is None:
+            continue
+        d = dates[i] if dates is not None else r[date_key]
+        out.append([d, r2(v)])
+    return out
+
+
+def _detail_updated(datasets: dict) -> str:
+    dates = [p[0] for d in datasets.values() for p in d["points"] if p[0]]
+    return max(dates) if dates else "-"
+
+
+def build_detail_linerlytica(conn) -> None:
+    rows = conn.execute(
+        "SELECT snapshot_date, ship_status, ships, teu FROM fleet_snapshot "
+        "ORDER BY snapshot_date"
+    ).fetchall()
+    if not rows:
+        return
+    by = {}
+    for r in rows:
+        by.setdefault(r["ship_status"], []).append(r)
+    statuses = sorted(by)
+    total_status = next((s for s in statuses if "total" in s.lower()), None)
+    datasets = {}
+    for st in statuses:
+        datasets[f"teu|{st}"] = {"label": f"{st} (TEU)",
+                                 "points": _pairs(by[st], "snapshot_date", "teu")}
+        datasets[f"ships|{st}"] = {"label": f"{st} (척)",
+                                   "points": _pairs(by[st], "snapshot_date", "ships")}
+    if total_status is None:
+        sums = {}
+        for r in rows:
+            e = sums.setdefault(r["snapshot_date"], [0, 0])
+            e[0] += r["ships"] or 0
+            e[1] += r["teu"] or 0
+        datasets["teu|TOTAL"] = {"label": "선대 합계 (TEU)",
+                                 "points": [[d, sums[d][1]] for d in sorted(sums)]}
+        datasets["ships|TOTAL"] = {"label": "선대 합계 (척)",
+                                   "points": [[d, sums[d][0]] for d in sorted(sums)]}
+        total_status = "TOTAL"
+    others = [s for s in statuses if s != total_status]
+    teu_keys = [f"teu|{total_status}"] + [f"teu|{s}" for s in others]
+    ship_keys = [f"ships|{total_status}"] + [f"ships|{s}" for s in others]
+    _detail_write("linerlytica", {
+        "id": "linerlytica", "title": "컨테이너 선대 — Linerlytica (월간 17일)",
+        "updated": _detail_updated(datasets), "datasets": datasets,
+        "panels": [
+            {"id": "teu", "title": "선대 TEU — 상태별 중첩", "keys": teu_keys,
+             "initial": [f"teu|{total_status}"], "navKey": f"teu|{total_status}"},
+            {"id": "ships", "title": "선대 선박수 — 상태별 중첩", "keys": ship_keys,
+             "initial": [f"ships|{total_status}"], "navKey": f"ships|{total_status}"},
+        ],
+    })
+
+
+def build_detail_alphaliner(conn) -> None:
+    hist = {}
+    for r in conn.execute(
+        "SELECT data_date AS d, total_ships AS s, total_teu AS t FROM alphaliner_master"
+    ):
+        hist[r["d"]] = (r["s"], r["t"])
+    for r in conn.execute(
+        "SELECT snapshot_date AS d, top100_ships AS s, top100_teu AS t FROM snapshot_meta"
+    ):
+        hist[r["d"]] = (r["s"], r["t"])
+    if not hist:
+        return
+    dates = sorted(hist)
+    datasets = {
+        "teu": {"label": "Top100 선대 (TEU)",
+                "points": [[d, hist[d][1]] for d in dates]},
+        "ships": {"label": "Active Ships (Top100)",
+                  "points": [[d, hist[d][0]] for d in dates]},
+    }
+    rowsby = {}
+    for r in conn.execute(
+        "SELECT m.data_date AS d, d.rank AS rk, d.operator_name AS nm, "
+        "       d.total_teu AS teu, d.total_ships AS sh, d.market_share AS ms "
+        "FROM alphaliner_detail d JOIN alphaliner_master m "
+        "  ON m.snapshot_id = d.snapshot_id"
+    ):
+        rowsby.setdefault(r["d"], []).append(
+            [r["rk"], r["nm"], r["teu"], r["sh"], r["ms"]])
+    for r in conn.execute(
+        "SELECT snapshot_date AS d, rank AS rk, "
+        "       COALESCE(operator_name, operator) AS nm, total_teu AS teu, "
+        "       total_ships AS sh, market_share AS ms FROM operator_snapshots"
+    ):
+        rowsby.setdefault(r["d"], []).append(
+            [r["rk"], r["nm"], r["teu"], r["sh"], r["ms"]])
+    for d in rowsby:
+        rowsby[d].sort(key=lambda x: (x[0] is None, x[0]))
+    _detail_write("alphaliner", {
+        "id": "alphaliner", "title": "Top100 선사 — Alphaliner",
+        "updated": dates[-1], "datasets": datasets,
+        "panels": [
+            {"id": "teu", "title": "Top100 선대 (TEU) 추이", "keys": ["teu"],
+             "fixed": True, "initial": ["teu"]},
+            {"id": "ships", "title": "Active Ships (Top100) 추이", "keys": ["ships"],
+             "fixed": True, "initial": ["ships"]},
+        ],
+        "sections": [{
+            "type": "rank", "title": "Top100 선사 순위 — 스냅샷 날짜 선택",
+            "dates": sorted(rowsby, reverse=True),
+            "cols": ["RANK", "OPERATOR", "TEU", "SHIPS", "SHARE (%)"],
+            "rows": rowsby, "tag": "alphaliner_top100",
+        }],
+    })
+
+
+def build_detail_forwarders(conn) -> None:
+    latest = conn.execute("SELECT MAX(date) FROM forwarders").fetchone()[0]
+    if not latest:
+        return
+    providers = [r[0] for r in conn.execute(
+        "SELECT provider FROM forwarders WHERE date = ? ORDER BY rank LIMIT 12",
+        (latest,))]
+    per = {}
+    for r in conn.execute(
+        "SELECT date, provider, revenue, teu, air_tons FROM forwarders ORDER BY date"
+    ):
+        per.setdefault(r["provider"], {})[r["date"]] = r
+    datasets = {}
+    for p in providers:
+        pts = sorted(per.get(p, {}).items())
+        datasets[f"rev|{p}"] = {"label": p, "points": _pairs(
+            [v for _, v in pts], None, "revenue", dates=[d for d, _ in pts])}
+        datasets[f"teu|{p}"] = {"label": p, "points": _pairs(
+            [v for _, v in pts], None, "teu", dates=[d for d, _ in pts])}
+        datasets[f"ton|{p}"] = {"label": p, "points": _pairs(
+            [v for _, v in pts], None, "air_tons", dates=[d for d, _ in pts])}
+    mk = lambda m, i: [f"{m}|{p}" for p in providers[:i]]
+    _detail_write("forwarders", {
+        "id": "forwarders", "title": "포워더 순위 — Armstrong & Associates",
+        "updated": latest, "datasets": datasets,
+        "panels": [
+            {"id": "rev", "title": "매출 ($M) — 회사별 중첩", "keys": mk("rev", 12),
+             "initial": mk("rev", 3), "navKey": f"rev|{providers[0]}"},
+            {"id": "teu", "title": "해양 물동량 (TEU) — 회사별 중첩",
+             "keys": mk("teu", 12), "initial": mk("teu", 3),
+             "navKey": f"teu|{providers[0]}"},
+            {"id": "ton", "title": "항공 물동량 (TON) — 회사별 중첩", "span": 2,
+             "keys": mk("ton", 12), "initial": mk("ton", 3),
+             "navKey": f"ton|{providers[0]}"},
+        ],
+    })
+
+
+def build_detail_air(conn) -> None:
+    master = conn.execute(
+        "SELECT snapshot_id, data_date, overall_index FROM tac_master "
+        "ORDER BY data_date"
+    ).fetchall()
+    if not master:
+        return
+    sid2date = {m["snapshot_id"]: m["data_date"] for m in master}
+    datasets = {"overall": {"label": "TAC 종합", "points": _pairs(
+        master, "data_date", "overall_index")}}
+    routes = {}
+    for r in conn.execute(
+        "SELECT snapshot_id, origin, destination, index_value FROM tac_detail"
+    ):
+        name = f"{r['origin']}-{r['destination']}"
+        d = sid2date.get(r["snapshot_id"])
+        if d and r["index_value"] is not None:
+            routes.setdefault(name, {})[d] = r["index_value"]
+    for name, m in routes.items():
+        datasets[name] = {"label": name,
+                          "points": [[d, r2(m[d])] for d in sorted(m)]}
+    route_keys = [k for k in datasets if k != "overall"]
+    _detail_write("air", {
+        "id": "air", "title": "항공운임 — TAC Index (항로별 중첩)",
+        "updated": master[-1]["data_date"], "datasets": datasets,
+        "panels": [{
+            "id": "routes", "title": "TAC 항로 지수 — 중첩 비교", "span": 2,
+            "keys": route_keys + ["overall"], "initial": route_keys,
+            "navKey": route_keys[0] if route_keys else "overall",
+        }],
+    })
+
+
+def build_detail_oil(conn) -> None:
+    prices = conn.execute(
+        "SELECT DATE, Dubai, Brent, WTI FROM oil_prices ORDER BY DATE"
+    ).fetchall()
+    datasets = {}
+    for column in ("Dubai", "Brent", "WTI"):
+        datasets[column] = {"label": column, "points": _pairs(prices, "DATE", column)}
+    for port in ("Rotterdam", "Singapore", "Fujairah"):
+        rows = conn.execute(
+            "SELECT date_str, price FROM product_vlsfo WHERE port = ? "
+            "ORDER BY date_str", (port,)).fetchall()
+        datasets[port] = {"label": port, "points": _pairs(rows, "date_str", "price")}
+    sections = []
+    fc = conn.execute(
+        "SELECT Period, VLSFO, MGO, LSMGO, HSFO FROM bunker_forecast "
+        "WHERE graph_date = (SELECT MAX(graph_date) FROM bunker_forecast) "
+        "ORDER BY Period"
+    ).fetchall()
+    if fc:
+        sections.append({
+            "type": "static", "title": "벙커유 전망 — Opinet ($/ton)",
+            "cols": ["PERIOD", "VLSFO", "MGO", "LSMGO", "HSFO"],
+            "rows": [[r["Period"], r2(r["VLSFO"]), r2(r["MGO"]), r2(r["LSMGO"]),
+                      r2(r["HSFO"])] for r in fc],
+            "tag": "oil_forecast",
+        })
+    _detail_write("oil", {
+        "id": "oil", "title": "유가 / 벙커링 — Crude & VLSFO",
+        "updated": _detail_updated(datasets), "datasets": datasets,
+        "panels": [
+            {"id": "crude", "title": "CRUDE OIL ($/배럴) — 3지수 중첩",
+             "keys": ["Dubai", "Brent", "WTI"],
+             "initial": ["Dubai", "Brent", "WTI"], "navKey": "Dubai"},
+            {"id": "vlsfo", "title": "VLSFO ($/ton) — 항만별 중첩",
+             "keys": ["Rotterdam", "Singapore", "Fujairah"],
+             "initial": ["Rotterdam", "Singapore", "Fujairah"],
+             "navKey": "Rotterdam"},
+        ],
+        "sections": sections,
+    })
+
+
+def build_detail_macro(conn) -> None:
+    gscpi = conn.execute(
+        "SELECT date, value FROM gscpi_series ORDER BY date"
+    ).fetchall()
+    datasets = {"gscpi": {"label": "GSCPI", "points": _pairs(gscpi, "date", "value")}}
+    for ind, lab in (("GDP_GROWTH", "GDP 성장률 (월드)"),
+                     ("CPI_INFLATION", "물가상승률 (월드)")):
+        rows = conn.execute(
+            "SELECT year, value FROM macro_series "
+            "WHERE indicator = ? AND country_code = 'WLD' ORDER BY year",
+            (ind,)).fetchall()
+        datasets[ind] = {"label": lab,
+                         "points": [[str(r["year"]), r2(r["value"])] for r in rows]}
+    _detail_write("macro", {
+        "id": "macro", "title": "거시경제 — GSCPI / GDP / CPI",
+        "updated": _detail_updated(datasets), "datasets": datasets,
+        "panels": [
+            {"id": "gscpi", "title": "GSCPI — 공급망 압력 (월간)",
+             "keys": ["gscpi"], "fixed": True, "initial": ["gscpi"]},
+            {"id": "world", "title": "월드 거시 — GDP / CPI (%)",
+             "keys": ["GDP_GROWTH", "CPI_INFLATION"],
+             "initial": ["GDP_GROWTH", "CPI_INFLATION"], "navKey": "GDP_GROWTH"},
+        ],
+    })
+
+
+DETAIL_BUILDERS = {
+    "linerlytica": build_detail_linerlytica,
+    "alphaliner": build_detail_alphaliner,
+    "forwarders": build_detail_forwarders,
+    "air": build_detail_air,
+    "oil": build_detail_oil,
+    "macro": build_detail_macro,
+}
+
+
 def build_summary() -> dict:
     modules = []
     for module in MODULES:
@@ -947,6 +1673,11 @@ def build_summary() -> dict:
             entry.update(SUMMARIZERS[module["id"]](conn))
             if module["id"] == "sea":
                 build_sea_page(conn)
+            if module["id"] in DETAIL_BUILDERS:
+                try:
+                    DETAIL_BUILDERS[module["id"]](conn)
+                except Exception as detail_exc:  # noqa: BLE001
+                    log(f"[detail] {module['id']} 페이지 생성 실패: {detail_exc}")
         except Exception as exc:  # noqa: BLE001
             entry["error"] = f"{type(exc).__name__}: {exc}"
         finally:
