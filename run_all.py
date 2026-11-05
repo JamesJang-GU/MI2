@@ -213,35 +213,46 @@ def summarize_alphaliner(conn):
     """
     out = {"metrics": [], "series": []}
     # 레거시(alphaliner_master) 이력 + 신규(snapshot_meta) 스냅샷을 날짜별로 병합
+    # Active Ships = 공식 글로벌 선대(global_ships), TEU = Top100 합계
     hist = {}
     for r in conn.execute(
-        "SELECT data_date AS d, total_ships AS ships, total_teu AS teu "
-        "FROM alphaliner_master ORDER BY data_date"
+        "SELECT data_date AS d, global_ships AS g, total_ships AS s, "
+        "       total_teu AS teu FROM alphaliner_master ORDER BY data_date"
     ):
-        hist[r["d"]] = (r["ships"], r["teu"])
+        hist[r["d"]] = (_clean(r["g"]) or _clean(r["s"]), _clean(r["teu"]))
     for r in conn.execute(
-        "SELECT snapshot_date AS d, top100_ships AS ships, top100_teu AS teu "
+        "SELECT snapshot_date AS d, global_ships AS g, top100_teu AS teu "
         "FROM snapshot_meta ORDER BY snapshot_date"
     ):
-        hist[r["d"]] = (r["ships"], r["teu"])
+        hist[r["d"]] = (_clean(r["g"]), _clean(r["teu"]))
     if not hist:
         return out
     dates = sorted(hist)
     latest_d = dates[-1]
-    prev_d = dates[-2] if len(dates) > 1 else None
-    ships, teu = hist[latest_d]
-    pships, pteu = hist[prev_d] if prev_d else (None, None)
+    ship_dates = [d for d in dates if hist[d][0] is not None]
+    prev_ship_d = ship_dates[-2] if len(ship_dates) > 1 else None
+    teu_dates = [d for d in dates if hist[d][1] is not None]
+    prev_teu_d = teu_dates[-2] if len(teu_dates) > 1 else None
+    ships = hist[latest_d][0]
+    teu = hist[latest_d][1]
     out["metrics"].append(
-        metric("Active Ships", ships, pships, latest_d, unit="척", prev_asof=prev_d)
+        metric("Active Ships", ships,
+               hist[prev_ship_d][0] if prev_ship_d else None, latest_d,
+               unit="척", prev_asof=prev_ship_d)
     )
     out["metrics"].append(
-        metric("선대 (TEU)", teu, pteu, latest_d, unit="TEU", prev_asof=prev_d)
+        metric("Top100 선대", teu,
+               hist[prev_teu_d][1] if prev_teu_d else None, latest_d,
+               unit="TEU", prev_asof=prev_teu_d)
     )
-    for idx, label in ((0, "Active Ships"), (1, "선대 (TEU)")):
-        out["series"].append(
-            {"label": label,
-             "points": year_filter([[d, hist[d][idx]] for d in dates])}
-        )
+    out["series"].append(
+        {"label": "Active Ships",
+         "points": year_filter([[d, hist[d][0]] for d in ship_dates])}
+    )
+    out["series"].append(
+        {"label": "Top100 선대 (TEU)",
+         "points": year_filter([[d, hist[d][1]] for d in teu_dates])}
+    )
     out["updated"] = latest_d
     return out
 
@@ -1042,6 +1053,14 @@ function pointsOf(key){
 function colorOf(panel, key){
   return PALETTE[panel.keys.indexOf(key) % PALETTE.length];
 }
+function flagImg(cc){
+  const c = String(cc || "").toUpperCase().slice(0, 2);
+  if (!/^[A-Z]{2}$/.test(c)) return "";
+  const cps = [...c].map(ch => (0x1F1E6 + ch.charCodeAt(0) - 65).toString(16)).join("-");
+  return `<img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/${cps}.svg"
+    alt="${c}" style="width:16px;height:12px;vertical-align:-2px;margin-right:6px;
+    border:1px solid #333;background:#111">`;
+}
 
 class Panel {
   constructor(cfg){
@@ -1339,8 +1358,14 @@ function buildSection(sec){
       if (filter) rows = rows.filter(r =>
         String(r[1]).toLowerCase().includes(filter));
       rows.sort((a, b) => (a[sortI] < b[sortI] ? -1 : a[sortI] > b[sortI] ? 1 : 0) * sortDir);
-      tbody.innerHTML = rows.map(r => `<tr>${r.map((v, i) =>
-        `<td class="${i <= 1 ? "txt" : ""}">${v === null ? "-" : fmt(v)}</td>`).join("")}</tr>`).join("");
+      tbody.innerHTML = rows.map(r => `<tr>${sec.cols.map((c, i) => {
+        const v = r[i];
+        const flag = (i === (sec.nameCol === undefined ? 1 : sec.nameCol) &&
+          sec.flagFrom !== undefined && r[sec.flagFrom])
+          ? flagImg(r[sec.flagFrom]) : "";
+        return `<td class="${i <= 1 ? "txt" : ""}">${flag}${
+          v === null || v === undefined ? "-" : fmt(v)}</td>`;
+      }).join("")}</tr>`).join("");
       note.textContent = `${rows.length} rows · ${sel.value}`;
     };
     sel.onchange = render;
@@ -1349,7 +1374,8 @@ function buildSection(sec){
       const i = Number(th.dataset.i);
       if (sortI === i) sortDir = -sortDir; else { sortI = i; sortDir = i <= 1 ? 1 : -1; }
       render(); });
-    const aoa = () => [sec.cols, ...(sec.rows[sel.value] || [])];
+    const aoa = () => [sec.cols, ...(sec.rows[sel.value] || [])
+      .map(r => r.slice(0, sec.cols.length))];
     box.querySelector("[data-a=csv]").onclick = () =>
       exportRows("csv", aoa(), sec.tag + "_" + sel.value, "RANK");
     box.querySelector("[data-a=xlsx]").onclick = () =>
@@ -1386,6 +1412,17 @@ def _detail_write(module_id: str, config: dict) -> None:
     temp.write_text(shell, encoding="utf-8")
     temp.replace(page_path)
     log(f"{module_id}/detail.html 작성 완료 ({page_path.stat().st_size:,} bytes)")
+
+
+def _clean(v):
+    """NaN/NULL/빈문자열 → None 정규화 (sqlite REAL NaN 및 pandas NaN 대비)."""
+    if v is None:
+        return None
+    if isinstance(v, float) and v != v:  # NaN
+        return None
+    if isinstance(v, str) and v.strip().lower() in ("", "nan", "none", "null"):
+        return None
+    return v
 
 
 def _pairs(rows, date_key, val_key, dates=None):
@@ -1449,55 +1486,95 @@ def build_detail_linerlytica(conn) -> None:
 
 
 def build_detail_alphaliner(conn) -> None:
+    # Active Ships = 공식 글로벌(global_ships), TEU = Top100 합계
     hist = {}
     for r in conn.execute(
-        "SELECT data_date AS d, total_ships AS s, total_teu AS t FROM alphaliner_master"
+        "SELECT data_date AS d, global_ships AS g, total_ships AS s, "
+        "       total_teu AS t FROM alphaliner_master"
     ):
-        hist[r["d"]] = (r["s"], r["t"])
+        hist[r["d"]] = (_clean(r["g"]) or _clean(r["s"]), _clean(r["t"]))
     for r in conn.execute(
-        "SELECT snapshot_date AS d, top100_ships AS s, top100_teu AS t FROM snapshot_meta"
+        "SELECT snapshot_date AS d, global_ships AS g, top100_teu AS t "
+        "FROM snapshot_meta"
     ):
-        hist[r["d"]] = (r["s"], r["t"])
+        hist[r["d"]] = (_clean(r["g"]), _clean(r["t"]))
     if not hist:
         return
     dates = sorted(hist)
     datasets = {
         "teu": {"label": "Top100 선대 (TEU)",
-                "points": [[d, hist[d][1]] for d in dates]},
-        "ships": {"label": "Active Ships (Top100)",
-                  "points": [[d, hist[d][0]] for d in dates]},
+                "points": [[d, hist[d][1]] for d in dates if hist[d][1] is not None]},
+        "ships": {"label": "Active Ships (공식 글로벌)",
+                  "points": [[d, hist[d][0]] for d in dates if hist[d][0] is not None]},
     }
+    # Existing / Owned / Chartered / Orderbook 집계 (날짜별)
+    comp = {}
+
+    def _add_comp(d, owned, chartered, orderbook):
+        owned, chartered, orderbook = (_clean(owned), _clean(chartered),
+                                       _clean(orderbook))
+        if owned is None and chartered is None and orderbook is None:
+            return
+        e = comp.setdefault(d, {"owned": 0, "chartered": 0, "orderbook": 0})
+        e["owned"] += owned or 0
+        e["chartered"] += chartered or 0
+        e["orderbook"] += orderbook or 0
+
     rowsby = {}
     for r in conn.execute(
         "SELECT m.data_date AS d, d.rank AS rk, d.operator_name AS nm, "
-        "       d.total_teu AS teu, d.total_ships AS sh, d.market_share AS ms "
+        "       d.total_teu AS teu, d.total_ships AS sh, d.market_share AS ms, "
+        "       d.existing_owned_teu AS ow, d.existing_chartered_teu AS ch, "
+        "       d.orderbook_teu AS ob, NULL AS cc "
         "FROM alphaliner_detail d JOIN alphaliner_master m "
         "  ON m.snapshot_id = d.snapshot_id"
     ):
-        rowsby.setdefault(r["d"], []).append(
-            [r["rk"], r["nm"], r["teu"], r["sh"], r["ms"]])
+        rowsby.setdefault(r["d"], []).append([
+            _clean(r["rk"]), _clean(r["nm"]), _clean(r["teu"]), _clean(r["sh"]),
+            _clean(r["ms"]), _clean(r["ow"]), _clean(r["ch"]), _clean(r["ob"]),
+            _clean(r["cc"])])
+        _add_comp(r["d"], r["ow"], r["ch"], r["ob"])
     for r in conn.execute(
-        "SELECT snapshot_date AS d, rank AS rk, "
-        "       COALESCE(operator_name, operator) AS nm, total_teu AS teu, "
-        "       total_ships AS sh, market_share AS ms FROM operator_snapshots"
+        "SELECT snapshot_date AS d, rank AS rk, operator_name AS nm1, "
+        "       operator AS nm2, total_teu AS teu, total_ships AS sh, "
+        "       market_share AS ms, owned_teu AS ow, chartered_teu AS ch, "
+        "       orderbook_teu AS ob, country AS cc FROM operator_snapshots"
     ):
-        rowsby.setdefault(r["d"], []).append(
-            [r["rk"], r["nm"], r["teu"], r["sh"], r["ms"]])
+        nm = _clean(r["nm1"]) or _clean(r["nm2"])
+        rowsby.setdefault(r["d"], []).append([
+            _clean(r["rk"]), nm, _clean(r["teu"]), _clean(r["sh"]),
+            _clean(r["ms"]), _clean(r["ow"]), _clean(r["ch"]), _clean(r["ob"]),
+            _clean(r["cc"])])
+        _add_comp(r["d"], r["ow"], r["ch"], r["ob"])
     for d in rowsby:
         rowsby[d].sort(key=lambda x: (x[0] is None, x[0]))
+    for key, label in (("existing", "Existing Fleet (TEU)"),
+                       ("owned", "Owned (TEU)"),
+                       ("chartered", "Chartered (TEU)"),
+                       ("orderbook", "Orderbook (TEU)")):
+        pts = []
+        for d in sorted(comp):
+            v = comp[d][key] if key != "existing" else comp[d]["owned"] + comp[d]["chartered"]
+            pts.append([d, v])
+        datasets[key] = {"label": label, "points": pts}
     _detail_write("alphaliner", {
         "id": "alphaliner", "title": "Top100 선사 — Alphaliner",
         "updated": dates[-1], "datasets": datasets,
         "panels": [
+            {"id": "ships", "title": "Active Ships (공식 글로벌) 추이",
+             "keys": ["ships"], "fixed": True, "initial": ["ships"]},
             {"id": "teu", "title": "Top100 선대 (TEU) 추이", "keys": ["teu"],
              "fixed": True, "initial": ["teu"]},
-            {"id": "ships", "title": "Active Ships (Top100) 추이", "keys": ["ships"],
-             "fixed": True, "initial": ["ships"]},
+            {"id": "comp", "title": "선대 구성 (TEU) — Existing/Owned/Chartered/Orderbook",
+             "span": 2, "keys": ["existing", "owned", "chartered", "orderbook"],
+             "initial": ["existing", "orderbook"], "navKey": "existing"},
         ],
         "sections": [{
             "type": "rank", "title": "Top100 선사 순위 — 스냅샷 날짜 선택",
             "dates": sorted(rowsby, reverse=True),
-            "cols": ["RANK", "OPERATOR", "TEU", "SHIPS", "SHARE (%)"],
+            "cols": ["RANK", "OPERATOR", "TEU", "SHIPS", "SHARE (%)",
+                     "OWNED (TEU)", "CHARTERED (TEU)", "ORDERBOOK (TEU)"],
+            "nameCol": 1, "flagFrom": 8,
             "rows": rowsby, "tag": "alphaliner_top100",
         }],
     })
