@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-05 01:40:17",
+  "generated_at": "2026-11-05 01:55:55",
   "source": {
     "name": "Baltic Exchange Airfreight Rate Index",
     "publisher": "Air Cargo News",
@@ -13,8 +13,8 @@
     "unit": "USD/kg"
   },
   "last_sync": {
-    "started_at": "2026-11-05 01:40:16",
-    "finished_at": "2026-11-05 01:40:17",
+    "started_at": "2026-11-05 01:55:55",
+    "finished_at": "2026-11-05 01:55:55",
     "status": "SUCCESS",
     "message": "HISTORICAL_SYNC new=0, updated=0, unchanged=115, total=115",
     "snapshot_id": 128,
