@@ -1,22 +1,22 @@
 ﻿Period,VLSFO,MGO,LSMGO,HSFO,graph_date,source_url,port
-2026 Q4,743.0,1236.0,1236.0,649.0,2026-12-31,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,Rotterdam
-Full Year 2026,683.0,1137.0,1137.0,597.0,,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,Rotterdam
-2027 Q1,673.0,1121.0,1121.0,588.0,2027-03-31,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,Rotterdam
-2027 Q2,617.0,1027.0,1027.0,539.0,2027-06-30,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,Rotterdam
-2027 Q3,568.0,945.0,945.0,496.0,2027-09-30,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,Rotterdam
-2027 Q4,525.0,873.0,873.0,458.0,2027-12-31,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,Rotterdam
-Full Year 2027,594.0,989.0,989.0,519.0,,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,Rotterdam
-2026 Q4,892.0,1464.0,1464.0,673.0,2026-12-31,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,Fujairah
-Full Year 2026,821.0,1347.0,1347.0,620.0,,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,Fujairah
-2027 Q1,809.0,1327.0,1327.0,610.0,2027-03-31,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,Fujairah
-2027 Q2,742.0,1217.0,1217.0,560.0,2027-06-30,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,Fujairah
-2027 Q3,682.0,1119.0,1119.0,515.0,2027-09-30,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,Fujairah
-2027 Q4,630.0,1034.0,1034.0,476.0,2027-12-31,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,Fujairah
-Full Year 2027,714.0,1171.0,1171.0,539.0,,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,Fujairah
-2026 Q4,842.0,1284.0,1285.0,683.0,2026-12-31,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,Singapore
-Full Year 2026,775.0,1181.0,1182.0,629.0,,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,Singapore
-2027 Q1,763.0,1164.0,1164.0,620.0,2027-03-31,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,Singapore
-2027 Q2,700.0,1067.0,1068.0,568.0,2027-06-30,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,Singapore
-2027 Q3,644.0,982.0,982.0,522.0,2027-09-30,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,Singapore
-2027 Q4,595.0,907.0,907.0,483.0,2027-12-31,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,Singapore
-Full Year 2027,674.0,1027.0,1028.0,547.0,,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,Singapore
+2026 Q4,776.0,1316.0,1316.0,675.0,2026-12-31,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,Rotterdam
+Full Year 2026,693.0,1175.0,1175.0,603.0,,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,Rotterdam
+2027 Q1,675.0,1145.0,1145.0,587.0,2027-03-31,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,Rotterdam
+2027 Q2,633.0,1073.0,1074.0,550.0,2027-06-30,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,Rotterdam
+2027 Q3,590.0,1001.0,1002.0,514.0,2027-09-30,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,Rotterdam
+2027 Q4,547.0,928.0,928.0,476.0,2027-12-31,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,Rotterdam
+Full Year 2027,610.0,1035.0,1035.0,531.0,,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,Rotterdam
+2026 Q4,950.0,1572.0,1572.0,710.0,2026-12-31,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,Fujairah
+Full Year 2026,848.0,1404.0,1404.0,634.0,,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,Fujairah
+2027 Q1,826.0,1367.0,1367.0,618.0,2027-03-31,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,Fujairah
+2027 Q2,775.0,1282.0,1282.0,579.0,2027-06-30,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,Fujairah
+2027 Q3,723.0,1196.0,1196.0,540.0,2027-09-30,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,Fujairah
+2027 Q4,670.0,1109.0,1109.0,501.0,2027-12-31,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,Fujairah
+Full Year 2027,747.0,1236.0,1236.0,558.0,,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,Fujairah
+2026 Q4,893.0,1351.0,1352.0,731.0,2026-12-31,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,Singapore
+Full Year 2026,798.0,1207.0,1207.0,653.0,,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,Singapore
+2027 Q1,777.0,1175.0,1176.0,636.0,2027-03-31,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,Singapore
+2027 Q2,728.0,1102.0,1103.0,596.0,2027-06-30,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,Singapore
+2027 Q3,680.0,1028.0,1029.0,556.0,2027-09-30,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,Singapore
+2027 Q4,630.0,953.0,953.0,516.0,2027-12-31,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,Singapore
+Full Year 2027,702.0,1062.0,1063.0,575.0,,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,Singapore
