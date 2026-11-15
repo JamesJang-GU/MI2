@@ -1,54 +1,54 @@
 {
- "generated_at": "2026-11-14 19:45:46",
+ "generated_at": "2026-11-15 20:08:06",
  "runs": [
   {
    "module": "sea",
    "ok": true,
-   "seconds": 49.5,
+   "seconds": 58.8,
    "error": null,
-   "finished_at": "2026-11-14 19:39:06"
+   "finished_at": "2026-11-15 20:05:03"
   },
   {
    "module": "linerlytica",
    "ok": true,
-   "seconds": 0.3,
+   "seconds": 0.2,
    "error": null,
-   "finished_at": "2026-11-14 19:39:07"
+   "finished_at": "2026-11-15 20:05:03"
   },
   {
    "module": "alphaliner",
    "ok": true,
-   "seconds": 4.9,
+   "seconds": 4.2,
    "error": null,
-   "finished_at": "2026-11-14 19:39:12"
+   "finished_at": "2026-11-15 20:05:07"
   },
   {
    "module": "forwarders",
    "ok": true,
    "seconds": 0.8,
    "error": null,
-   "finished_at": "2026-11-14 19:39:12"
+   "finished_at": "2026-11-15 20:05:08"
   },
   {
    "module": "air",
    "ok": true,
    "seconds": 0.5,
    "error": null,
-   "finished_at": "2026-11-14 19:39:13"
+   "finished_at": "2026-11-15 20:05:09"
   },
   {
    "module": "oil",
    "ok": true,
-   "seconds": 67.7,
+   "seconds": 83.8,
    "error": null,
-   "finished_at": "2026-11-14 19:40:21"
+   "finished_at": "2026-11-15 20:06:32"
   },
   {
    "module": "macro",
    "ok": true,
-   "seconds": 325.8,
+   "seconds": 93.2,
    "error": null,
-   "finished_at": "2026-11-14 19:45:46"
+   "finished_at": "2026-11-15 20:08:06"
   }
  ]
 }
