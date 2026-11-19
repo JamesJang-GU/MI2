@@ -1,6 +1,4 @@
 ﻿port,series_name,source_type,timestamp_ms,price,source_url,date,date_str
-Fujairah,Fujairah VLSFO,http_inline,1637107200000,620.5,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,2021-11-17,2021-11-17
-Fujairah,Fujairah VLSFO,http_inline,1637193600000,608.0,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,2021-11-18,2021-11-18
 Fujairah,Fujairah VLSFO,http_inline,1637280000000,611.5,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,2021-11-19,2021-11-19
 Fujairah,Fujairah VLSFO,http_inline,1637539200000,605.5,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,2021-11-22,2021-11-22
 Fujairah,Fujairah VLSFO,http_inline,1637625600000,606.0,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,2021-11-23,2021-11-23
@@ -1304,8 +1302,7 @@ Fujairah,Fujairah VLSFO,http_inline,1794441600000,822.5,https://shipandbunker.co
 Fujairah,Fujairah VLSFO,http_inline,1794528000000,856.5,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,2026-11-13,2026-11-13
 Fujairah,Fujairah VLSFO,http_inline,1794787200000,860.5,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,2026-11-16,2026-11-16
 Fujairah,Fujairah VLSFO,http_inline,1794873600000,831.5,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,2026-11-17,2026-11-17
-Rotterdam,Rotterdam VLSFO,http_inline,1637107200000,568.0,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,2021-11-17,2021-11-17
-Rotterdam,Rotterdam VLSFO,http_inline,1637193600000,560.5,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,2021-11-18,2021-11-18
+Fujairah,Fujairah VLSFO,http_inline,1794960000000,822.5,https://shipandbunker.com/prices/emea/me/ae-fjr-fujairah#_VLSFO,2026-11-18,2026-11-18
 Rotterdam,Rotterdam VLSFO,http_inline,1637280000000,564.5,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,2021-11-19,2021-11-19
 Rotterdam,Rotterdam VLSFO,http_inline,1637539200000,555.5,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,2021-11-22,2021-11-22
 Rotterdam,Rotterdam VLSFO,http_inline,1637625600000,559.0,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,2021-11-23,2021-11-23
@@ -2609,8 +2606,7 @@ Rotterdam,Rotterdam VLSFO,http_inline,1794441600000,717.5,https://shipandbunker.
 Rotterdam,Rotterdam VLSFO,http_inline,1794528000000,743.5,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,2026-11-13,2026-11-13
 Rotterdam,Rotterdam VLSFO,http_inline,1794787200000,748.0,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,2026-11-16,2026-11-16
 Rotterdam,Rotterdam VLSFO,http_inline,1794873600000,734.0,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,2026-11-17,2026-11-17
-Singapore,Singapore VLSFO,http_inline,1637107200000,619.5,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,2021-11-17,2021-11-17
-Singapore,Singapore VLSFO,http_inline,1637193600000,610.5,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,2021-11-18,2021-11-18
+Rotterdam,Rotterdam VLSFO,http_inline,1794960000000,705.0,https://shipandbunker.com/prices/emea/nwe/nl-rtm-rotterdam#_VLSFO,2026-11-18,2026-11-18
 Singapore,Singapore VLSFO,http_inline,1637280000000,616.0,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,2021-11-19,2021-11-19
 Singapore,Singapore VLSFO,http_inline,1637539200000,611.0,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,2021-11-22,2021-11-22
 Singapore,Singapore VLSFO,http_inline,1637625600000,612.0,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,2021-11-23,2021-11-23
@@ -3914,3 +3910,4 @@ Singapore,Singapore VLSFO,http_inline,1794441600000,822.0,https://shipandbunker.
 Singapore,Singapore VLSFO,http_inline,1794528000000,882.5,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,2026-11-13,2026-11-13
 Singapore,Singapore VLSFO,http_inline,1794787200000,878.0,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,2026-11-16,2026-11-16
 Singapore,Singapore VLSFO,http_inline,1794873600000,862.5,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,2026-11-17,2026-11-17
+Singapore,Singapore VLSFO,http_inline,1794960000000,831.0,https://shipandbunker.com/prices/apac/sea/sg-sin-singapore#_VLSFO,2026-11-18,2026-11-18
